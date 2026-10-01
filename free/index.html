@@ -274,6 +274,7 @@ label.opts2 input{margin-top:6px;flex:none}
         <p class="hint" id="privNote"></p>
         <p class="hint">عند بلوغ الحد المجاني للدقيقة ينتظر البرنامج ويكمل تلقائياً. المحرك الحالي: <b id="provName"></b></p>
       </div>
+      <label class="opts2" style="margin-top:6px"><input type="checkbox" id="autoFb" checked> التحويل التلقائي إلى المحرك التالي (الأفضل أولاً) عند نفاد الرصيد أو التعطل — يشمل المحركات التي حفظت مفاتيحها</label>
       <label class="opts2" style="margin-top:6px"><input type="checkbox" id="strictChk" checked> صرامة الأدلة: لا يُقبل حكم إيجابي إلا باقتباس موجود فعلاً في نص الشاهد</label>
     </div>
     <div class="run">
@@ -359,7 +360,7 @@ const pref = () => store.get("aud-free", {});
 const savePref = p => store.set("aud-free", Object.assign(pref(), p));
 const keyName = p => "aud-key-" + p;
 const getKey = p => { try { return localStorage.getItem(keyName(p)) || (p === "groq" ? localStorage.getItem("aud-groq-key") || "" : ""); } catch { return ""; } };
-let PROV = PROVS[pref().prov] ? pref().prov : (location.protocol === "file:" ? "gemini" : "puter");
+let PROV = PROVS[pref().prov] ? pref().prov : (["puter","pollinations","nvidia","gemini","mistral","openrouter","groq"].find(p => p === "puter" ? location.protocol !== "file:" : !!getKey(p)) || (location.protocol === "file:" ? "gemini" : "puter"));
 if (PROV === "puter" && location.protocol === "file:") PROV = "gemini";
 let apiKey = getKey(PROV);
 const P = () => PROVS[PROV];
@@ -462,6 +463,8 @@ $("#apiSave").onclick = () => { const v = $("#apiKey").value.trim(); if (!v) ret
 $("#apiDel").onclick = () => { apiKey = ""; try { localStorage.removeItem(keyName(PROV)); if (PROV === "groq") localStorage.removeItem("aud-groq-key"); } catch {} paintProv(); checkApi(); toast("حُذف المفتاح من هذا المتصفح"); };
 $("#mApi").addEventListener("change", () => savePP({judge:$("#mApi").value}));
 $("#mVis").addEventListener("change", () => savePP({vis:$("#mVis").value}));
+$("#autoFb").addEventListener("change", () => savePref({autofb:$("#autoFb").checked}));
+if (pref().autofb === false) $("#autoFb").checked = false;
 $("#strictChk").addEventListener("change", () => savePref({strict:$("#strictChk").checked}));
 if (pref().strict === false) $("#strictChk").checked = false;
 paintProv();
@@ -576,8 +579,8 @@ async function puterChat({model, prompt, images = [], signal, onText, maxTokens 
 }
 const VIS_PROMPT = "هذه صورة من شاهد اعتماد لمنشأة تدريب تقني سعودية. انسخ كل النص الظاهر فيها كما هو دون ترجمة أو تلخيص. ثم اكتب سطراً يبدأ بـ «عناصر بصرية:» تذكر فيه وجود أو غياب: توقيع، ختم، شعار، تاريخ، اسم الجهة.";
 // read scanned pages / images as text, so quotes from them can be verified
-async function readImages(images, signal, onText, step){
-  const vis = $("#mVis").value; if (!vis || !images.length) return "";
+async function readImages0(images, signal, onText, step){
+  const vis = CUR.vis !== undefined ? CUR.vis : $("#mVis").value; if (!vis || !images.length) return "";
   if (PROV === "puter") {
     const imgs = images.slice(0, 12), lbl = `قراءة بصرية (${AR(imgs.length)} صورة)`;
     step?.(lbl);
@@ -607,11 +610,48 @@ async function readImages(images, signal, onText, step){
   return parts.join("\n\n");
 }
 // same signature the pipeline uses for the API engine
-async function apiChat({prompt, signal, onText, maxTokens = 6000}){
-  if (PROV === "puter") return puterChat({model:$("#mApi").value, signal, onText, maxTokens:Math.max(maxTokens, 8000), prompt});
-  if (PROV === "gemini") return gemChat({model:$("#mApi").value, json:true, signal, onText, maxTokens:Math.max(maxTokens, 12000), parts:[{text:prompt}]});
-  return groqChat({model:$("#mApi").value, json:true, signal, onText, maxTokens, messages:[{role:"user", content:prompt}]});
+async function apiChat0({prompt, signal, onText, maxTokens = 6000}){
+  const JM = CUR.judge || $("#mApi").value;
+  if (PROV === "puter") return puterChat({model:JM, signal, onText, maxTokens:Math.max(maxTokens, 8000), prompt});
+  if (PROV === "gemini") return gemChat({model:JM, json:true, signal, onText, maxTokens:Math.max(maxTokens, 12000), parts:[{text:prompt}]});
+  return groqChat({model:JM, json:true, signal, onText, maxTokens, messages:[{role:"user", content:prompt}]});
 }
+
+/* ---------- automatic fallback across engines (best first) ---------- */
+const ENGINE_ORDER = ["puter", "pollinations", "nvidia", "gemini", "mistral", "openrouter", "groq"];
+let CUR = {}, RUN_START = null;
+const engineUsable = p => p === "puter" ? location.protocol !== "file:" : !!getKey(p);
+const isFallbackErr = e => !!e && e.name !== "AbortError" && (["free_day", "free_busy", "free_nofree", "puter_credit", "puter_signin", "puter_file", "free_blocked"].includes(e.message) || e instanceof TypeError || /^api (5\d\d|429|402|401|403|404)/.test(e.message || ""));
+const errLabel = e => ({free_day:"بلغ الحد اليومي", free_busy:"مزدحم", free_nofree:"غير متاح مجاناً", puter_credit:"نفد الرصيد", puter_signin:"يلزم تسجيل الدخول", puter_file:"لا يعمل من ملف محلي", free_blocked:"رفض المحتوى"})[e?.message] || (e instanceof TypeError ? "تعذّر الاتصال" : "خطأ في الخدمة");
+async function switchEngine(prov){
+  PROV = prov; apiKey = getKey(prov);
+  const {all, judgePref, vis} = await listModels();
+  if (!all.length) throw new Error("no_models");
+  let judge = null; for (const rx of judgePref) { judge = all.find(i => rx.test(i)); if (judge) break; }
+  judge = judge || all[0];
+  CUR = {judge, vis: (prov === "gemini" || prov === "puter") ? judge : (vis[0] || "")};
+}
+async function withFallback(fn, onText){
+  const tried = new Set();
+  for (;;) {
+    try { return await fn(); }
+    catch (e) {
+      if (!isFallbackErr(e) || !$("#autoFb")?.checked) throw e;
+      tried.add(PROV);
+      let switched = false;
+      for (const next of ENGINE_ORDER) {
+        if (tried.has(next) || !engineUsable(next)) continue;
+        const from = P().name;
+        try { await switchEngine(next); switched = true; onText?.(`${from}: ${errLabel(e)} — التحويل تلقائياً إلى ${P().name} (${CUR.judge})`, true); break; }
+        catch { tried.add(next); }
+      }
+      if (!switched) throw e;
+    }
+  }
+}
+const apiChat = args => withFallback(() => apiChat0(args), args.onText);
+const readImages = (images, signal, onText, step) => withFallback(() => readImages0(images, signal, onText, step), onText);
+function restoreEngine(){ if (RUN_START && RUN_START !== PROV) { PROV = RUN_START; apiKey = getKey(PROV); } CUR = {}; RUN_START = null; }
 const budgetChars = () => ({puter:120000, gemini:90000, pollinations:80000, nvidia:80000, openrouter:60000, mistral:60000}[PROV] || 30000);
 
 function parseJSON(t){
@@ -1050,7 +1090,7 @@ $("#runBtn").onclick = async () => {
   const step = (label, state = "run") => { const i = steps.findIndex(s => s.label === label); if (i < 0) steps.push({label, state}); else steps[i].state = state;
     const el = $("#stepList"); if (el) el.innerHTML = steps.map(s => `<li class="${s.state}">${s.state === "done" ? "✓" : s.state === "skip" ? "–" : "…"} ${esc(s.label)}</li>`).join(""); stage(label); };
   const timer = setInterval(() => { const el = $("#tm"); if (el) el.textContent = `مضى ${AR(Math.round((Date.now() - t0) / 1000))} ثانية`; }, 1000);
-  AUTO_SUB = null;
+  AUTO_SUB = null; RUN_START = PROV; CUR = {};
   const ok = files.filter(f => !f.err);
   try {
     // 1) visual reading for the local engine (the API engine sees the images directly)
@@ -1177,7 +1217,7 @@ ${docsBlock(ok, budget)}
     if (facts.orgMatch !== null) res.controls.linkage = {ok:facts.orgMatch, note:facts.orgMatch ? "اسم المنشأة مذكور في الشاهد" : "اسم المنشأة غير مذكور في نص الشاهد"};
     res.foundCheck = res.found.map(t => { const qs = quotesIn(t); return {t, st: !qs.length ? "none" : qs.every(q => quoteOk(q, hay2)) ? "ok" : "bad"}; });
     res.sub_code = AUTO_SUB || $("#subSel").value;
-    res.engine = `${P().name} · ${LAST_MODEL || $("#mApi").value}`;
+    res.engine = `${P().name} · ${LAST_MODEL || CUR.judge || $("#mApi").value}${RUN_START && RUN_START !== PROV ? " (تحويل تلقائي من " + PROVS[RUN_START].name + ")" : ""}`;
     res.secs = Math.round((Date.now() - t0) / 1000);
     res.imgDropped = 0; res.files = ok.map(f => f.name);
     res.mode = MODE; res.phase = phase; res.scope = scope; res.org = $("#orgName").value.trim(); res.at = new Date().toISOString();
@@ -1201,7 +1241,7 @@ ${docsBlock(ok, budget)}
     else msg = "تعذّر إكمال التدقيق: " + (e?.message || "خطأ غير معروف");
     $("#result").innerHTML = `<div class="err">${esc(msg)}</div>`;
   } finally {
-    AUTO_SUB = null; LAST_MODEL = ""; clearInterval(timer); $("#stopBtn").hidden = true; updateRun();
+    AUTO_SUB = null; LAST_MODEL = ""; restoreEngine(); clearInterval(timer); $("#stopBtn").hidden = true; updateRun();
   }
 };
 
