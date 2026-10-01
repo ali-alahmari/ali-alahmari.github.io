@@ -359,7 +359,8 @@ const pref = () => store.get("aud-free", {});
 const savePref = p => store.set("aud-free", Object.assign(pref(), p));
 const keyName = p => "aud-key-" + p;
 const getKey = p => { try { return localStorage.getItem(keyName(p)) || (p === "groq" ? localStorage.getItem("aud-groq-key") || "" : ""); } catch { return ""; } };
-let PROV = PROVS[pref().prov] ? pref().prov : "puter";
+let PROV = PROVS[pref().prov] ? pref().prov : (location.protocol === "file:" ? "gemini" : "puter");
+if (PROV === "puter" && location.protocol === "file:") PROV = "gemini";
 let apiKey = getKey(PROV);
 const P = () => PROVS[PROV];
 const OR_JUDGE = [/nemotron-3-ultra/i, /inkling(?!-small)/i, /kimi/i, /deepseek/i, /qwen3\.8/i, /gpt-oss-120b/i, /llama-4/i];
@@ -369,6 +370,7 @@ const NV_JUDGE = [/kimi-k3/i, /glm-5/i, /deepseek-v4/i, /nemotron-3-ultra/i, /ki
 const PU_JUDGE = [/claude-sonnet-5-5/i, /claude-opus-5-5/i, /claude-sonnet-5/i, /claude-opus-5/i, /claude/i];
 let puterReady = null;
 function loadPuter(){
+  if (location.protocol === "file:") return Promise.reject(new TypeError("puter_file"));
   if (window.puter) return Promise.resolve(window.puter);
   if (!puterReady) puterReady = new Promise((res, rej) => { const sc = document.createElement("script"); sc.src = "https://js.puter.com/v2/"; sc.onload = () => res(window.puter); sc.onerror = () => { puterReady = null; rej(new TypeError("puter_load")); }; document.head.appendChild(sc); });
   return puterReady;
@@ -450,7 +452,7 @@ async function checkApi(){
     if (PROV === "puter") { let u = null; try { u = window.puter.auth.isSignedIn() ? await window.puter.auth.getUser() : null; } catch {}
       st.textContent = u ? `جاهز · مسجّل باسم ${u.username} · ${AR(all.length)} نموذج` : "جاهز · سجّل الدخول في Puter مرة واحدة (أو سيُطلب منك عند أول تدقيق)"; }
     else st.textContent = `المفتاح صالح · ${AR(all.length)} نموذج متاح في ${P().name}`;
-  } catch (e) { ENG.api.ok = false; $("#apiDot").style.background = "var(--bad)"; st.textContent = String(e.message) === "401" ? "المفتاح غير صحيح" : PROV === "puter" ? "تعذّر تحميل Puter. افتح البرنامج من رابطه على الإنترنت (GitHub Pages) لا من ملف محلي، ثم أعد المحاولة." : `تعذّر الاتصال بخدمة ${P().name}. تحقق من الإنترنت.`; }
+  } catch (e) { ENG.api.ok = false; $("#apiDot").style.background = "var(--bad)"; st.textContent = String(e.message) === "401" ? "المفتاح غير صحيح" : PROV === "puter" ? (location.protocol === "file:" ? "محرك Claude عبر Puter لا يعمل من ملف على الجهاز — افتح البرنامج من رابطه: ali-alahmari.github.io/free" : "تعذّر تحميل Puter. تحقق من الإنترنت ثم أعد المحاولة.") : `تعذّر الاتصال بخدمة ${P().name}. تحقق من الإنترنت.`; }
   setEngine();
 }
 const savePP = o => { const all = pref(); all[PROV] = Object.assign(all[PROV] || {}, o); store.set("aud-free", all); };
