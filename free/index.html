@@ -260,7 +260,7 @@ label.opts2 input{margin-top:6px;flex:none}
     </div>
     <div class="field engine" id="engine">
       <label class="lbl" for="provSel">محرك التحليل المجاني</label>
-      <select id="provSel"><option value="puter">Claude عبر Puter — الأقوى (بلا مفتاح)</option><option value="pollinations">Pollinations — Claude وGPT وGemini بمفتاح واحد</option><option value="nvidia">NVIDIA — Kimi K3 وGLM-5.3 وDeepSeek V4</option><option value="openrouter">OpenRouter — نماذج مجانية كبيرة</option><option value="mistral">Mistral Large — رصيد شهري مجاني</option><option value="gemini">Gemini Flash — سياق طويل</option><option value="groq">Groq — الأسرع</option></select>
+      <select id="provSel"><option value="puter">Claude عبر Puter — الأقوى (بلا مفتاح)</option><option value="pollinations">Pollinations — Claude وGPT وGemini بمفتاح واحد</option><option value="openrouter">OpenRouter — نماذج مجانية كبيرة (Kimi وDeepSeek وNemotron)</option><option value="mistral">Mistral Large — رصيد شهري مجاني</option><option value="gemini">Gemini Flash — سياق طويل</option><option value="groq">Groq — الأسرع</option></select>
       <div id="apiBox" style="display:grid;gap:6px;margin-top:4px">
         <div class="eng-st"><i class="dot" id="apiDot"></i><span id="apiTxt">أدخل المفتاح المجاني</span></div>
         <button type="button" class="btn sm pri" id="puterBtn" hidden>تسجيل الدخول في Puter (مجاني)</button>
@@ -360,7 +360,7 @@ const pref = () => store.get("aud-free", {});
 const savePref = p => store.set("aud-free", Object.assign(pref(), p));
 const keyName = p => "aud-key-" + p;
 const getKey = p => { try { return localStorage.getItem(keyName(p)) || (p === "groq" ? localStorage.getItem("aud-groq-key") || "" : ""); } catch { return ""; } };
-let PROV = PROVS[pref().prov] ? pref().prov : (["puter","pollinations","nvidia","gemini","mistral","openrouter","groq"].find(p => p === "puter" ? location.protocol !== "file:" : !!getKey(p)) || (location.protocol === "file:" ? "gemini" : "puter"));
+let PROV = (PROVS[pref().prov] && pref().prov !== "nvidia") ? pref().prov : (["puter","pollinations","openrouter","gemini","mistral","groq"].find(p => p === "puter" ? location.protocol !== "file:" : !!getKey(p)) || (location.protocol === "file:" ? "gemini" : "puter"));
 if (PROV === "puter" && location.protocol === "file:") PROV = "gemini";
 let apiKey = getKey(PROV);
 const P = () => PROVS[PROV];
@@ -415,7 +415,10 @@ async function listModels(){
     const fr = ok.filter(free).map(m => m.id).sort(), paid = ok.filter(m => !free(m) && /anthropic\/claude|openai\/gpt-5|google\/gemini-3.*pro/i.test(m.id)).map(m => m.id).sort().reverse();
     const visSet = new Set(ok.filter(m => (m.architecture?.input_modalities || []).includes("image")).map(m => m.id));
     const all = [...fr, ...paid];
-    return {all, judgePref:OR_JUDGE, vis:all.filter(i => visSet.has(i)), visAll:false};
+    const VPREF = [/gemini/i, /gemma-?4/i, /inkling/i, /qwen.*vl/i, /llama-4/i, /kimi/i, /mistral|pixtral/i];
+    const vrank = i => { const k = VPREF.findIndex(rx => rx.test(i)); return k < 0 ? 99 : k; };
+    const visList = all.filter(i => visSet.has(i)).sort((a, b) => vrank(a) - vrank(b) || (b.endsWith(":free") - a.endsWith(":free")));
+    return {all, judgePref:OR_JUDGE, vis:visList, visAll:false};
   }
   if (PROV === "mistral") {
     const r = await fetch(P().base + "/models", {headers:{Authorization:"Bearer " + apiKey}});
@@ -618,7 +621,7 @@ async function apiChat0({prompt, signal, onText, maxTokens = 6000}){
 }
 
 /* ---------- automatic fallback across engines (best first) ---------- */
-const ENGINE_ORDER = ["puter", "pollinations", "nvidia", "gemini", "mistral", "openrouter", "groq"];
+const ENGINE_ORDER = ["puter", "pollinations", "openrouter", "gemini", "mistral", "groq"];
 let CUR = {}, RUN_START = null;
 const engineUsable = p => p === "puter" ? location.protocol !== "file:" : !!getKey(p);
 const isFallbackErr = e => !!e && e.name !== "AbortError" && (["free_day", "free_busy", "free_nofree", "puter_credit", "puter_signin", "puter_file", "free_blocked"].includes(e.message) || e instanceof TypeError || /^api (5\d\d|429|402|401|403|404)/.test(e.message || ""));
