@@ -232,7 +232,10 @@ section{margin-top:44px}
 .proj.tool{display:block;text-decoration:none;color:inherit;border-top-color:var(--ink);transition:transform .15s}
 .proj.tool:hover{transform:translateY(-2px)}
 .toolk{display:inline-block;font-size:11px;letter-spacing:.3px;color:var(--brass-2);margin-bottom:4px}
-.toolgo{display:block;margin-top:8px;font-size:13px;font-weight:600}
+.toolgo{display:block;margin-top:8px;font-size:13px;font-weight:600;color:inherit;text-decoration:none}
+.toolgo:hover{text-decoration:underline}
+.toolalt{display:block;margin-top:4px;font-size:11.5px;color:var(--brass-2);text-decoration:none}
+.toolalt:hover{text-decoration:underline}
 @media print{.proj.tool{display:none}}
 
 .cert{display:flex;gap:13px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--line)}
@@ -583,8 +586,8 @@ function render(){
     const [h,b] = p[L];
     return `<div class="proj"><h4>${h}</h4><p>${b}</p></div>`;
   }).join('') + (L==='ar'
-    ? `<a class="proj tool" href="auditor/"><span class="toolk">أداة تفاعلية</span><h4>مدقق شواهد الاعتماد</h4><p>ارفع شاهد الاعتماد المؤسسي أو البرامجي بأي صيغة، فيحلله ويضعه في مستواه وفق مقاييس هيئة تقويم التعليم والتدريب مع التعليل والتوصية. يعمل بذكاء اصطناعي محلي على الجهاز أو بمفتاح Claude API.</p><span class="toolgo">افتح الأداة ←</span></a>`
-    : `<a class="proj tool" href="auditor/"><span class="toolk">Interactive tool</span><h4>Accreditation Evidence Auditor</h4><p>Upload institutional or programmatic accreditation evidence in any format; it is analysed and placed at its level against ETEC's official scales, with a written rationale and recommendation. Runs on a local AI model or with a Claude API key.</p><span class="toolgo">Open the tool →</span></a>`);
+    ? `<div class="proj tool"><span class="toolk">أداة تفاعلية</span><h4>مدقق شواهد الاعتماد</h4><p>ارفع شاهد الاعتماد المؤسسي أو البرامجي بأي صيغة، فيحلله Claude ويضعه في مستواه وفق مقاييس هيئة تقويم التعليم والتدريب مع التعليل والتوصية.</p><a class="toolgo" href="https://claude.ai/artifact/NWy4gWZAB12eU6WG43sRma" target="_blank" rel="noopener">افتح المدقق في Claude ←</a><a class="toolalt" href="auditor/">نسخة بديلة: نموذج محلي أو مفتاح API</a></div>`
+    : `<div class="proj tool"><span class="toolk">Interactive tool</span><h4>Accreditation Evidence Auditor</h4><p>Upload institutional or programmatic accreditation evidence in any format; Claude analyses it and places it at its level against ETEC's official scales, with a written rationale and recommendation.</p><a class="toolgo" href="https://claude.ai/artifact/NWy4gWZAB12eU6WG43sRma" target="_blank" rel="noopener">Open the auditor in Claude →</a><a class="toolalt" href="auditor/">Alternative: local model or API key</a></div>`);
 
   document.getElementById('training').innerHTML = CV.training.map(x =>
     `<tr><td>${x[L]}</td><td class="h">${L==='ar'?x.src_ar:x.src_en}</td><td class="mono">${L==='ar'?x.date_ar:x.date_en}</td><td class="mono">${d.hoursu(x.hours)}</td></tr>`).join('');
