@@ -1,0 +1,1347 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<title>مدقق شواهد الاعتماد</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="author" content="علي الأحمري">
+<style>
+/* Layout concept: an auditor's desk — a working sheet on the right (standard, files) and the verdict sheet on the left, sealed with the level stamp */
+:root{
+  --paper:#F3F5F2; --sheet:#FFFFFF; --sheet-2:#EBEFEA; --ink:#14251F; --ink-2:#4A5C55; --rule:#D5DDD7;
+  --accent:#0D5A46; --accent-2:#167A60; --accent-soft:#DCEDE6; --gold:#8A6A1F; --gold-soft:#F3EAD3;
+  --ok:#17784F; --ok-soft:#DDF1E6; --part:#9A6A08; --part-soft:#F8EBCB; --bad:#A63A2C; --bad-soft:#F6DFDA;
+  --l0:#8E9893; --l1:#C9583D; --l2:#D9932A; --l3:#A9B83A; --l4:#2E9A6E; --l5:#B8912F;
+  --display:"Sakkal Majalla","Geeza Pro","SF Arabic","Segoe UI",Tahoma,sans-serif;
+  --body:"Sakkal Majalla","Geeza Pro","SF Arabic","Segoe UI",Tahoma,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+  --shadow:0 1px 2px rgba(20,37,31,.06),0 8px 24px -16px rgba(20,37,31,.25);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#0F1715; --sheet:#16211E; --sheet-2:#1C2925; --ink:#E6EEEA; --ink-2:#A7B8B1; --rule:#2B3B36;
+  --accent:#4CC79C; --accent-2:#6FD8B2; --accent-soft:#183A31; --gold:#D7B567; --gold-soft:#3A3120;
+  --ok:#5DD39C; --ok-soft:#173A2A; --part:#E5B54E; --part-soft:#3B3017; --bad:#F08A78; --bad-soft:#40211C;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -16px rgba(0,0,0,.7); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0F1715; --sheet:#16211E; --sheet-2:#1C2925; --ink:#E6EEEA; --ink-2:#A7B8B1; --rule:#2B3B36;
+  --accent:#4CC79C; --accent-2:#6FD8B2; --accent-soft:#183A31; --gold:#D7B567; --gold-soft:#3A3120;
+  --ok:#5DD39C; --ok-soft:#173A2A; --part:#E5B54E; --part-soft:#3B3017; --bad:#F08A78; --bad-soft:#40211C;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -16px rgba(0,0,0,.7); color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:18px;line-height:1.75;direction:rtl}
+h1,h2,h3,h4{font-family:var(--display);line-height:1.35;margin:0;text-wrap:balance}
+p{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.num,.code{font-variant-numeric:tabular-nums}
+.code{font-family:var(--mono);font-size:.85em;direction:ltr;unicode-bidi:isolate}
+.wrap{max-width:1240px;margin:0 auto;padding-inline:20px;padding-block:0 40px}
+
+/* top bar */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--rule)}
+.bar .in{max-width:1240px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:700;font-size:18px}
+.seal{width:34px;height:34px;border-radius:50%;border:2px solid var(--accent);display:grid;place-items:center;color:var(--accent);font-size:13px;font-family:var(--display);font-weight:700;transform:rotate(-12deg)}
+.bar .sp{flex:1}
+.modepill{border:1px solid var(--rule);background:var(--sheet);border-radius:999px;padding:4px 14px;font-family:var(--display);font-size:14px;color:var(--ink-2)}
+.modepill b{color:var(--accent)}
+.btn{border:1px solid var(--rule);background:var(--sheet);border-radius:10px;padding:8px 16px;font-family:var(--display);font-size:15px;transition:.15s}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--sheet);font-weight:600}
+.btn.pri:hover{background:var(--accent-2);color:var(--sheet)}
+.btn.pri:disabled{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:transparent}
+.btn.sm{padding:5px 12px;font-size:13.5px;border-radius:8px}
+
+/* start screen */
+.start{padding-block:44px 16px;display:grid;gap:28px}
+.start .lead h1{font-size:clamp(30px,4.4vw,48px);font-weight:700;letter-spacing:-.3px}
+.start .lead h1 span{color:var(--accent)}
+.start .lead p{color:var(--ink-2);font-size:clamp(17px,1.8vw,20px);max-width:62ch;margin-top:10px}
+.choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+@media (max-width:760px){.choices{grid-template-columns:1fr}}
+.choice{all:unset;box-sizing:border-box;cursor:pointer;background:var(--sheet);border:1px solid var(--rule);border-radius:18px;padding:24px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow);transition:.2s;position:relative;overflow:hidden}
+.choice:hover,.choice:focus-visible{border-color:var(--accent);transform:translateY(-3px)}
+.choice h2{font-size:26px}
+.choice .kick{font-family:var(--display);font-size:13px;letter-spacing:.4px;color:var(--gold)}
+.choice ul{margin:0;padding-inline-start:18px;color:var(--ink-2);font-size:15.5px}
+.choice .scale{display:flex;gap:4px;margin-top:4px}
+.choice .scale i{flex:1;height:26px;border-radius:6px;display:grid;place-items:center;font-style:normal;font-family:var(--display);font-weight:700;font-size:13px;color:#fff}
+.choice .go{margin-top:auto;font-family:var(--display);color:var(--accent);font-weight:600}
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media (max-width:760px){.steps{grid-template-columns:1fr}}
+.step{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-top:2px solid var(--rule)}
+.step b{font-family:var(--display);font-size:22px;color:var(--accent);line-height:1}
+.step p{color:var(--ink-2);font-size:15px}
+.step strong{display:block;color:var(--ink);font-family:var(--display);font-weight:600;font-size:16px}
+.formats{display:flex;flex-wrap:wrap;gap:6px}
+.fmt{font-family:var(--mono);font-size:12px;border:1px solid var(--rule);border-radius:6px;padding:1px 8px;color:var(--ink-2);background:var(--sheet)}
+
+/* workspace */
+.ws{display:grid;grid-template-columns:minmax(0,430px) minmax(0,1fr);gap:22px;padding-block:22px 0;align-items:start}
+@media (max-width:980px){.ws{grid-template-columns:1fr}}
+.panel{background:var(--sheet);border:1px solid var(--rule);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:16px;box-shadow:var(--shadow);min-width:0}
+.sticky{position:sticky;top:calc(env(safe-area-inset-top,0px) + 70px)}
+@media (max-width:980px){.sticky{position:static}}
+.lbl{font-family:var(--display);font-size:13px;letter-spacing:.3px;color:var(--ink-2);display:block;margin-bottom:6px}
+.field{display:flex;flex-direction:column}
+select,input[type=text],textarea{width:100%;border:1px solid var(--rule);background:var(--paper);border-radius:10px;padding:9px 12px;font-size:15px}
+select:focus,input:focus,textarea:focus{border-color:var(--accent);outline:none}
+.seg{display:flex;border:1px solid var(--rule);border-radius:10px;overflow:hidden;background:var(--paper)}
+.seg button{flex:1;border:0;background:transparent;padding:8px 6px;font-family:var(--display);font-size:13.5px;color:var(--ink-2)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--sheet);font-weight:600}
+.substd{background:var(--sheet-2);border-radius:10px;padding:10px 12px;font-size:14.5px;color:var(--ink)}
+.substd .k{font-family:var(--display);font-size:12.5px;color:var(--gold)}
+.drop{border:2px dashed var(--rule);border-radius:14px;padding:22px 14px;text-align:center;transition:.15s;background:var(--paper);cursor:pointer}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.drop strong{font-family:var(--display);display:block;font-size:17px}
+.drop span{color:var(--ink-2);font-size:14px}
+.files{display:flex;flex-direction:column;gap:8px}
+.file{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid var(--rule);border-radius:10px;padding:8px 10px;background:var(--sheet)}
+.file .ic{width:40px;height:40px;border-radius:8px;display:grid;place-items:center;font-family:var(--mono);font-size:10.5px;font-weight:500;color:var(--sheet);background:var(--ink-2);overflow:hidden}
+.file .ic img{width:100%;height:100%;object-fit:cover}
+.file .nm{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr;text-align:right}
+.file .st{font-size:12.5px;color:var(--ink-2)}
+.file .st.err{color:var(--bad)}
+.file .x{border:0;background:transparent;font-size:18px;color:var(--ink-2);padding:2px 8px}
+.file details{grid-column:1/-1}
+.file summary{cursor:pointer;font-size:12.5px;color:var(--accent)}
+.file pre{white-space:pre-wrap;max-height:180px;overflow:auto;font-size:12.5px;background:var(--paper);border-radius:8px;padding:8px;margin:6px 0 0;font-family:var(--body)}
+.hint{font-size:13px;color:var(--ink-2)}
+.warn{font-size:13.5px;background:var(--part-soft);color:var(--part);border-radius:10px;padding:8px 12px}
+.run{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+/* results */
+.empty{border:1px dashed var(--rule);border-radius:16px;padding:28px;color:var(--ink-2);display:grid;gap:14px}
+.empty h3{color:var(--ink);font-size:20px}
+.ex{font-size:12px;font-family:var(--display);color:var(--gold);border:1px solid var(--gold);border-radius:999px;padding:0 10px;justify-self:start}
+.sheet{background:var(--sheet);border:1px solid var(--rule);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;min-width:0}
+.sheet-h{padding:18px 20px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;border-bottom:1px solid var(--rule)}
+@media (max-width:560px){.sheet-h{grid-template-columns:1fr}}
+.sheet-h .t{font-size:13px;color:var(--ink-2);font-family:var(--display)}
+.sheet-h h2{font-size:21px;margin-top:2px}
+.stamp{width:132px;height:132px;border-radius:50%;border:3px solid currentColor;display:grid;place-items:center;text-align:center;transform:rotate(-8deg);font-family:var(--display);padding:10px;justify-self:center}
+.stamp b{display:block;font-size:44px;line-height:1}
+.stamp span{font-size:13px;font-weight:600;line-height:1.3}
+.stamp.ok{color:var(--ok);background:var(--ok-soft)}.stamp.part{color:var(--part);background:var(--part-soft)}.stamp.bad{color:var(--bad);background:var(--bad-soft)}
+.sec{padding:16px 20px;border-bottom:1px solid var(--rule);display:grid;gap:10px}
+.sec:last-child{border-bottom:0}
+.sec h3{font-size:16.5px;display:flex;align-items:center;gap:8px}
+.sec h3 small{font-family:var(--body);font-weight:400;font-size:13px;color:var(--ink-2)}
+.ladder{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}
+.ladder.five{grid-template-columns:repeat(5,minmax(0,1fr))}
+.rung{border-radius:8px;padding:6px 4px;text-align:center;background:var(--sheet-2);color:var(--ink-2);font-size:12px;font-family:var(--display);line-height:1.35;border:2px solid transparent}
+.rung b{display:block;font-size:18px}
+.rung.on{color:#fff}
+.rung.cur{border-color:var(--ink);transform:translateY(-3px)}
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:1px 11px;font-size:13px;font-family:var(--display);font-weight:600}
+.chip.ok{background:var(--ok-soft);color:var(--ok)}.chip.part{background:var(--part-soft);color:var(--part)}.chip.bad{background:var(--bad-soft);color:var(--bad)}.chip.na{background:var(--sheet-2);color:var(--ink-2)}
+.ql{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:700px){.ql{grid-template-columns:1fr}}
+.qc{border:1px solid var(--rule);border-radius:12px;padding:10px 12px;display:grid;gap:4px;align-content:start}
+.qc .h{display:flex;justify-content:space-between;align-items:center;font-family:var(--display);font-weight:600}
+.qc .sc{font-family:var(--display);font-weight:700;font-size:20px}
+.qc p{font-size:14px;color:var(--ink-2)}
+.list{margin:0;padding-inline-start:20px;display:grid;gap:4px;font-size:15px}
+.list.found li::marker{color:var(--ok)}.list.gap li::marker{color:var(--bad)}.list.next li::marker{color:var(--gold)}
+.ctrls{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
+.ctl{border:1px solid var(--rule);border-radius:10px;padding:8px 10px;font-size:13.5px;display:grid;gap:2px}
+.ctl .n{font-family:var(--display);font-weight:600;font-size:14px;display:flex;gap:6px;align-items:center}
+.ctl .d{width:9px;height:9px;border-radius:50%}
+.ctl p{color:var(--ink-2)}
+.rec{border-inline-start:4px solid var(--gold);background:var(--gold-soft);border-radius:10px;padding:10px 14px;font-size:15px}
+.rec.praise{border-color:var(--ok);background:var(--ok-soft)}
+.rat{font-size:15.5px}
+.meter{height:8px;background:var(--sheet-2);border-radius:6px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--accent)}
+.foot{display:flex;gap:8px;flex-wrap:wrap;padding:14px 20px;background:var(--sheet-2)}
+.busy{display:grid;gap:12px;padding:28px;text-align:center;justify-items:center}
+.spin{width:54px;height:54px;border-radius:50%;border:4px solid var(--rule);border-top-color:var(--accent);animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.busy .stream{max-height:140px;overflow:hidden;font-family:var(--mono);font-size:11.5px;color:var(--ink-2);direction:ltr;text-align:left;width:100%;opacity:.7;white-space:pre-wrap;word-break:break-all}
+.log{display:grid;gap:8px}
+.log h3{font-size:17px}
+.logrow{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:10px;align-items:center;border:1px solid var(--rule);border-radius:10px;padding:8px 12px;background:var(--sheet);font-size:14px}
+.logrow .lv{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;color:#fff;font-family:var(--display);font-weight:700}
+.logrow .ttl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.toast{position:fixed;bottom:calc(18px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:8px 18px;border-radius:10px;font-size:14px;z-index:50;font-family:var(--display)}
+.eng-st{display:flex;align-items:center;gap:8px;font-size:14px;background:var(--sheet-2);border-radius:10px;padding:6px 10px;margin-bottom:8px}
+.eng-st .dot{width:10px;height:10px;border-radius:50%;background:var(--l0);flex:none}
+.eng-st span{flex:1}
+.engine select{margin-bottom:8px}
+.opts2{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;font-size:14px}
+label.opts2{flex-wrap:nowrap;align-items:flex-start}
+label.opts2 input{margin-top:6px;flex:none}
+.steps2{list-style:none;margin:0;padding:0;display:grid;gap:2px;font-size:14px;text-align:right;justify-self:stretch;max-width:420px;margin-inline:auto}
+.steps2 li.done{color:var(--ok)}.steps2 li.run{color:var(--ink);font-weight:600}.steps2 li.skip{color:var(--ink-2)}
+.stage{font-family:var(--display);color:var(--accent);font-size:15px}
+.err{background:var(--bad-soft);color:var(--bad);border-radius:12px;padding:12px 16px;font-size:15px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+
+<header class="bar"><div class="in">
+  <div class="brand"><span class="seal" aria-hidden="true">مُدقَّق</span>مدقق شواهد الاعتماد <span class="hint" style="font-weight:400">· النسخة المجانية</span></div>
+  <span class="modepill" id="modePill" hidden></span>
+  <span class="sp"></span>
+  <button class="btn sm ghost" id="switchBtn" hidden>تغيير نوع التدقيق</button>
+</div></header>
+
+<main class="wrap">
+<!-- START -->
+<section class="start" id="startView">
+  <div class="lead">
+    <h1>ارفع الشاهد، <span>واعرف مستواه</span> قبل أن يراه فريق المراجعة</h1>
+    <p>مجاني بالكامل عبر Groq أو Google Gemini بمفتاحك الخاص، ويعمل من أي جهاز دون اشتراك. يقرأ البرنامج الشاهد أياً كانت صيغته، ويطابقه مع المعيار الفرعي في ملفات الهيئة الرسمية، ثم يضعه في المستوى الذي يستحقه مع تعليل مكتوب: ما الموجود، وما الناقص، وما يلزم للصعود درجة.</p>
+  </div>
+  <div class="choices">
+    <button class="choice" id="pickInst" type="button">
+      <span class="kick">ملف مقاييس التقويم للمراجعة الخارجية · الإصدار V2.1 (7 يناير 2026)</span>
+      <h2>الاعتماد المؤسسي</h2>
+      <ul><li>8 معايير رئيسة و37 معياراً فرعياً</li><li>تقييم مستويات الجودة الثلاثة: الوجود، التطبيق، الفاعلية</li><li>الدرجة الكلية تُحسب بقاعدة الملف نفسها</li></ul>
+      <div class="scale"><i style="background:var(--l1)">1</i><i style="background:var(--l2)">2</i><i style="background:var(--l3)">3</i><i style="background:var(--l4)">4</i><i style="background:var(--l5)">5</i></div>
+      <span class="go">ابدأ التدقيق المؤسسي ←</span>
+    </button>
+    <button class="choice" id="pickProg" type="button">
+      <span class="kick">محددات ومقاييس التحقق لمراجعة استيفاء معايير الاعتماد البرامجي</span>
+      <h2>الاعتماد البرامجي</h2>
+      <ul><li>4 معايير و21 معياراً فرعياً</li><li>سلّم دائرة دمنج من 0 إلى 5 بوصف الأداء والشواهد المطلوبة لكل مستوى</li><li>قاعدة المرحلتين: التصميم قبل الطرح، والتنفيذ بعد تخريج دفعة</li></ul>
+      <div class="scale"><i style="background:var(--l0)">0</i><i style="background:var(--l1)">1</i><i style="background:var(--l2)">2</i><i style="background:var(--l3)">3</i><i style="background:var(--l4)">4</i><i style="background:var(--l5)">5</i></div>
+      <span class="go">ابدأ التدقيق البرامجي ←</span>
+    </button>
+  </div>
+  <div class="steps">
+    <div class="step"><b>1</b><p><strong>حدّد المعيار الفرعي</strong>أو اترك البرنامج يقترح المعيار الأقرب للشاهد.</p></div>
+    <div class="step"><b>2</b><p><strong>ارفع ملف الشاهد أو أكثر</strong>يُستخرج النص من كل ملف، والصور والمستندات الممسوحة تُقرأ بصرياً.</p></div>
+    <div class="step"><b>3</b><p><strong>استلم الحكم والتعليل</strong>المستوى، متحقق أو لا، محددات الشاهد، وصياغة التوصية أو الإشادة.</p></div>
+  </div>
+  <div class="formats" aria-label="الصيغ المدعومة"><span class="fmt">PDF</span><span class="fmt">DOCX</span><span class="fmt">XLSX</span><span class="fmt">XLS</span><span class="fmt">CSV</span><span class="fmt">PPTX</span><span class="fmt">JPG</span><span class="fmt">PNG</span><span class="fmt">WEBP</span><span class="fmt">GIF</span><span class="fmt">TXT</span><span class="fmt">HTML</span><span class="fmt">JSON</span><span class="fmt">MD</span></div>
+</section>
+
+<!-- WORKSPACE -->
+<section class="ws" id="wsView" hidden>
+  <div class="panel sticky" id="setup">
+    <div class="field">
+      <label class="lbl" for="stdSel">المعيار الرئيس</label>
+      <select id="stdSel"></select>
+    </div>
+    <div class="field">
+      <label class="lbl" for="subSel">المعيار الفرعي</label>
+      <select id="subSel"></select>
+    </div>
+    <div class="substd" id="subBox"></div>
+    <div class="field" id="scopeField">
+      <span class="lbl">ما الذي يمثله هذا الشاهد؟</span>
+      <div class="seg" id="scopeSeg" role="group" aria-label="نطاق الشاهد"></div>
+      <p class="hint" id="scopeHint"></p>
+    </div>
+    <div class="field" id="phaseField" hidden>
+      <span class="lbl">مرحلة المراجعة</span>
+      <div class="seg" id="phaseSeg" role="group" aria-label="المرحلة">
+        <button type="button" data-v="2" aria-pressed="true">الثانية: التنفيذ والمخرجات</button>
+        <button type="button" data-v="1" aria-pressed="false">الأولى: التصميم</button>
+      </div>
+    </div>
+    <div class="field">
+      <label class="lbl" for="orgName">اسم المنشأة أو البرنامج (اختياري، للتقرير)</label>
+      <input type="text" id="orgName" placeholder="مثال: الكلية التقنية بالطائف — دبلوم تقنية الشبكات">
+    </div>
+    <div class="drop" id="drop" tabindex="0" role="button" aria-label="اختيار ملفات الشاهد">
+      <strong>اسحب ملفات الشاهد هنا</strong>
+      <span>أو اضغط للاختيار · يمكن رفع عدة ملفات لنفس المعيار</span>
+      <input type="file" id="fileIn" multiple hidden>
+    </div>
+    <div class="files" id="files"></div>
+    <div class="field">
+      <label class="lbl" for="note">ملاحظة للمدقق (اختياري)</label>
+      <textarea id="note" rows="2" placeholder="مثال: هذا محضر اللجنة الاستشارية للفصل الأول، والتقرير المرفق نتيجة متابعته"></textarea>
+    </div>
+    <div class="field engine" id="engine">
+      <label class="lbl" for="provSel">محرك التحليل المجاني</label>
+      <select id="provSel"><option value="puter">Claude عبر Puter — الأقوى (بلا مفتاح)</option><option value="pollinations">Pollinations — Claude وGPT وGemini بمفتاح واحد</option><option value="nvidia">NVIDIA — Kimi K3 وGLM-5.3 وDeepSeek V4</option><option value="openrouter">OpenRouter — نماذج مجانية كبيرة</option><option value="mistral">Mistral Large — رصيد شهري مجاني</option><option value="gemini">Gemini Flash — سياق طويل</option><option value="groq">Groq — الأسرع</option></select>
+      <div id="apiBox" style="display:grid;gap:6px;margin-top:4px">
+        <div class="eng-st"><i class="dot" id="apiDot"></i><span id="apiTxt">أدخل المفتاح المجاني</span></div>
+        <button type="button" class="btn sm pri" id="puterBtn" hidden>تسجيل الدخول في Puter (مجاني)</button>
+        <label class="lbl" for="apiKey" id="keyLbl">المفتاح</label>
+        <div style="display:flex;gap:6px" id="keyRow"><input type="password" id="apiKey" placeholder="" autocomplete="off"><button type="button" class="btn sm" id="apiSave">حفظ</button><button type="button" class="btn sm ghost" id="apiDel">حذف</button></div>
+        <p class="hint" id="keyHow"></p>
+        <label class="lbl" for="mApi">نموذج الحكم</label>
+        <select id="mApi"></select>
+        <label class="lbl" for="mVis">نموذج قراءة الصور والمستندات الممسوحة</label>
+        <select id="mVis"></select>
+        <p class="hint" id="privNote"></p>
+        <p class="hint">عند بلوغ الحد المجاني للدقيقة ينتظر البرنامج ويكمل تلقائياً. المحرك الحالي: <b id="provName"></b></p>
+      </div>
+      <label class="opts2" style="margin-top:6px"><input type="checkbox" id="strictChk" checked> صرامة الأدلة: لا يُقبل حكم إيجابي إلا باقتباس موجود فعلاً في نص الشاهد</label>
+    </div>
+    <div class="run">
+      <button class="btn pri" id="runBtn" disabled>دقّق الشاهد</button>
+      <button class="btn" id="stopBtn" hidden>إيقاف</button>
+      <span class="hint" id="runHint">ارفع ملفاً واحداً على الأقل</span>
+    </div>
+    <p class="warn" id="noAI" hidden>اختر المحرك: Claude عبر Puter يعمل بتسجيل دخول مجاني، وبقية المحركات تحتاج مفتاحاً مجانياً تضغط بعده «حفظ».</p>
+  </div>
+
+  <div style="display:grid;gap:18px;min-width:0">
+    <div id="result"></div>
+    <div class="log" id="logBox" hidden>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+        <h3>سجل التدقيق في هذه الجلسة</h3>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn sm" id="repBtn">تنزيل التقرير (HTML)</button>
+          <button class="btn sm" id="csvBtn">تنزيل السجل (CSV)</button>
+          <button class="btn sm ghost" id="clrBtn">مسح السجل</button>
+        </div>
+      </div>
+      <div id="logList" style="display:grid;gap:6px"></div>
+    </div>
+  </div>
+</section>
+</main>
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+const INST = [{"n": 1, "title": "الشراكة مع أصحاب العمل", "desc": "تُعزز الشراكة مع أصحاب العمل والصناعات، بناء علاقات إيجابية تساهم في تنمية نواتج تعلم المتدربين وتطوُّرهم في مسارهم نحو التوظيف، أو ريادة الأعمال، أو انتقالهم لمستويات أعلى من التدريب.", "subs": [{"code": "1-1", "text": "تُدار الشراكات مع أصحاب العمل بشكل استراتيجي منهجي وفاعل، لدعم المتدربين في مسارهم نحو التوظيف، ريادة الأعمال، أو انتقالهم لمستويات أعلى من التدريب."}, {"code": "2-1", "text": "يشكل التدريب التعاوني و/أو التدريب على رأس العمل و/أو التلمذة المهنية جزءاً لا يتجزأ من العملية التدريبية."}, {"code": "3-1", "text": "تدعم المنشأة التدريبية المتدربين وتشرف عليهم بشكل كامل خلال التدريب التعاوني أو خلال (التلمذة المهنية و/أو التدريب على رأس العمل)."}, {"code": "4-1", "text": "تتسم بيانات وُجهات المتدربين بالشمولية والدقة وتستخدم بشكل فاعل."}]}, {"n": 2, "title": "الحوكمة والإدارة", "desc": "توفر حوكمة المنشأة التدريبية ونظمها الإدارية أُطراً أخلاقية، وتنظيمية، وتوزيعاً للصلاحيات والمسؤوليات وبما يدل على قيادة فاعلة", "subs": [{"code": "1-2", "text": "يتوفر لدى المنشأة التدريبية حوكمة واضحة  وفاعلة تتضمن عضوية أصحاب المصلحة المناسبين"}, {"code": "2-2", "text": "يتوفر لدى المنشأة التدريبية خطة استراتيجية فاعلة وشاملة"}, {"code": "3-2", "text": "تخطط المنشأة التدريبية لمواردها البشرية، وتديرها بما يتوافق مع أهدافها الاستراتيجية"}, {"code": "4-2", "text": "تضمن إدارة المنشأة التدريبية مستوى تواصل فعال مع أصحاب المصلحة الداخليين والخارجيين"}, {"code": "5-2", "text": "يتولى نظام إدارة معلومات مركزي جمع وإدارة وتحليل أداء المنشأة التدريبية وقياسه بفاعلية"}, {"code": "6-2", "text": "تُدار مرافق المنشأة التدريبية ويتم صيانتها بشكل فاعل"}, {"code": "7-2", "text": "تفي تدابير الصحة والسلامة في المنشأة التدريبية بكافة المعايير والأنظمة واللوائح الوطنية"}]}, {"n": 3, "title": "القبول وخدمات المتدربين", "desc": "للمنشأة التدريبية إجراءات قبول شفافة، تُطبُق باستمرار، وتقدم المنشأة التدريبية الدعم الكامل للمتدربين من خلال مجموعة من الخدمات بهدف تعزيز تحصيلهم", "subs": [{"code": "1-3", "text": "تتسم إجراءات استقطاب المتدربين والتسويق للبرامج التدريبية بالشفافية والملاءمة"}, {"code": "2-3", "text": "تدير المنشأة التدريبية عمليات القبول والتسجيل بدقة وثبات، وتلتزم بمتطلبات الالتحاق بالبرنامج التدريبي"}, {"code": "3-3", "text": "تدعم خدمات المتدربين جميع احتياجاتهم خلال فترتهم التدريبية مع المنشأة التدريبية"}, {"code": "4-3", "text": "تُدار وتُطًور علاقات وشؤون الخريجين في المنشأة التدريبية بشكل فاعل"}]}, {"n": 4, "title": "تطوير البرامج وأدوات القياس والتقويم", "desc": "يُحدد تصميم البرامج التدريبية بوضوح نواتج التعلم، والموارد المساعدة، وآليات قياس ملائمة لقياس المخرجات", "subs": [{"code": "1-4", "text": "تتوفر نواتج تعلم محدثة للبرامج التدريبية، وتفي باحتياجات سوق العمل"}, {"code": "2-4", "text": "تخضع البرامج التدريبية لدورة منتظمة من المراجعة والتحديث"}, {"code": "3-4", "text": "تعزز الموارد المساعدة تقديم المنهج بشكل فاعل"}, {"code": "4-4", "text": "يرتبط تصميم منهجيات القياس والتقويم بنواتج التعلم المعرفية والعملية"}, {"code": "5-4", "text": "تُدار وتنظَّم عمليات القياس والتقويم عبر لوائح وسياسات وإجراءات فاعل"}]}, {"n": 5, "title": "التدريب والموارد", "desc": "تستخدم المنشأة التدريبية استراتيجيات تدريب فاعلة، مع الاستخدام الأمثل للموارد والمعدات", "subs": [{"code": "1-5", "text": "تطبق المنشأة التدريبية استراتيجيات تدريبية متنوعة للوصول لكافة شرائح المتدربين"}, {"code": "2-5", "text": "يُقدَّم التدريب بشكل مبتكر لدعم المتدربين، وتحفيزهم وتطوير قدراتهم"}, {"code": "3-5", "text": "تُدمج التقنية ويتم توظيفها في تقديم كافة أنواع التدريب"}, {"code": "4-5", "text": "تُستخدم الموارد والمعدات المناسبة بشكل فاعل"}]}, {"n": 6, "title": "تحصيل المتدربين", "desc": "تُظهر المنشأة التدريبية مدى التطور الذي يحققه المتدربون، ومستوى تقدمهم وتحصيلهم، من خلال متابعة اكتسابهم للمعارف والمهارات والقيم المستهدفة في نواتج التعلم للبرامج", "subs": [{"code": "1-6", "text": "تُظهر سجلات تطوّر المتدربين وتحصيلهم إنجازات ملموسة"}, {"code": "2-6", "text": "يتم مراقبة معدلات استبقاء المتدربين، ومدى تقدمهم وتحصيلهم بحزم وعناية، وتُتخذ الإجراءات التصحيحية اللازمة"}, {"code": "3-6", "text": "تُنمّى المهارات الاجتماعية ومهارات قابلية التوظيف (بما في ذلك أخلاقيات العمل) لدى المتدربين بحزم وعناية، وتُتّخذ الإجراءات التصحيحية اللازمة"}, {"code": "4-6", "text": "تتابع المنشأة التدريبية حصول المتدربين على وظائف في مجالاتهم وتخصصاتهم بشكل منهجي وفاعل, وتتخذ الإجراءات التصحيحية اللازمة"}]}, {"n": 7, "title": "تأهيل وتطوير المدربين", "desc": "تُعيّن المنشأة التدريبية مدربين مؤهلين وتٌقوم أداءهم بانتظام بهدف التطوير المهني المستمر", "subs": [{"code": "1-7", "text": "تعكس مؤهلات المدربين وخبراتهم المهنية المستوى المطلوب للبرامج التدريبية التي يقدمونها"}, {"code": "2-7", "text": "يُظهر مشرفو المدربين الممارسة الجيدة في إدارة، وتقويم ودعم، وتوجيه المدربين"}, {"code": "3-7", "text": "يدعم التطوير المهني المستمر للمدربين تطورهم الذاتي وتحسين ممارساتهم المهنية"}, {"code": "4-7", "text": "يتوفر لدى المنشأة التدريبية خطط فاعلة لبناء القدرات الداخلية للمدربين ودعم نقل المعرفة والسعودة"}]}, {"n": 8, "title": "الإستدامة والفاعلية", "desc": "تحقق المنشأة التدريبية الاستدامة والفاعلية من خلال الاستقرار المالي والشراكات والتخطيط طويل المدى", "subs": [{"code": "1-8", "text": "تضمن المنشأة التدريبية الاستقرار والجودة من خلال إدارة المخاطر، والتقويم الذاتي المستمر، والتخطيط بهدف التحسين"}, {"code": "2-8", "text": "تدعم الشراكات أهداف المنشأة التدريبية للاستدامة"}, {"code": "3-8", "text": "يضمن النموذج المالي استمرار تغطية الاحتياجات التشغيلية للمنشأة التدريبية"}, {"code": "4-8", "text": "تُدار قنوات وآليات التمويل في المنشأة التدريبية بشكل فاعل"}, {"code": "5-8", "text": "تعكس خطط التطوير توجهاً نحو الاستدامة يتوافق مع اتجاهات سوق العمل المستقبلية"}]}];
+const PROG = [{"code": "1.1", "axis": "توصيف البرنامج", "text": "تتوافق نواتج التعلم والبيانات الوصفية للبرنامج (اسم المؤهل والمستوى ومجال التخصص، والحد الأدنى للساعات المعتمدة، وعدد السنوات الدراسية)، مع اشتراطات الإطار الوطني للمؤهلات والمعايير المهنية والتخصصية المعتمدة في مجال التخصص.", "goal": "التأكد من أن توصيف البرنامج يتوافق مع متطلبات الإطار الوطني للمؤهلات والمعايير المهنية والتخصصية المعتمدة.", "levels": [{"lv": 0, "name": "عدم امتثال", "desc": "لا يوجد دليل على توصيف البرنامج أو توافقه مع اشتراطات الإطار الوطني للمؤهلات والمعايير المهنية والتخصصية المعتمدة في مجال التخصص.", "ev": "غير متوفر."}, {"lv": 1, "name": "تخطيط", "desc": "توجد نماذج موثقة لمواءمة توصيف البرنامج مع اشتراطات الإطار الوطني للمؤهلات والمعايير المهنية والتخصصية المعتمدة في مجال التخصص.", "ev": "مسودة توصيف البرنامج ومحاضر الاجتماعات التي تناقش التوافق مع اشتراطات الإطار الوطني للمؤهلات والمعايير المهنية والتخصصية المعتمدة."}, {"lv": 2, "name": "تنفيذ", "desc": "تتم مواءمة توصيف البرنامج مع اشتراطات الإطار الوطني للمؤهلات والمعايير المهنية والتخصصية المعتمدة في مجال التخصص.", "ev": "الإصدارات النهائية من توصيف البرامج التي تتوافق مع اشتراطات الإطار الوطني للمؤهلات والمعايير المهنية والتخصصية المعتمدة."}, {"lv": 3, "name": "متابعة", "desc": "يوجد تقييم ومتابعة منتظمة لتوصيف البرنامج للتحقق من استيفائه لاشتراطات الإطار الوطني للمؤهلات والمعايير المهنية والتخصصية المعتمدة في مجال التخصص.", "ev": "تقارير المتابعة أو أدوات التقييم أو أنظمة التتبع المتعلقة بتوصيف البرنامج."}, {"lv": 4, "name": "تحسين وتطوير", "desc": "تم إجراء تعديلات بناء على نتائج التقييم والمتابعة لتحقيق اشتراطات الإطار الوطني للمؤهلات والمعايير المهنية والتخصصية المعتمدة في مجال التخصص.", "ev": "توثيق المراجعات التي تم إجراؤها على توصيف البرنامج بناءً على التقييمات."}, {"lv": 5, "name": "مثالي", "desc": "يلبي توصيف البرنامج اشتراطات الإطار الوطني للمؤهلات والمعايير المهنية والتخصصية المعتمدة بالإضافة إلى تضمينه أفضل الممارسات للتحسين المستمر.", "ev": "إرشادات أفضل الممارسات أو التقارير أو دراسات الحالة التي توضح التحسين المستمر في توصيف البرنامج."}]}, {"code": "1.2", "axis": "الشراكة الفاعلة مع أصحاب المصلحة وجهات العمل", "text": "يُطبِّق البرنامج منهجية فاعلة للشراكة مع أصحاب المصلحة وجهات العمل لتحديد واستيعاب متطلباتهم الحالية وتوقعاتهم المستقبلية عند تصميم وتطوير البرنامج، وتتخذ الإجراءات التصحيحية وفقًا لذلك.", "goal": "التأكد من أن البرنامج يطبق شراكة فاعلة مع أصحاب المصلحة وأصحاب العمل عند تصميم وتطوير البرنامج التدريبي.", "levels": [{"lv": 0, "name": "عدم امتثال", "desc": "لا يوجد دليل على مشاركة أصحاب المصلحة وجهات العمل في تصميم البرنامج وتطويره.", "ev": "غير متوفر."}, {"lv": 1, "name": "تخطيط", "desc": "توجد آليات لإشراك أصحاب المصلحة وجهات العمل في تصميم البرنامج التدريبي وتطويره.", "ev": "مسودة لخطة إشراك أصحاب المصلحة وجهات العمل."}, {"lv": 2, "name": "تنفيذ", "desc": "يوجد دليل على مشاركة أصحاب المصلحة وجهات العمل في تصميم البرنامج التدريبي وتطويره.", "ev": "محاضر الاجتماعات أو المخاطبات التي توضح مشاركة أصحاب المصلحة وجهات العمل في التصميم والتطوير."}, {"lv": 3, "name": "متابعة", "desc": "يوجد تقييم ومتابعة منتظمة لآليات إشراك أصحاب المصلحة وجهات العمل في تصميم البرنامج التدريبي وتطويره.", "ev": "تقارير ملاحظات ومقترحات أصحاب المصلحة وجهات العمل."}, {"lv": 4, "name": "تحسين وتطوير", "desc": "تم إجراء تعديلات على آليات إشراك أصحاب المصلحة وجهات العمل في تصميم البرنامج التدريبي وتطويره بناء على نتائج التقييم والمتابعة.", "ev": "توثيق التغييرات التي تم إجراؤها بناء على ملاحظات ومقترحات أصحاب المصلحة وجهات العمل."}, {"lv": 5, "name": "مثالي", "desc": "مشاركة أصحاب المصلحة وجهات العمل مثالية، وتتسق مع أفضل الممارسات بهدف التحسين المستمر.", "ev": "دراسات الحالة أو التقارير التي تظهر المشاركة المثالية لأصحاب المصلحة وجهات العمل."}]}, {"code": "1.3", "axis": "موارد وتجهيزات ومصادر التعلم", "text": "يحدد البرنامج مصادر التعلم والمرافق والتجهيزات اللازمة لتحقيق أهدافه ونواتج التعلم، ويتضمن منهجية واضحة لمتابعة استخدامها وتحديثها بمشاركة أصحاب المصلحة.", "goal": "التأكد من أن البرنامج يحدد مصادر التعلم والمرافق والمعدات والتجهيزات اللازمة لتحقيق أهداف البرنامج.", "levels": [{"lv": 0, "name": "عدم امتثال", "desc": "لا يوجد دليل على تحديد موارد التعلم أو المرافق أو التجهيزات المطلوبة لتحقيق أهداف البرنامج ونواتج التعلم.", "ev": "غير متوفر."}, {"lv": 1, "name": "تخطيط", "desc": "توجد خطط لتوفير موارد التعلم والمرافق والتجهيزات المطلوبة لتحقيق أهداف البرنامج ونواتج التعلم.", "ev": "مسودة خطة مصادر التعلم والمرافق والتجهيزات المطلوبة."}, {"lv": 2, "name": "تنفيذ", "desc": "تم توفير موارد التعلم والمرافق والتجهيزات اللازمة لتحقيق أهداف البرنامج ونواتج التعلم.", "ev": "قوائم أو أدلة لمصادر التعلم والمرافق والتجهيزات المطلوبة."}, {"lv": 3, "name": "متابعة", "desc": "يوجد تقييم ومتابعة منتظمة لمصادر التعلم والمرافق والتجهيزات اللازمة لتحقيق أهداف البرنامج ونواتج التعلم.", "ev": "تقرير سجلات المخزون والعهد، وتقارير الاستخدام وتقارير الصيانة."}, {"lv": 4, "name": "تحسين وتطوير", "desc": "تم إجراء تعديلات على مصادر التعلم والمرافق والتجهيزات اللازمة لتحقيق أهداف البرنامج ونواتج التعلم بناء نتائج التقييم والمتابعة.", "ev": "توثيق التحديثات أو التحسينات التي تم إجراؤها بناءً على التقييمات."}, {"lv": 5, "name": "مثالي", "desc": "الفعالية المثالية في استخدام ومراقبة وصيانة موارد التعلم والمرافق والتجهيزات لتحقيق أهداف البرنامج ونواتج التعلم.", "ev": "دراسات حالة أو تقارير توضح الاستخدام المثالي لمصادر التعلم والمرافق والتجهيزات."}]}, {"code": "1.4", "axis": "المحتوى التدريبي", "text": "المحتوى التدريبي يحقق أهداف البرنامج ونواتج التعلم والتطورات العلمية والتقنية والمهنية في مجال التخصص، ويخضع إعداده وتطويره لقيم الأمانة العلمية وحقوق الملكية الفكرية.", "goal": "التأكد من أن المحتوى التدريبي يحقق أهداف البرنامج ونواتج التعلم مع مراعاته للتطورات ذات الصلة في مجال التخصص.", "levels": [{"lv": 0, "name": "عدم امتثال", "desc": "لا يوجد دليل على أن المحتوى التدريبي يتوافق مع أهداف البرنامج ونواتج التعلم والتطورات العلمية والتقنية والمهنية في مجال التخصص.", "ev": "غير متوفر."}, {"lv": 1, "name": "تخطيط", "desc": "توجد خطط لتحقيق المحتوى التدريبي أهداف البرنامج ونواتج التعلم والتطورات العلمية والتقنية والمهنية في مجال التخصص.", "ev": "مسودات إصدارات محتوى التدريب وخطط المواءمة."}, {"lv": 2, "name": "تنفيذ", "desc": "يتوافق المحتوى التدريبي مع أهداف البرنامج ونواتج التعلم والتطورات العلمية والتقنية والمهنية في مجال التخصص.", "ev": "الإصدار النهائي من محتوى التدريب التي تمت محاذاته، ولكن لم يتم تحديثه."}, {"lv": 3, "name": "متابعة", "desc": "يوجد تقييم ومتابعة منتظمة لمحتوى التدريب في تحقيق أهداف البرنامج التدريبي ونواتج التعلم والتطورات العلمية والتقنية والمهنية في مجال التخصص.", "ev": "تقارير أو نماذج الملاحظات المتعلقة بالمحتوى التدريبي."}, {"lv": 4, "name": "تحسين وتطوير", "desc": "تم إجراء تعديلات لمحتوى البرنامج التدريبي بناء على نتائج التقييم والمتابعة.", "ev": "توثيق التحديثات أو التحسينات على المحتوى التدريبي."}, {"lv": 5, "name": "مثالي", "desc": "يتوافق محتوى التدريب مع أهداف البرنامج ونواتج التعلم ومثالي في دمج التطورات الحالية.", "ev": "دراسات حالة أو تقارير تظهر محتوى تدريبي مثالي."}]}, {"code": "1.5", "axis": "إستراتيجيات التدريب", "text": "يحدد البرنامج إستراتيجيات التدريب المناسبة لتحقيق نواتج تعلم البرنامج، بما في ذلك متطلبات التدريب التعاوني و/أو التدريب على رأس العمل و/أو التلمذة المهنية.", "goal": "التأكد من أن البرنامج يحدد إستراتيجيات التدريب المناسبة لتحقيق لنواتج التعلم.", "levels": [{"lv": 0, "name": "عدم امتثال", "desc": "لا يوجد دليل على تحديد إستراتيجيات التدريب المناسبة لنواتج التعلم.", "ev": "غير متوفر."}, {"lv": 1, "name": "تخطيط", "desc": "توجد آليات وخطط لتحديد إستراتيجيات التدريب المناسبة لتحقيق نواتج تعلم البرنامج بما في ذلك متطلبات التدريب التعاوني و/أو التدريب على رأس العمل و/أو التلمذة المهنية.", "ev": "مسودة خطة لتحديد إستراتيجيات التدريب."}, {"lv": 2, "name": "تنفيذ", "desc": "تم تطبيق إستراتيجيات التدريب المناسبة لتحقيق نواتج تعلم البرنامج بما في ذلك متطلبات التدريب التعاوني و/أو التدريب على رأس العمل و/أو التلمذة المهنية.", "ev": "قائمة أو توثيق لإستراتيجيات التدريب المحددة."}, {"lv": 3, "name": "متابعة", "desc": "توجد مراقبة ومتابعة منتظمة لتطبيق إستراتيجيات التدريب المحددة للتأكد من فعاليتها في تحقيق نواتج التعلم بما في ذلك متطلبات التدريب التعاوني و/أو التدريب على رأس العمل و/أو التلمذة المهنية.", "ev": "التقارير أو نماذج التغذية الراجعة المتعلقة بإستراتيجيات التدريب المحددة."}, {"lv": 4, "name": "تحسين وتطوير", "desc": "تم إجراء تعديلات على إستراتيجيات التدريب بناء على نتائج التقييم والمتابعة.", "ev": "توثيق التحديثات أو التحسينات على إستراتيجيات التدريب."}, {"lv": 5, "name": "مثالي", "desc": "إستراتيجيات التدريب المحددة مثالية في تحقيق نتائج التعلم.", "ev": "دراسات حالة أو تقارير توضح إستراتيجيات التدريب النموذجية."}]}, {"code": "1.6", "axis": "تحديد أدوات تقييم نواتج التعلم", "text": "يحدد البرنامج الآليات والأساليب والأدوات المناسبة لقياس نواتج التعلم والتحقق من استيفائها وفق مستويات أداء وخطط تقييم محددة.", "goal": "التأكد من أن البرنامج يحدد آليات وأساليب وأدوات قياس وتقييم لنواتج التعلم.", "levels": [{"lv": 0, "name": "عدم امتثال", "desc": "لا يوجد دليل على وجود آليات أو أساليب أو أدوات لقياس نواتج التعلم.", "ev": "غير متوفر."}, {"lv": 1, "name": "تخطيط", "desc": "توجد خطط لتحديد الآليات والأساليب والأدوات اللازمة لقياس نواتج التعلم والتحقق من استيفائها وفق مستويات أداء وخطط تقييم محددة.", "ev": "مسودة خطة لتحديد الآليات والأساليب والأدوات."}, {"lv": 2, "name": "تنفيذ", "desc": "يتم تحديد الآليات والأساليب والأدوات المناسبة ومواءمتها مع نتائج التعلم والتحقق من استيفائها وفق مستويات أداء وخطط تقييم محددة.", "ev": "قائمة أو توثيق الآليات والأساليب والأدوات المحددة."}, {"lv": 3, "name": "متابعة", "desc": "توجد مراقبة ومتابعة منتظمة لتقييم الآليات والأساليب والأدوات لقياس نواتج التعلم والتحقق من استيفائها وفق مستويات أداء وخطط تقييم محددة.", "ev": "تقارير الاستخدام أو نماذج الملاحظات المتعلقة بالآليات والأساليب والأدوات."}, {"lv": 4, "name": "تحسين وتطوير", "desc": "أجريت تعديلات للآليات والأساليب والأدوات لقياس نواتج التعلم والتحقق من استيفائها بناء على نتائج التقييم والمتابعة.", "ev": "توثيق التحديثات أو التحسينات على الآليات والأساليب والأدوات."}, {"lv": 5, "name": "مثالي", "desc": "لا تقيس الآليات والأدوات نواتج التعلم فحسب، بل هي مثالية في فعاليتها.", "ev": "دراسات حالة أو تقارير تبين آليات وأساليب وأدوات نموذجية."}]}, {"code": "2.1", "axis": "تطبيق إستراتيجيات التدريب", "text": "يُطبِّق البرنامج إستراتيجيات تدريب متنوعة لتحقيق أهدافه العامة والتخصصية ونواتج التعلم، ويستفاد من نتائج التقويم والتقارير الدورية في تطوير البرنامج.", "goal": "التأكد من أن البرنامج يطبق إستراتيجيات التدريب المختلفة لتحقيق أهدافه العامة والتخصصية ونواتج التعلم، ويستخدم نتائج البيانات والتقارير في تطوير البرنامج.", "levels": [{"lv": 0, "name": "عدم امتثال", "desc": "لا يوجد دليل على تطبيق إستراتيجيات التدريب متنوعة أو استخدام التقييم والتقارير الدورية.", "ev": "غير متوفر."}, {"lv": 1, "name": "تخطيط", "desc": "توجد خطط وآليات لاستخدام إستراتيجيات تدريب متنوعة لتحقيق أهداف البرنامج العامة والتخصصية ونواتج التعلم.", "ev": "مسودة خطة تطبيق إستراتيجيات التدريب المختلفة واستخدام التقييم والتقارير الدورية."}, {"lv": 2, "name": "تنفيذ", "desc": "يتم تطبيق إستراتيجيات تدريب متنوعة، لتحقيق أهداف البرنامج العامة والتخصصية ونواتج التعلم.", "ev": "وثائق توضح تطبيق إستراتيجيات التدريب المحددة."}, {"lv": 3, "name": "متابعة", "desc": "توجد مراقبة ومتابعة منتظمة لتقييم تطبيق إستراتيجيات تدريب متنوعة لتحقيق أهداف البرنامج العامة والتخصصية ونواتج التعلم.", "ev": "نسخ من التقييم والتقارير الدورية التي تستخدم للتطوير."}, {"lv": 4, "name": "تحسين وتطوير", "desc": "أجريت تعديلات لتطبيق إستراتيجيات تدريب متنوعة لتحقيق أهداف البرنامج العامة والتخصصية ونواتج التعلم بناء على نتائج التقييم والمتابعة.", "ev": "توثيق التعديلات والتحسينات التي أدخلت على إستراتيجيات التدريب بناءً على التقييمات والتقارير الدورية."}, {"lv": 5, "name": "مثالي", "desc": "لا تحقق إستراتيجيات التدريب المختلفة الأهداف ونواتج التعلم فحسب، بل هي مثالية، ويتم استخدام التقييم والتقارير الدورية بشكل فعال للتحسين المستمر.", "ev": "دراسات حالة أو تقارير تبين التطبيق المثالي لاستراتيجيات التدريب المختلفة والاستخدام الفعال للتقييم والتقارير الدورية."}]}, {"code": "2.2", "axis": "تطبيق أدوات ومنهجيات تقييم نواتج التعلم ومتابعة تحصيل المتدربين", "text": "يُطبِّق البرنامج أدوات ومنهجيات تقييم متنوعة ومناسبة تقيس مستوى تقدم المتدربين في تحقيق نواتج التعلم، وتتخذ الإجراءات التصحيحية للرفع من تحصيلهم وفقًا للنتائج.", "goal": "التأكد من أن البرنامج يطبق أدوات ومنهجيات تقييم متنوعة ومناسبة لقياس تقدم المتدربين في تحقيق نواتج التعلم ويتخذ الإجراءات التصحيحية بناء على النتائج.", "levels": [{"lv": 0, "name": "عدم امتثال", "desc": "لا يوجد دليل على استخدام أدوات ومنهجيات تقييم لقياس تقدم المتدربين.", "ev": "غير متوفر."}, {"lv": 1, "name": "تخطيط", "desc": "توجد آليات لاستخدام أدوات ومنهجيات تقييم متنوعة ومناسبة لقياس مستوى تقدم المتدربين في تحقيق نواتج التعلم.", "ev": "مسودة خطة استخدام أدوات التقييم."}, {"lv": 2, "name": "تنفيذ", "desc": "يطبق البرنامج أدوات ومنهجيات تقييم متنوعة ومناسبة لقياس مستوى تقدم المتدربين في تحقيق نواتج التعلم.", "ev": "وثائق توضح استخدام أدوات التقييم."}, {"lv": 3, "name": "متابعة", "desc": "توجد مراقبة ومتابعة منتظمة لتطبيق أدوات ومنهجيات تقييم متنوعة لقياس مستوى تقدم المتدربين في تحقيق نواتج التعلم.", "ev": "تقارير المتابعة التي تبين فعالية استخدام أدوات التقييم."}, {"lv": 4, "name": "تحسين وتطوير", "desc": "أجريت تعديلات لتطبيق أدوات ومنهجيات التقييم لقياس مستوى تقدم المتدربين في تحقيق نواتج التعلم بناء على نتائج المتابعة.", "ev": "توثيق الإجراءات التصحيحية المتخذة بناءً على نتائج التقييم."}, {"lv": 5, "name": "مثالي", "desc": "أدوات ومنهجيات ىالتقييم مثالية في فعاليتها، والإجراءات التصحيحية أدت إلى تحسينات كبيرة.", "ev": "دراسات حالة أو تقارير تبين الاستخدام المثالي لأدوات التقييم والإجراءات التصحيحية الفعالة."}]}, {"code": "2.3", "axis": "التطبيق الفعال للموارد والتجهيزات ومصادر التعلم", "text": "يستخدم البرنامج الموارد والتجهيزات اللازمة لتنفيذ التدريب (بما في ذلك الموارد التقنية) بفاعلية، ويقوم بتحديثها وصيانتها بصورة منتظمة، ويتابع طرق ومدى استخدامها بالشكل الصحيح، وتتخذ الإجراءات التصحيحية وفقًا لذلك.", "goal": "التأكد من أن البرنامج يستخدم بشكل فعال الموارد والتجهيزات والمصادر اللازمة للتدريب، وتحديثها وصيانتها بانتظام ، ومراقبة استخدامها.", "levels": [{"lv": 0, "name": "عدم امتثال", "desc": "لا يوجد دليل على الاستخدام الفعال أو مراقبة الموارد والتجهيزات والمصادر.", "ev": "غير متوفر"}, {"lv": 1, "name": "تخطيط", "desc": "توجد آليات لاستخدام الموارد والتجهيزات لتنفيذ التدريب (بما في ذلك الموارد التقنية).", "ev": "مسودة خطة الاستخدام الفعال ومتابعة الموارد والتجهيزات."}, {"lv": 2, "name": "تنفيذ", "desc": "تستخدم الموارد والتجهيزات لتنفيذ التدريب (بما في ذلك الموارد التقنية).", "ev": "وثائق توضح استخدام وصيانة الموارد والتجهيزات."}, {"lv": 3, "name": "متابعة", "desc": "توجد مراقبة ومتابعة منتظمة لتقييم الموارد والتجهيزات وصيانتها لتنفيذ التدريب (بما في ذلك الموارد التقنية).", "ev": "تقارير المتابعة التي تبين فعالية الموارد والتجهيزات وصيانتها."}, {"lv": 4, "name": "تحسين وتطوير", "desc": "توجد تعديلات لاستخدام الموارد والتجهيزات لتنفيذ التدريب (بما في ذلك الموارد التقنية) بناء على نتائج التقييم والمتابعة والصيانة.", "ev": "توثيق التحديثات أو التحسينات على الموارد والتجهيزات بناءً على المتابعة وتقارير الصيانة."}, {"lv": 5, "name": "مثالي", "desc": "يتم استخدام الموارد والتجهيزات وتحديثها وصيانتها بشكل نموذجي، مما يؤدي إلى تحسينات كبيرة في التدريب.", "ev": "دراسات حالة أو تقارير تبين الاستخدام المثالي وتحديثات الموارد والتجهيزات."}]}, {"code": "2.4", "axis": "فاعلية التدريب التعاوني", "text": "يتحقق البرنامج من فعالية التدريب التعاوني و/أو التدريب على رأس العمل و/أو التلمذة المهنية في تحقيق أهدافه ونواتج التعلم المستهدفة، ويستفاد من النتائج والتقارير في تطوير البرنامج.", "goal": "التأكد من أن البرنامج يتحقق من فاعلية  التدريب التعاوني أو التدريب أثناء العمل أو التلمذة الصناعية في تحقيق أهدافه ويستخدم النتائج من أجل التحسين والتطوير.", "levels": [{"lv": 0, "name": "عدم امتثال", "desc": "لا يوجد دليل على التحقق من فعالية إستراتيجيات التطبيق العملي.", "ev": "غير متوفر."}, {"lv": 1, "name": "تخطيط", "desc": "توجد في البرنامج آليات للتحقق من فاعلية التدريب التعاوني و/أو التدريب على رأس العمل و/أو التلمذة المهنية في تحقيق أهدافه ونواتج التعلم المستهدفة.", "ev": "مسودة خطة للتحقق من فعالية أنواع التدريب المختلفة."}, {"lv": 2, "name": "تنفيذ", "desc": "يطبق البرنامج آليات من فاعلية التدريب التعاوني و/أو التدريب على رأس العمل و/أو التلمذة المهنية في تحقيق أهدافه ونواتج التعلم المستهدفة.", "ev": "وثائق توضح عمليات التحقق."}, {"lv": 3, "name": "متابعة", "desc": "توجد مراقبة ومتابعة منتظمة للتحقق من فاعلية التدريب التعاوني و/أو التدريب على رأس العمل و/أو التلمذة المهنية في تحقيق أهداف البرنامج ونواتج التعلم المستهدفة.", "ev": "التقارير المتعلقة بعمليات التحقق."}, {"lv": 4, "name": "تحسين وتطوير", "desc": "توجد تعديلات لتحقيق البرنامج فاعلية التدريب التعاوني و/أو التدريب على رأس العمل و/أو التلمذة المهنية في تحقيق أهدافه ونواتج التعلم المستهدفة.", "ev": "توثيق التحديثات أو التحسينات التي تم إجراؤها بناءً على نتائج المتابعة."}, {"lv": 5, "name": "مثالي", "desc": "عمليات التحقق مثالية وأدت إلى تحسينات كبيرة في البرنامج.", "ev": "دراسات الحالة أو التقارير التي تظهر عمليات التحقق النموذجية وتحسينات البرنامج."}]}, {"code": "2.5", "axis": "مؤشرات الأداء والاستطلاعات", "text": "تُستخدم مؤشرات الأداء واستطلاعات أصحاب المصلحة والمستفيدين في تقويم ومراجعة البرنامج وجودة مخرجاته، وتُستخدم النتائج للتطوير والتحسين المستمر للبرنامج.", "goal": "التأكد من استخدام البرنامج لمؤشرات الأداء المناسبة والاستطلاعات ذات العلاقة لتحسين وتطوير جودة البرنامج والمخرجات.", "levels": [{"lv": 0, "name": "عدم امتثال", "desc": "لا يوجد دليل على استخدام مؤشرات الأداء أو الاستطلاعات.", "ev": "غير متوفر."}, {"lv": 1, "name": "تخطيط", "desc": "توجد آليات لاستخدام مؤشرات الأداء واستطلاعات أصحاب المصلحة والمستفيدين في تقويم ومراجعة البرنامج وجودة مخرجاته.", "ev": "مسودة خطة استخدام مؤشرات الأداء والاستطلاعات."}, {"lv": 2, "name": "تنفيذ", "desc": "تستخدم مؤشرات الأداء واستطلاعات أصحاب المصلحة والمستفيدين في تقويم ومراجعة البرنامج وجودة مخرجاته.", "ev": "وثائق تبين استخدام مؤشرات الأداء والدراسات الاستطلاعية."}, {"lv": 3, "name": "متابعة", "desc": "توجد مراقبة ومتابعة منتظمة لتقييم استخدام مؤشرات الأداء واستطلاعات أصحاب المصلحة والمستفيدين في تقويم ومراجعة البرنامج وجودة مخرجاته.", "ev": "التقارير المتعلقة بمؤشرات الأداء والاستطلاعات."}, {"lv": 4, "name": "تحسين وتطوير", "desc": "أجريت تعديلات على استخدام مؤشرات واستطلاعات أصحاب المصلحة والمستفيدين في تقويم ومراجعة البرنامج وجودة مخرجاته بناء على نتائج التقييم والمتابعة.", "ev": "توثيق التحديثات أو التحسينات التي أجريت استنادا إلى مؤشرات الأداء والدراسات الاستطلاعية."}, {"lv": 5, "name": "مثالي", "desc": "مؤشرات الأداء والدراسات الاستطلاعية مثالية وأدت إلى تحسينات كبيرة في البرنامج.", "ev": "دراسات الحالة أو التقارير التي تبين الاستخدام المثالي لمؤشرات الأداء والدراسات الاستطلاعية."}]}, {"code": "2.6", "axis": "تقويم ومراجعة البرنامج", "text": "يُطبِّق البرنامج آليات واضحة ومنتظمة للتقويم الدوري ومراجعة البرنامج (بما في ذلك التقويم الذاتي، المراجعة الخارجية)، ويستفاد من النتائج والتقارير في تحسين وتطوير البرنامج.", "goal": "التأكد من أن البرنامج يطبق آليات واضحة ومنتظمة لتقويم ومراجعة وتطوير البرنامج، بما في ذلك التقويم الذاتي والمراجعة الخارجية).", "levels": [{"lv": 0, "name": "عدم امتثال", "desc": "لا يوجد دليل على آليات تقويم ومراجعة للبرنامج.", "ev": "غير متوفر."}, {"lv": 1, "name": "تخطيط", "desc": "توجد آليات واضحة ومنتظمة لتقويم ومراجعة البرنامج (بما في ذلك التقويم الذاتي والمراجعة الخارجية).", "ev": "مسودة خطة لآليات تقويم ومراجعة البرنامج."}, {"lv": 2, "name": "تنفيذ", "desc": "يطبق البرنامج آليات واضحة ومنتظمة لتقويم ومراجعة البرنامج (بما في ذلك التقويم الذاتي والمراجعة الخارجية).", "ev": "وثائق توضح الآليات المنفذة."}, {"lv": 3, "name": "متابعة", "desc": "توجد مراقبة ومتابعة منتظمة لتقييم آليات تقويم ومراجعة البرنامج (بما في ذلك التقويم الذاتي والمراجعة الخارجية).", "ev": "متابعة التقارير المتعلقة بفعالية الآليات."}, {"lv": 4, "name": "تحسين وتطوير", "desc": "أجريت تعديلات على آليات تقويم ومراجعة البرنامج (بما في ذلك التقويم الذاتي والمراجعة الخارجية) بناء على نتائج التقييم والمتابعة.", "ev": "توثيق التحديثات أو التحسينات التي أجريت بناءً  على آليات التقويم والمراجعة."}, {"lv": 5, "name": "مثالي", "desc": "آليات التقويم والمراجعة مثالية وأدت إلى تحسينات كبيرة في البرنامج.", "ev": "دراسات حالة أو تقارير تبين الاستخدام المثالي للآليات."}]}, {"code": "3.1", "axis": "خدمات الدعم والإرشاد (خدمات الدعم والتوجيه)", "text": "تُقدم خدمات الدعم والتوجيه والإرشاد للمتدربين لرفع معدلات إكمالهم واستبقائهم، ويتم إجراء تقويم شامل لجودة وكفاية هذه الخدمات، ويستفاد من النتائج والتقارير الدورية للتطوير والتحسين المستمر.", "goal": "التأكد من أن البرنامج يقدم خدمات الدعم والتوجيه والإرشاد للمتدربين لرفع معدلات اكمالهم لمتطلبات البرنامج واستبقائهم، ويستخدم النتائج للتطوير والتحسين المستمر.", "levels": [{"lv": 0, "name": "عدم امتثال", "desc": "لا يوجد دليل على تقديم خدمات الدعم والتوجيه والإرشاد.", "ev": ".غير متوفر"}, {"lv": 1, "name": "تخطيط", "desc": "توجد خطط لتقديم خدمات الدعم والتوجيه والإرشاد للمتدربين لرفع معدلات إكمالهم واستبقائهم.", "ev": "مسودة خطة خدمات الدعم والتوجيه والإرشاد."}, {"lv": 2, "name": "تنفيذ", "desc": "تطبق خطط لتقديم خدمات الدعم والتوجيه والإرشاد للمتدربين لرفع معدلات إكمالهم واستبقائهم.", "ev": "وثائق توضح تقديم الخدمات."}, {"lv": 3, "name": "متابعة", "desc": "توجد مراقبة ومتابعة منتظمة لتقييم خطط تقديم خدمات الدعم والتوجيه والإرشاد للمتدربين لرفع معدلات إكمالهم واستبقائهم.", "ev": "تقارير الخدمات."}, {"lv": 4, "name": "تحسين وتطوير", "desc": "توجد تعديلات لخطط تقديم خدمات الدعم والتوجيه والإرشاد للمتدربين لرفع معدلات إكمالهم واستبقائهم بناء على نتائج التقييم والمتابعة.", "ev": "توثيق التحديثات أو التحسينات على الخدمات بناءً على نتائج التقويم."}, {"lv": 5, "name": "مثالي", "desc": "خدمات الدعم والتوجيه والإرشاد مثالية وأدت إلى تحسينات كبيرة في معدلات إكمال المتدربين للبرنامج واستبقائهم.", "ev": "دراسات حالة أو تقارير تعرض خدمات مثالية."}]}, {"code": "3.2", "axis": "الخدمات المهنية", "text": "يقدم البرنامج خدمات الدعم والإرشاد المهني المناسب للمتدربين لمواءمة مهاراتهم مع متطلبات سوق العمل، ويستفاد من النتائج والتقارير الدورية في تطوير وتحسين الخدمات.", "goal": "التأكد من أن البرنامج يقدم خدمات الدعم والإرشاد المهني المناسبة لمواءمة مهارات المتدربين مع متطلبات سوق العمل.", "levels": [{"lv": 0, "name": "عدم امتثال", "desc": "لا يوجد دليل على تقديم خدمات الدعم والإرشاد المهني.", "ev": "غير متوفر."}, {"lv": 1, "name": "تخطيط", "desc": "توجد خطط لتقديم خدمات الدعم والإرشاد المهني المناسب للمتدربين لمواءمة مهاراتهم مع متطلبات سوق العمل.", "ev": "مسودة خطة لخدمات الدعم والإرشاد المهني."}, {"lv": 2, "name": "تنفيذ", "desc": "يطبق البرنامج خطط لتقديم خدمات الدعم والإرشاد المهني المناسب للمتدربين لمواءمة مهاراتهم مع متطلبات سوق العمل.", "ev": "الوثائق التي تبين تقديم الخدمات المهنية."}, {"lv": 3, "name": "متابعة", "desc": "توجد مراقبة ومتابعة منتظمة لتقييم خطط تقديم خدمات الدعم والإرشاد المهني المناسب للمتدربين لمواءمة مهاراتهم مع متطلبات سوق العمل.", "ev": "تقارير الخدمات."}, {"lv": 4, "name": "تحسين وتطوير", "desc": "توجد تعديلات على خطط  تقديم خدمات الدعم والإرشاد المهني المناسب للمتدربين لمواءمة مهاراتهم مع متطلبات سوق العمل بناء على نتائج التقييم.", "ev": "توثيق التحديثات أو التحسينات التي أجريت على الخدمات بناءً على نتائج التقويم والتقارير."}, {"lv": 5, "name": "مثالي", "desc": "خدمات الدعم والإرشاد المهني مثالية وأدت إلى تحسينات كبيرة في مواءمة مهارات المتدربين مع متطلبات سوق العمل.", "ev": "دراسات حالة أو تقارير تعرض خدمات مهنية مثالية."}]}, {"code": "3.3", "axis": "التعرف على المتدربين المتميزين والمتعثرين وذوي الإعاقة والتعامل معهم", "text": "يُطبِّق البرنامج آليات ملائمة للتعرف على المتدربين المتميزين والمتعثرين، والمتدربين من ذوي الإعاقة، ويوفر الخدمات المناسبة لرعايتهم وتحفيزهم ودعمهم، ويستفاد من النتائج والتقارير الدورية في تطوير الخدمات المقدمة.", "goal": "التأكد من أن البرنامج يطبق آليات مناسبة لتحديد المتدربين المتميزين والمتعثرين وفئة ذوي الإعاقة، ويقدم الخدمات المناسبة لهم.", "levels": [{"lv": 0, "name": "عدم امتثال", "desc": "لا يوجد دليل على وجود آليات لتحديد المتدربين المتميزين والمتعثرين وذوي الإعاقة.", "ev": "غير متوفر."}, {"lv": 1, "name": "تخطيط", "desc": "توجد آليات للتعرف على المتدربين المتميزين والمتعثرين، والمتدربين من ذوي الإعاقة.", "ev": "مسودة خطة لآليات تحديد فئات المتدربين."}, {"lv": 2, "name": "تنفيذ", "desc": "يطبق البرنامج آليات ملائمة للتعرف على المتدربين المتميزين والمتعثرين، والمتدربين من ذوي الإعاقة.", "ev": "وثائق توضح الآليات المنفذة."}, {"lv": 3, "name": "متابعة", "desc": "توجد مراقبة ومتابعة منتظمة لتقييم آليات التعرف على المتدربين المتميزين والمتعثرين، والمتدربين من ذوي الإعاقة.", "ev": "تقارير الآليات والخدمات."}, {"lv": 4, "name": "تحسين وتطوير", "desc": "توجد تعديلات على آليات التعرف على المتدربين المتميزين والمتعثرين، والمتدربين من ذوي الإعاقة.", "ev": "توثيق التحديثات أو التحسينات على الآليات والخدمات استنادا إلى نتائج التقويم والتقارير."}, {"lv": 5, "name": "مثالي", "desc": "وتعتبر آليات تحديد الهوية وخدمات الدعم مثالية وأدت إلى تحسينات كبيرة في أداء المتدربين.", "ev": "دراسات حالة أو تقارير تعرض آليات وخدمات نموذجية."}]}, {"code": "3.4", "axis": "آليات ضبط حضور ومشاركة المتدربين", "text": "يُطبِّق البرنامج آليات لضمان انتظام المتدربين في الحضور والمشاركة الفاعلة في التدريب، وتتخذ الإجراءات التصحيحية اللازمة لذلك.", "goal": "التأكد من أن البرنامج يطبق آليات تضمن حضور المتدربين ومشاركتهم في التدريب، وتتخذ الإجراءات التصحيحية اللازمة.", "levels": [{"lv": 0, "name": "عدم امتثال", "desc": "لا يوجد دليل على وجود آليات لضمان حضور المتدربين وفاعلية مشاركتهم.", "ev": "غير متوفر."}, {"lv": 1, "name": "تخطيط", "desc": "توجد آليات لضمان انتظام المتدربين في الحضور والمشاركة الفاعلة في التدريب.", "ev": "مسودة خطة لآليات الحضور والمشاركة."}, {"lv": 2, "name": "تنفيذ", "desc": "يطبق البرنامج آليات لضمان انتظام المتدربين في الحضور والمشاركة الفاعلة في التدريب.", "ev": "وثائق توضح الآليات المنفذة."}, {"lv": 3, "name": "متابعة", "desc": "توجد مراقبة ومتابعة منتظمة لتقييم آليات ضمان انتظام المتدربين في الحضور والمشاركة الفاعلة في التدريب.", "ev": "التقارير المتعلقة بالحضور والمشاركة."}, {"lv": 4, "name": "تحسين وتطوير", "desc": "توجد تعديلات على آليات ضمان انتظام المتدربين في الحضور والمشاركة الفاعلة في التدريب بناء على نتائج التقييم والمتابعة.", "ev": "توثيق الإجراءات التصحيحية المتخذة."}, {"lv": 5, "name": "مثالي", "desc": "تعتبر آليات ضمان الحضور والمشاركة مثالية وأدت إلى تحسينات كبيرة في مشاركة المتدربين.", "ev": "دراسات حالة أو تقارير تعرض آليات نموذجية وتحسينات في مشاركة المتدربين."}]}, {"code": "3.5", "axis": "التواصل مع الخريجين", "text": "يُطبِّق البرنامج آليات منتظمة للتواصل مع الخريجين، ومتابعة حصولهم على وظائف في مجال تخصصاتهم، ويحتفظ بقواعد بيانات محدثة وشاملة عنهم، لخدمة مبادرات التوظيف الوطنية (بما في ذلك المرصد الوطني للعمل)، وتتخذ الإجراءات التصحيحية اللازمة لذلك.", "goal": "التأكد من أن البرنامج يطبق آليات منتظمة للتواصل مع الخريجين ويتابع إجراءات توظيفهم ويحتفظ بقواعد بيانات لخدمة المبادرات الوطنية للتوظيف.", "levels": [{"lv": 0, "name": "عدم امتثال", "desc": "لا يوجد دليل على آليات للتواصل مع الخريجين وتتبعهم.", "ev": "غير متوفر."}, {"lv": 1, "name": "تخطيط", "desc": "توجد آليات منتظمة للتواصل مع الخريجين، ومتابعة حصولهم على وظائف في مجال تخصصاتهم.", "ev": "مسودة خطة التواصل مع الخريجين وتتبعهم."}, {"lv": 2, "name": "تنفيذ", "desc": "يطبق البرنامج آليات منتظمة للتواصل مع الخريجين، ومتابعة حصولهم على وظائف في مجال تخصصاتهم.", "ev": "وثائق توضح الآليات المنفذة."}, {"lv": 3, "name": "متابعة", "desc": "توجد مراقبة ومتابعة منتظمة لتقييم آليات التواصل مع الخريجين، ومتابعة حصولهم على وظائف في مجال تخصصاتهم.", "ev": "التقارير المتعلقة بالتواصل مع الخريجين وتتبعهم."}, {"lv": 4, "name": "تحسين وتطوير", "desc": "توجد تعديلات على آليات التواصل مع الخريجين، ومتابعة حصولهم على وظائف في مجال تخصصاتهم بناء على نتائج التقييم والمتابعة.", "ev": "توثيق التحديثات أو التحسينات التي أجريت بناءً على نتائج التقويم والتقارير."}, {"lv": 5, "name": "مثالي", "desc": "تعتبر آليات التواصل والتتبع الخاصة بالخريجين مثالية وقد أدت إلى مساهمات كبيرة في مبادرات التوظيف الوطنية.", "ev": "دراسات حالة أو تقارير تعرض آليات ومساهمات نوعية في مبادرات التوظيف الوطنية."}]}, {"code": "4.1", "axis": "اختيار المدربين", "text": "يتوافر في البرنامج العدد الكافي من المدربين المهنيين من ذوي الخبرة والمهارة والممارسة المهنية المناسبة في تخصص البرنامج، وتوجد آليات مناسبة لمتابعة ذلك.", "goal": "التأكد من أن البرنامج لديه العدد الكافي من المدربين المؤهلين ذوي الخبرة.", "levels": [{"lv": 0, "name": "عدم امتثال", "desc": "لا يوجد دليل على وجود معايير لاختيار المدربين.", "ev": "غير متوفر."}, {"lv": 1, "name": "تخطيط", "desc": "توجد خطط لتوفير العدد الكافي من المدربين المهنيين من ذوي الخبرة والمهارة والممارسة المهنية في تخصص البرنامج.", "ev": "مسودة خطة للمعايير."}, {"lv": 2, "name": "تنفيذ", "desc": "يطبق البرنامج  خطط لتوفير العدد الكافي من المدربين المهنيين من ذوي الخبرة والمهارة والممارسة المهنية في تخصص البرنامج.", "ev": "وثائق توضح المعايير المنفذة."}, {"lv": 3, "name": "متابعة", "desc": "توجد مراقبة ومتابعة منتظمة لتقييم خطط توفير العدد الكافي من المدربين المهنيين من ذوي الخبرة والمهارة والممارسة المهنية في تخصص البرنامج.", "ev": "تقارير المتابعة المتعلقة بمعايير اختيار المدربين."}, {"lv": 4, "name": "تحسين وتطوير", "desc": "توجد تعديلات على خطط توفير العدد الكافي من المدربين المهنيين من ذوي الخبرة والمهارة والممارسة المهنية في تخصص البرنامج بناء على نتائج التقييم والمتابعة.", "ev": "توثيق التحديثات أو التحسينات التي أجريت وفقاً لنتائج المتابعة."}, {"lv": 5, "name": "مثالي", "desc": "معايير اختيار المدربين مثالية وأدت إلى تكوين فريق من المدربين مؤهلين تأهيلا عاليًا.", "ev": "دراسات حالة أو تقارير تعرض معايير مثالية ومؤهلات المدربين."}]}, {"code": "4.2", "axis": "استبقاء المدربين", "text": "تُوجد منهجية فاعلة ومطبقة لاستبقاء المدربين، وتتخذ الإجراءات التصحيحية اللازمة لذلك.", "goal": "التأكد من وجود منهجية فعالة لاستبقاء المدربين واتخاذ الإجراءات التصحيحية.", "levels": [{"lv": 0, "name": "عدم امتثال", "desc": "لا يوجد دليل على وجود منهجية لاستبقاء المدربين.", "ev": "غير متوفر."}, {"lv": 1, "name": "تخطيط", "desc": "توجد منهجية فاعلة لاستبقاء المدربين.", "ev": "مسودة صياغة خطط المنهجية."}, {"lv": 2, "name": "تنفيذ", "desc": "يطبق البرنامج منهجية فاعلة لاستبقاء المدربين.", "ev": "وثائق توضح المنهجية المنفذة."}, {"lv": 3, "name": "متابعة", "desc": "توجد مراقبة ومتابعة منتظمة لتقييم منهجية استبقاء المدربين.", "ev": "تقارير المتابعة المتعلقة بالمنهجية."}, {"lv": 4, "name": "تحسين وتطوير", "desc": "توجد تعديلات على منهجية استبقاء المدربين.", "ev": "توثيق التحديثات أو التحسينات التي أجريت بناءً على المتابعة."}, {"lv": 5, "name": "مثالي", "desc": "منهجية استبقاء المدربين مثالية وأدت إلى فريق مستقر ومؤهل تأهيلا عاليًا.", "ev": "دراسات حالة أو تقارير تعرض منهجية مثالية لاستبقاء المدربين."}]}, {"code": "4.3", "axis": "التطوير المهني للمدربين", "text": "تُوجد منهجية فاعلة ومطبقة لتمكين المدربين من التطوير المهني المستمر للرفع من أدائهم وتأهيلهم وفق احتياجاتهم ومتطلبات البرنامج، وتتخذ الإجراءات التصحيحية اللازمة لذلك.", "goal": "التأكد من وجود منهجية فعالة للتطوير المهني المستمر للمدربين وفقا لاحتياجاتهم ومتطلبات البرنامج.", "levels": [{"lv": 0, "name": "عدم امتثال", "desc": "لا يوجد دليل على منهجية للتطوير المهني المستمر للمدربين.", "ev": "غير متوفر."}, {"lv": 1, "name": "تخطيط", "desc": "توجد منهجية لتمكين المدربين من التطوير المهني المستمر.", "ev": "مسودة خطة منهجية للتطوير المهني."}, {"lv": 2, "name": "تنفيذ", "desc": "يطبق البرنامج منهجية لتمكين المدربين من التطوير المهني المستمر.", "ev": "وثائق توضح المنهجية المنفذة."}, {"lv": 3, "name": "متابعة", "desc": "توجد مراقبة ومتابعة منتظمة لتقييم منهجية تمكين المدربين من التطوير المهني المستمر.", "ev": "تقارير المتابعة المتعلقة بالمنهجية."}, {"lv": 4, "name": "تحسين وتطوير", "desc": "توجد تعديلات على منهجية تمكين المدربين من التطوير المهني المستمر بناء على نتائج التقييم والمتابعة.", "ev": "توثيق التحديثات أو التحسينات التي أجريت وفقًا لنتائج المتابعة."}, {"lv": 5, "name": "مثالي", "desc": "منهجية التطوير المهني مثالية وأدت إلى تكوين فريق من المدربين بمهارات عالية.", "ev": "دراسات حالة أو تقارير تعرض منهجية مثالية وتطويرا مهنيا."}]}, {"code": "4.4", "axis": "جودة أداء المدربين", "text": "يُطبّق البرنامج آليات منتظمة للتأكد من جودة أداء المدربين، وتطبيقهم لمنهجيات وإستراتيجيات التدريب المحددة في أدلة البرنامج (بما في ذلك دليل المدرب)، وتتخذ الإجراءات اللازمة للتحسين والتطوير.", "goal": "التأكد من أن البرنامج يطبق آليات منتظمة لضمان جودة أداء المدربين وتطبيقهم لإستراتيجيات ومنهجيات التدريب المحددة.", "levels": [{"lv": 0, "name": "عدم امتثال", "desc": "لا يوجد دليل على وجود آليات لضمان الجودة في أداء المدربين.", "ev": "غير متوفر."}, {"lv": 1, "name": "تخطيط", "desc": "توجد آليات منتظمة للتأكد من جودة أداء المدربين، وتطبيقهم لمنهجيات وإستراتيجيات التدريب المحددة في أدلة البرنامج.", "ev": "خطة لآليات ضمان الجودة."}, {"lv": 2, "name": "تنفيذ", "desc": "يطبق البرنامج آليات منتظمة للتأكد من جودة أداء المدربين، وتطبيقهم لمنهجيات وإستراتيجيات التدريب المحددة في أدلة البرنامج.", "ev": "وثائق توضح الآليات المنفذة."}, {"lv": 3, "name": "متابعة", "desc": "توجد مراقبة ومتابعة منتظمة لتقييم آليات جودة أداء المدربين، وتطبيقهم لمنهجيات وإستراتيجيات التدريب المحددة في أدلة البرنامج.", "ev": "تقارير المتابعة المتعلقة بضمان الجودة."}, {"lv": 4, "name": "تحسين وتطوير", "desc": "توجد تعديلات على آليات جودة أداء المدربين، وتطبيقهم لمنهجيات وإستراتيجيات التدريب المحددة في أدلة البرنامج بناء على نتائج التقييم والمتابعة.", "ev": "توثيق الإجراءات التصحيحية المتخذة."}, {"lv": 5, "name": "مثالي", "desc": "تعتبر آليات ضمان الجودة في أداء المدربين مثالية وأدت إلى تحسينات كبيرة في تقديم التدريب.", "ev": "دراسات حالة أو تقارير تعرض آليات نموذجية وتحسينات في أداء المدربين."}]}];
+const PROG_STD = {"1":"تصميم وتطوير البرنامج","2":"جودة البرنامج","3":"المتدربون","4":"المدربون"};
+const CONTROLS = [
+  ["documentation","التوثيق","الشاهد وثيقة مكتوبة أو مسجلة يمكن الرجوع إليها"],
+  ["approval","الاعتماد","موقّع أو معتمد من صاحب الصلاحية أو جهة رسمية"],
+  ["currency","الحداثة","يخص الفترة الحالية أو دورة المراجعة لا سنوات سابقة"],
+  ["dated","التاريخ","يحمل تاريخاً واضحاً للإصدار أو التنفيذ"],
+  ["comprehensive","الشمولية","يغطي جميع عناصر المعيار الفرعي لا جزءاً منها"],
+  ["clarity","الوضوح","مقروء ومنظم ويُفهم دون شرح خارجي"],
+  ["linkage","الارتباط بالمنشأة","يحمل اسم المنشأة أو شعارها وصادر عنها"]
+];
+const LVC = ["var(--l0)","var(--l1)","var(--l2)","var(--l3)","var(--l4)","var(--l5)"];
+const INST_NAMES = {1:"غير مستوفى",2:"مستوفى جزئياً",3:"مستوفى",4:"مستوفى بإتقان",5:"مستوفى بتميز"};
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const AR = n => String(n).replace(/\d/g, d => "٠١٢٣٤٥٦٧٨٩"[d]);
+function toast(t){ const el=$("#toast"); el.textContent=t; el.hidden=false; clearTimeout(toast.h); toast.h=setTimeout(()=>el.hidden=true,2600); }
+const store = { get(k,d){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch{ return d; } }, set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch{} } };
+
+let MODE = null, files = [], scope = "full", phase = "2", ctl = null, AUTO_SUB = null;
+let LOG = store.get("aud-log", []);
+
+/* ---------- engine: free providers (Groq or Google Gemini), key kept only in this browser ---------- */
+const PROVS = {
+  puter:  {name:"Claude (Puter)", nokey:true, url:"https://puter.com", howto:"لا يحتاج مفتاحاً: اضغط «تسجيل الدخول في Puter» وأنشئ حساباً مجانياً مرة واحدة. لكل حساب رصيد شهري مجاني، وعند نفاده يمكن التبديل لمحرك آخر.",
+           info:"يستخدم نماذج Claude (Sonnet 5.5 / Opus 5.5) — الأقرب لنسخة Claude. Opus أدق لكنه يستهلك الرصيد أسرع."},
+  pollinations:{name:"Pollinations", ph:"sk_… أو pk_…", url:"https://enter.pollinations.ai", base:"https://gen.pollinations.ai/v1", howto:"سجّل في Pollinations (مجاني)، ثم من لوحة الحساب أنشئ مفتاحاً وانسخه هنا.",
+           info:"منصة واحدة تتيح Claude وGPT-5 وGemini وDeepSeek وGrok برصيد يومي مجاني (pollen)، وتعمل من المتصفح مباشرة."},
+  nvidia: {name:"NVIDIA", ph:"nvapi-…", url:"https://build.nvidia.com/settings/api-keys", base:"https://integrate.api.nvidia.com/v1", howto:"سجّل في build.nvidia.com (مجاني، بلا بطاقة)، ثم من API Keys أنشئ مفتاحاً وانسخه هنا.",
+           info:"أقوى النماذج المفتوحة مجاناً: Kimi K3 وGLM-5.3 وDeepSeek V4.1 وNemotron 3 Ultra — حتى 40 طلباً في الدقيقة. إن ظهر «تعذّر الاتصال» فالخدمة تمنع الاتصال من المتصفح؛ استخدم OpenRouter."},
+  openrouter:{name:"OpenRouter", ph:"sk-or-…", url:"https://openrouter.ai/keys", base:"https://openrouter.ai/api/v1", howto:"سجّل في OpenRouter ثم اضغط Create Key وانسخ المفتاح والصقه هنا.",
+           info:"يعرض النماذج المجانية أولاً (Nemotron 3 Ultra، Inkling، Qwen…) — الحد المجاني نحو 50 طلباً يومياً. إن كان في حسابك رصيد تظهر النماذج المدفوعة أيضاً (منها Claude)."},
+  mistral:{name:"Mistral", ph:"…", url:"https://console.mistral.ai/api-keys", base:"https://api.mistral.ai/v1", howto:"سجّل في Mistral (الخطة المجانية)، ثم من API Keys اضغط Create new key وانسخه هنا.",
+           info:"Mistral Large 3 / Medium 3.5 برصيد مجاني شهري (نحو 10$)."},
+  gemini: {name:"Gemini", ph:"AIza…", url:"https://aistudio.google.com/apikey", howto:"افتح صفحة المفاتيح وسجّل بحساب Google، ثم اضغط Create API key وانسخ المفتاح والصقه هنا.",
+           info:"نماذج Gemini Flash المجانية، وتقرأ الصور والمستندات الطويلة مباشرة."},
+  groq:   {name:"Groq", ph:"gsk_…", url:"https://console.groq.com/keys", base:"https://api.groq.com/openai/v1", howto:"افتح صفحة المفاتيح، ثم اضغط Create API Key وانسخ المفتاح والصقه هنا.",
+           info:"أسرع المحركات، ونماذجه أصغر."}
+};
+const GROQ = "https://api.groq.com/openai/v1", GEM = "https://generativelanguage.googleapis.com/v1beta";
+const ENG = {ok:false, kind:"api", models:[], api:{ok:false, models:[]}};
+const G_VIS = /(qwen3\.8|vl\b|vision|scout|maverick|llava|gemma-?4)/i;
+const G_JUDGE = [/gpt-oss-120b/i, /qwen3\.8/i, /qwen3-32b/i, /llama-3\.3-70b/i, /kimi/i, /gpt-oss-20b/i];
+const G_SKIP = /(whisper|tts|guard|safeguard|prompt-guard|playai|orpheus|embed|compound)/i;
+const M_JUDGE = [/gemini-3(\.\d)?-flash(?!-lite)/i, /gemini-2\.5-flash(?!-lite)/i, /gemini-3(\.\d)?-flash-lite/i, /flash/i];
+const M_SKIP = /(pro|embed|tts|image|live|audio|native|aqa|imagen|veo|robotics|computer|thinking-exp|learnlm|gemma|nano)/i;
+const pref = () => store.get("aud-free", {});
+const savePref = p => store.set("aud-free", Object.assign(pref(), p));
+const keyName = p => "aud-key-" + p;
+const getKey = p => { try { return localStorage.getItem(keyName(p)) || (p === "groq" ? localStorage.getItem("aud-groq-key") || "" : ""); } catch { return ""; } };
+let PROV = PROVS[pref().prov] ? pref().prov : "puter";
+let apiKey = getKey(PROV);
+const P = () => PROVS[PROV];
+const OR_JUDGE = [/nemotron-3-ultra/i, /inkling(?!-small)/i, /kimi/i, /deepseek/i, /qwen3\.8/i, /gpt-oss-120b/i, /llama-4/i];
+const MI_JUDGE = [/^mistral-large-latest$/i, /mistral-large/i, /^mistral-medium-latest$/i, /mistral-medium/i];
+const PO_JUDGE = [/claude.*opus/i, /claude/i, /gpt-5|openai-large/i, /gemini.*pro/i, /deepseek/i, /grok/i, /gemini/i];
+const NV_JUDGE = [/kimi-k3/i, /glm-5/i, /deepseek-v4/i, /nemotron-3-ultra/i, /kimi/i, /deepseek/i, /qwen3/i, /gpt-oss-120b/i];
+const PU_JUDGE = [/claude-sonnet-5-5/i, /claude-opus-5-5/i, /claude-sonnet-5/i, /claude-opus-5/i, /claude/i];
+let puterReady = null;
+function loadPuter(){
+  if (window.puter) return Promise.resolve(window.puter);
+  if (!puterReady) puterReady = new Promise((res, rej) => { const sc = document.createElement("script"); sc.src = "https://js.puter.com/v2/"; sc.onload = () => res(window.puter); sc.onerror = () => { puterReady = null; rej(new TypeError("puter_load")); }; document.head.appendChild(sc); });
+  return puterReady;
+}
+function setEngine(){ ENG.ok = ENG.api.ok; $("#noAI").hidden = ENG.ok; updateRun(); }
+function paintProv(){
+  $("#provSel").value = PROV;
+  $("#keyLbl").textContent = `مفتاح ${P().name} (يُحفظ في هذا المتصفح فقط)`;
+  $("#apiKey").value = ""; $("#apiKey").placeholder = apiKey ? "محفوظ في هذا المتصفح ••••" : P().ph;
+  $("#keyHow").innerHTML = `للحصول على مفتاح مجاني: <a href="${P().url}" target="_blank" rel="noopener">صفحة مفاتيح ${P().name}</a> — ${esc(P().howto)} لا يحتاج بطاقة ائتمان.`;
+  $("#privNote").textContent = P().info || ""; $("#privNote").style.color = "";
+  const nk = !!P().nokey; $("#keyLbl").hidden = nk; $("#keyRow").hidden = nk; $("#puterBtn").hidden = !nk;
+  $("#provName").textContent = P().name;
+}
+async function listModels(){
+  if (PROV === "puter") {
+    const pt = await loadPuter(); let ids = [];
+    try { const ms = await pt.ai.listModels(); ids = (Array.isArray(ms) ? ms : (ms?.models || ms?.data || [])).map(m => typeof m === "string" ? m : (m.id || m.name || "")).filter(Boolean); } catch {}
+    const base = ["claude-sonnet-5-5", "claude-opus-5-5", "claude-opus-5", "claude-sonnet-5", "claude-haiku-4-5"];
+    const cl = ids.filter(i => /claude/i.test(i) && !/claude-(instant|2|3)[-.]/i.test(i)).map(i => i.replace(/^(anthropic\/|claude:)/i, ""));
+    const others = ids.filter(i => /^(openai\/)?gpt-5|gemini-3.*pro|grok-4/i.test(i)).slice(0, 12);
+    const all = [...new Set([...base.filter(b => !cl.length || cl.includes(b)), ...cl, ...others])];
+    return {all, judgePref:PU_JUDGE, vis:all, visAll:true};
+  }
+  if (PROV === "pollinations" || PROV === "nvidia") {
+    let r = await fetch(P().base + "/models", {headers:{Authorization:"Bearer " + apiKey}});
+    if (!r.ok && PROV === "pollinations") r = await fetch("https://gen.pollinations.ai/text/models", {headers:{Authorization:"Bearer " + apiKey}});
+    if (!r.ok) throw new Error([401, 403].includes(r.status) ? 401 : r.status);
+    const j = await r.json(), arr = Array.isArray(j) ? j : (j.data || j.models || []);
+    const ids = [...new Set(arr.map(m => typeof m === "string" ? m : (m.id || m.name || "")).filter(i => i && !/embed|rerank|guard|safety|tts|whisper|audio|image|flux|reward|parse|retriever|clip/i.test(i)))].sort();
+    if (PROV === "nvidia") return {all:ids, judgePref:NV_JUDGE, vis:ids.filter(i => /vl\b|vision|-vl|kimi-k3|llama-4|gemma-?[34]|nemotron.*vl|phi-4-multimodal/i.test(i)), visAll:false};
+    return {all:ids, judgePref:PO_JUDGE, vis:ids.filter(i => /claude|gpt|openai|gemini|grok/i.test(i)), visAll:false};
+  }
+  if (PROV === "openrouter") {
+    const r = await fetch(P().base + "/models", {headers:{Authorization:"Bearer " + apiKey}});
+    if (!r.ok) throw new Error(r.status);
+    const ck = await fetch(P().base + "/key", {headers:{Authorization:"Bearer " + apiKey}}); if (ck.status === 401) throw new Error(401);
+    const data = (await r.json()).data || [];
+    const free = m => /:free$/.test(m.id) || (+m.pricing?.prompt === 0 && +m.pricing?.completion === 0);
+    const ok = data.filter(m => !/embed|tts|whisper|image-gen|guard/i.test(m.id));
+    const fr = ok.filter(free).map(m => m.id).sort(), paid = ok.filter(m => !free(m) && /anthropic\/claude|openai\/gpt-5|google\/gemini-3.*pro/i.test(m.id)).map(m => m.id).sort().reverse();
+    const visSet = new Set(ok.filter(m => (m.architecture?.input_modalities || []).includes("image")).map(m => m.id));
+    const all = [...fr, ...paid];
+    return {all, judgePref:OR_JUDGE, vis:all.filter(i => visSet.has(i)), visAll:false};
+  }
+  if (PROV === "mistral") {
+    const r = await fetch(P().base + "/models", {headers:{Authorization:"Bearer " + apiKey}});
+    if (!r.ok) throw new Error(r.status);
+    const all = [...new Set(((await r.json()).data || []).map(m => m.id).filter(i => /^(mistral-(large|medium|small)|magistral|pixtral)/i.test(i) && !/embed|ocr|moderation/i.test(i)))].sort();
+    return {all, judgePref:MI_JUDGE, vis:all.filter(i => /pixtral|mistral-(medium|small|large)/i.test(i)), visAll:false};
+  }
+  if (PROV === "groq") {
+    const r = await fetch(GROQ + "/models", {headers:{Authorization:"Bearer " + apiKey}});
+    if (!r.ok) throw new Error(r.status);
+    const all = ((await r.json()).data || []).filter(m => m.active !== false).map(m => m.id).filter(id => !G_SKIP.test(id)).sort();
+    return {all, judgePref:G_JUDGE, vis:all.filter(i => G_VIS.test(i)), visAll:false};
+  }
+  const r = await fetch(GEM + "/models?pageSize=200", {headers:{"x-goog-api-key":apiKey}});
+  if (!r.ok) throw new Error([400, 403].includes(r.status) ? 401 : r.status);
+  const all = ((await r.json()).models || []).filter(m => (m.supportedGenerationMethods || []).includes("generateContent"))
+    .map(m => m.name.replace(/^models\//, "")).filter(id => /^gemini/i.test(id) && !M_SKIP.test(id)).sort().reverse();
+  return {all, judgePref:M_JUDGE, vis:all, visAll:true};
+}
+async function checkApi(){
+  const st = $("#apiTxt");
+  if (!apiKey && !P().nokey) { ENG.api.ok = false; st.textContent = `أدخل مفتاح ${P().name} المجاني`; $("#apiDot").style.background = "var(--l0)"; setEngine(); return; }
+  st.textContent = "جارٍ التحقق من المفتاح…";
+  try {
+    const {all, judgePref, vis} = await listModels();
+    ENG.api.models = all; ENG.api.ok = all.length > 0;
+    const p = pref()[PROV] || {};
+    let judge = (p.judge && all.includes(p.judge)) ? p.judge : null;
+    if (!judge) for (const rx of judgePref) { judge = all.find(i => rx.test(i)); if (judge) break; }
+    judge = judge || all[0];
+    $("#mApi").innerHTML = all.map(i => `<option value="${esc(i)}">${esc(i)}</option>`).join(""); $("#mApi").value = judge;
+    $("#mVis").innerHTML = vis.map(i => `<option value="${esc(i)}">${esc(i)}</option>`).join("") + `<option value="">بدون قراءة بصرية</option>`;
+    $("#mVis").value = (p.vis !== undefined && (p.vis === "" || vis.includes(p.vis))) ? p.vis : ((PROV === "gemini" || PROV === "puter") ? judge : (vis[0] || ""));
+    $("#apiDot").style.background = "var(--ok)";
+    if (PROV === "puter") { let u = null; try { u = window.puter.auth.isSignedIn() ? await window.puter.auth.getUser() : null; } catch {}
+      st.textContent = u ? `جاهز · مسجّل باسم ${u.username} · ${AR(all.length)} نموذج` : "جاهز · سجّل الدخول في Puter مرة واحدة (أو سيُطلب منك عند أول تدقيق)"; }
+    else st.textContent = `المفتاح صالح · ${AR(all.length)} نموذج متاح في ${P().name}`;
+  } catch (e) { ENG.api.ok = false; $("#apiDot").style.background = "var(--bad)"; st.textContent = String(e.message) === "401" ? "المفتاح غير صحيح" : PROV === "puter" ? "تعذّر تحميل Puter. افتح البرنامج من رابطه على الإنترنت (GitHub Pages) لا من ملف محلي، ثم أعد المحاولة." : `تعذّر الاتصال بخدمة ${P().name}. تحقق من الإنترنت.`; }
+  setEngine();
+}
+const savePP = o => { const all = pref(); all[PROV] = Object.assign(all[PROV] || {}, o); store.set("aud-free", all); };
+$("#provSel").addEventListener("change", () => { PROV = $("#provSel").value; savePref({prov:PROV}); apiKey = getKey(PROV); $("#mApi").innerHTML = ""; $("#mVis").innerHTML = ""; paintProv(); checkApi(); });
+$("#puterBtn").onclick = async () => { try { const pt = await loadPuter(); await pt.auth.signIn(); toast("تم تسجيل الدخول في Puter"); } catch { toast("لم يكتمل تسجيل الدخول"); } checkApi(); };
+$("#apiSave").onclick = () => { const v = $("#apiKey").value.trim(); if (!v) return; apiKey = v; try { localStorage.setItem(keyName(PROV), apiKey); } catch {} paintProv(); checkApi(); };
+$("#apiDel").onclick = () => { apiKey = ""; try { localStorage.removeItem(keyName(PROV)); if (PROV === "groq") localStorage.removeItem("aud-groq-key"); } catch {} paintProv(); checkApi(); toast("حُذف المفتاح من هذا المتصفح"); };
+$("#mApi").addEventListener("change", () => savePP({judge:$("#mApi").value}));
+$("#mVis").addEventListener("change", () => savePP({vis:$("#mVis").value}));
+$("#strictChk").addEventListener("change", () => savePref({strict:$("#strictChk").checked}));
+if (pref().strict === false) $("#strictChk").checked = false;
+paintProv();
+setTimeout(checkApi, 0);
+function warmLocal(){}
+
+async function blobToB64(b){
+  const u = new Uint8Array(await b.arrayBuffer()); let s = "";
+  for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000));
+  return btoa(s);
+}
+const sleep = (ms, signal) => new Promise((res, rej) => { const t = setTimeout(res, ms); signal?.addEventListener("abort", () => { clearTimeout(t); rej(new DOMException("aborted", "AbortError")); }); });
+const waitMsg = s => `بلغ الحد المجاني للدقيقة… انتظار ${Math.ceil(s)} ثانية ثم المتابعة تلقائياً`;
+
+// Groq: OpenAI-compatible chat
+async function groqChat({model, messages, json = false, signal, onText, maxTokens = 4000}){
+  let body = {model, messages, temperature:0.1, max_completion_tokens:maxTokens};
+  if (json) body.response_format = {type:"json_object"};
+  if (/gpt-oss/i.test(model) && PROV === "groq") body.reasoning_effort = "medium";
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const hd = {Authorization:"Bearer " + apiKey, "Content-Type":"application/json"};
+    if (PROV === "openrouter") { hd["X-Title"] = "Evidence Auditor"; }
+    if (PROV === "mistral") { delete body.reasoning_effort; if (body.max_completion_tokens) { body.max_tokens = body.max_completion_tokens; delete body.max_completion_tokens; } }
+    const res = await fetch((P().base || GROQ) + "/chat/completions", {method:"POST", signal, headers:hd, body:JSON.stringify(body)});
+    if (res.ok) { const j = await res.json(); const out = j.choices?.[0]?.message?.content || ""; onText?.(out, false); return out; }
+    const t = await res.text();
+    if (res.status === 429) {
+      if (/per day|TPD|RPD|free-models-per-day|daily/i.test(t)) throw new Error("free_day");
+      const ra = parseFloat(res.headers.get("retry-after")) || parseFloat((t.match(/try again in ([\d.]+)s/i) || [])[1]) || 20;
+      onText?.(waitMsg(ra), true); await sleep(Math.min(65, ra + 1) * 1000, signal); continue;
+    }
+    if (res.status === 402) throw new Error("free_day");
+    if (res.status >= 500) { onText?.(`خدمة ${P().name} مزدحمة… إعادة المحاولة`, true); await sleep(6000 * (attempt + 1), signal); continue; }
+    if (res.status === 400 && json && /json|response_format|validate/i.test(t)) { delete body.response_format; continue; }
+    if (res.status === 400 && /reasoning/i.test(t)) { delete body.reasoning_effort; continue; }
+    if (res.status === 413 || /too large|context_length|maximum context/i.test(t)) throw new Error("free_big");
+    throw new Error("api " + res.status + ": " + t.slice(0, 300));
+  }
+  throw new Error("free_busy");
+}
+// Gemini: native generateContent (reads images directly, 1M context)
+// If the chosen model is overloaded (503) or its per-minute quota is hit, switch automatically to the next free Flash model.
+let LAST_MODEL = "";
+function gemFallbacks(first){
+  const all = ENG.api.models || [], out = [first];
+  for (const rx of M_JUDGE) for (const id of all) if (out.length < 4 && rx.test(id) && !out.includes(id)) out.push(id);
+  return out;
+}
+async function gemChat({model, parts, json = false, signal, onText, maxTokens = 8192}){
+  const body = {contents:[{role:"user", parts}], generationConfig:{temperature:0.1, maxOutputTokens:maxTokens}};
+  if (json) body.generationConfig.responseMimeType = "application/json";
+  const models = gemFallbacks(model);
+  let lastErr = "free_busy";
+  for (let mi = 0; mi < models.length; mi++) {
+    const m = models[mi], hasNext = mi < models.length - 1;
+    if (mi > 0) onText?.(`النموذج ${models[mi - 1]} مزدحم… التحويل تلقائياً إلى ${m}`, true);
+    let busy = 0;
+    for (let attempt = 0; attempt < 8; attempt++) {
+      const res = await fetch(`${GEM}/models/${m}:generateContent`, {method:"POST", signal, headers:{"x-goog-api-key":apiKey, "Content-Type":"application/json"}, body:JSON.stringify(body)});
+      if (res.ok) {
+        const j = await res.json(), c = j.candidates?.[0];
+        const out = (c?.content?.parts || []).filter(x => !x.thought && x.text).map(x => x.text).join("");
+        if (!out && (c?.finishReason === "SAFETY" || j.promptFeedback?.blockReason)) throw new Error("free_blocked");
+        if (!out && c?.finishReason === "MAX_TOKENS" && body.generationConfig.maxOutputTokens < 30000) { body.generationConfig.maxOutputTokens *= 2; continue; }
+        LAST_MODEL = m; onText?.(out, false); return out;
+      }
+      const t = await res.text();
+      if (res.status === 429) {
+        if (/limit:\s*0\b/i.test(t)) { lastErr = "free_nofree"; break; }
+        if (/PerDay|per day/i.test(t)) { lastErr = "free_day"; break; }
+        const ra = parseFloat((t.match(/"retryDelay":\s*"([\d.]+)s"/) || [])[1]) || parseFloat(res.headers.get("retry-after")) || 20;
+        if (hasNext && ra > 15) { lastErr = "free_busy"; break; }   // quota is per model: switching is faster than waiting
+        onText?.(waitMsg(ra), true); await sleep(Math.min(65, ra + 1) * 1000, signal); continue;
+      }
+      if ([500, 502, 503, 504].includes(res.status)) {
+        busy++; lastErr = "free_busy";
+        if (busy >= (hasNext ? 2 : 5)) break;
+        onText?.(`خدمة Gemini مزدحمة… إعادة المحاولة (${AR(busy)})`, true);
+        await sleep(Math.min(30, 4 * 2 ** (busy - 1)) * 1000 + Math.random() * 1500, signal); continue;
+      }
+      if (res.status === 404 && hasNext) { lastErr = "api 404: model"; break; }
+      if ([400, 403].includes(res.status) && /API key|API_KEY/i.test(t)) throw new Error("api 401: " + t.slice(0, 200));
+      if (res.status === 400 && /token|too long|exceeds/i.test(t)) throw new Error("free_big");
+      throw new Error("api " + res.status + ": " + t.slice(0, 300));
+    }
+  }
+  throw new Error(lastErr);
+}
+// Puter: Claude (and others) through the user's own free Puter account — no API key
+async function puterChat({model, prompt, images = [], signal, onText, maxTokens = 8000}){
+  const pt = await loadPuter();
+  if (!pt.auth.isSignedIn()) { try { await pt.auth.signIn(); } catch { throw new Error("puter_signin"); } }
+  for (let attempt = 0; attempt < 4; attempt++) {
+    if (signal?.aborted) throw new DOMException("aborted", "AbortError");
+    try {
+      const opts = {model, max_tokens:maxTokens, temperature:0.1};
+      const r = images.length ? await pt.ai.chat(prompt, images, opts) : await pt.ai.chat(prompt, opts);
+      if (signal?.aborted) throw new DOMException("aborted", "AbortError");
+      const c = r?.message?.content ?? r?.text ?? r;
+      const out = typeof c === "string" ? c : Array.isArray(c) ? c.map(x => typeof x === "string" ? x : (x?.text || "")).join("") : String(c?.text || r || "");
+      LAST_MODEL = model; onText?.(out, false); return out;
+    } catch (e) {
+      if (e?.name === "AbortError") throw e;
+      const m = JSON.stringify(e?.error || e?.message || e || "");
+      if (/insufficient|funds|credit|quota|limit|usage|balance|upgrade/i.test(m) && !/rate/i.test(m)) throw new Error("puter_credit");
+      if (/not.?found|unknown model|invalid model/i.test(m)) throw new Error("api 404: model " + m.slice(0, 120));
+      if (/sign.?in|auth|401/i.test(m)) throw new Error("puter_signin");
+      onText?.("خدمة Puter مشغولة… إعادة المحاولة", true); await sleep(5000 * (attempt + 1), signal);
+    }
+  }
+  throw new Error("free_busy");
+}
+const VIS_PROMPT = "هذه صورة من شاهد اعتماد لمنشأة تدريب تقني سعودية. انسخ كل النص الظاهر فيها كما هو دون ترجمة أو تلخيص. ثم اكتب سطراً يبدأ بـ «عناصر بصرية:» تذكر فيه وجود أو غياب: توقيع، ختم، شعار، تاريخ، اسم الجهة.";
+// read scanned pages / images as text, so quotes from them can be verified
+async function readImages(images, signal, onText, step){
+  const vis = $("#mVis").value; if (!vis || !images.length) return "";
+  if (PROV === "puter") {
+    const imgs = images.slice(0, 12), lbl = `قراءة بصرية (${AR(imgs.length)} صورة)`;
+    step?.(lbl);
+    const files = imgs.map((b, i) => new File([b], `page-${i + 1}.jpg`, {type:b.type || "image/jpeg"}));
+    const txt = await puterChat({model:vis, signal, onText, maxTokens:8000, images:files, prompt:VIS_PROMPT.replace("هذه صورة", "هذه صور") + "\nابدأ كل صورة بسطر «[صورة رقم]» بالترتيب."});
+    step?.(lbl, "done");
+    return `[قراءة بصرية — ${imgs.length} صورة]\n${txt.trim()}`;
+  }
+  if (PROV === "gemini") {
+    const imgs = images.slice(0, 16), lbl = `قراءة بصرية (${AR(imgs.length)} صورة)`;
+    step?.(lbl);
+    const parts = [{text:VIS_PROMPT.replace("هذه صورة", "هذه صور") + "\nابدأ كل صورة بسطر «[صورة رقم]» بالترتيب."}];
+    for (const img of imgs) parts.push({inline_data:{mime_type:img.type || "image/jpeg", data:await blobToB64(img)}});
+    const txt = await gemChat({model:vis, parts, signal, onText, maxTokens:12000});
+    step?.(lbl, "done");
+    return `[قراءة بصرية — ${imgs.length} صورة]\n${txt.trim()}`;
+  }
+  const parts = [];
+  for (const [k, img] of images.slice(0, 8).entries()) {
+    step?.(`قراءة بصرية ${AR(k + 1)} من ${AR(Math.min(8, images.length))}`);
+    const txt = await groqChat({model:vis, signal, onText, maxTokens:1500, messages:[{role:"user", content:[
+      {type:"text", text:VIS_PROMPT},
+      PROV === "mistral" ? {type:"image_url", image_url:"data:image/jpeg;base64," + await blobToB64(img)} : {type:"image_url", image_url:{url:"data:image/jpeg;base64," + await blobToB64(img)}}]}]});
+    parts.push(`[قراءة بصرية — صورة ${k + 1}]\n${txt.trim()}`);
+    step?.(`قراءة بصرية ${AR(k + 1)} من ${AR(Math.min(8, images.length))}`, "done");
+  }
+  return parts.join("\n\n");
+}
+// same signature the pipeline uses for the API engine
+async function apiChat({prompt, signal, onText, maxTokens = 6000}){
+  if (PROV === "puter") return puterChat({model:$("#mApi").value, signal, onText, maxTokens:Math.max(maxTokens, 8000), prompt});
+  if (PROV === "gemini") return gemChat({model:$("#mApi").value, json:true, signal, onText, maxTokens:Math.max(maxTokens, 12000), parts:[{text:prompt}]});
+  return groqChat({model:$("#mApi").value, json:true, signal, onText, maxTokens, messages:[{role:"user", content:prompt}]});
+}
+const budgetChars = () => ({puter:120000, gemini:90000, pollinations:80000, nvidia:80000, openrouter:60000, mistral:60000}[PROV] || 30000);
+
+function parseJSON(t){
+  t = String(t || "").replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+  try { return JSON.parse(t); } catch {}
+  const m = t.match(/```(?:json)?\s*([\s\S]*?)```/); if (m) { try { return JSON.parse(m[1]); } catch {} }
+  const a = t.indexOf("{"), b = t.lastIndexOf("}"); if (a >= 0 && b > a) { try { return JSON.parse(t.slice(a, b + 1)); } catch {} }
+  throw new Error("bad_json");
+}
+
+/* ---------- facts the page extracts itself (no AI) ---------- */
+const normAr = s => String(s || "").replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).normalize("NFKC").replace(/[ً-ٰٟـ]/g, "")
+  .replace(/[إأآٱ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه").replace(/ؤ/g, "و").replace(/ئ/g, "ي").replace(/[^\p{L}\p{N}]+/gu, " ").trim().toLowerCase();
+function quoteOk(q, hay){
+  const n = normAr(q); if (n.length < 4) return false;
+  if (hay.includes(n)) return true;
+  const w = n.split(" ").filter(x => x.length > 2); if (w.length < 3) return false;
+  return w.filter(x => hay.includes(x)).length / w.length >= 0.85;
+}
+const quotesIn = s => [...String(s || "").matchAll(/«([^»]{4,})»|"([^"]{6,})"|“([^”]{4,})”/g)].map(m => m[1] || m[2] || m[3]);
+function curYears(){
+  let h = 1448; try { h = parseInt(new Intl.DateTimeFormat("en-u-ca-islamic-umalqura", {year:"numeric"}).format(new Date()), 10) || h; } catch {}
+  return {h, g:new Date().getFullYear()};
+}
+function factsOf(text, org){
+  const t = String(text || "").replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
+  const hy = [...t.matchAll(/(?<!\d)(14[2-5]\d)(?!\d)/g)].map(m => +m[1]);
+  const gy = [...t.matchAll(/(?<!\d)(20[0-3]\d)(?!\d)/g)].map(m => +m[1]);
+  const cy = curYears();
+  const lastH = hy.length ? Math.max(...hy.filter(y => y <= cy.h + 1)) : null, lastG = gy.length ? Math.max(...gy.filter(y => y <= cy.g + 1)) : null;
+  const dated = (lastH && isFinite(lastH)) || (lastG && isFinite(lastG));
+  const recent = dated ? ((lastH && lastH >= cy.h - 1) || (lastG && lastG >= cy.g - 1)) : null;
+  const appr = (t.match(/(اعتماد|معتمد|يعتمد|المعتمد|توقيع|التوقيع|الختم|ختم|approved|signature)/gi) || []).length;
+  const signer = (t.match(/(العميد|عميد|المدير|مدير|وكيل|رئيس|المشرف)/g) || []).length;
+  let orgMatch = null;
+  if (org) { const ow = normAr(org).split(" ").filter(x => x.length > 3 && !["الكليه","التقنيه","المعهد","الصناعي","الثانوي","للبنين","للبنات"].includes(x)); const hay = normAr(t); orgMatch = ow.length ? ow.filter(x => hay.includes(x)).length / ow.length >= 0.5 : null; }
+  return {lastH: isFinite(lastH) ? lastH : null, lastG: isFinite(lastG) ? lastG : null, dated:!!dated, recent, appr, signer, orgMatch, chars:t.length, cur:cy};
+}
+function factsText(f){
+  return [`سنوات مذكورة: ${f.lastH ? "آخر هجري " + f.lastH : "لا هجري"} · ${f.lastG ? "آخر ميلادي " + f.lastG : "لا ميلادي"} (السنة الحالية ${f.cur.h}هـ / ${f.cur.g}م)`,
+    `الحداثة: ${f.recent === null ? "لا تاريخ في النص" : f.recent ? "حديث (العام الحالي أو السابق)" : "قديم"}`,
+    `ألفاظ الاعتماد والتوقيع والختم في النص: ${f.appr} · مسميات صاحب صلاحية: ${f.signer}`,
+    f.orgMatch === null ? "" : `اسم المنشأة المُدخل ${f.orgMatch ? "مذكور" : "غير مذكور"} في نص الشاهد`].filter(Boolean).join("\n");
+}
+
+/* ---------- mode ---------- */
+function setMode(m){
+  MODE = m; store.set("aud-mode", m);
+  $("#startView").hidden = true; $("#wsView").hidden = false; $("#switchBtn").hidden = false;
+  const pill = $("#modePill"); pill.hidden = false;
+  pill.innerHTML = m === "inst" ? "تدقيق <b>مؤسسي</b> · V2.1" : "تدقيق <b>برامجي</b> · مقياس 0–5";
+  $("#phaseField").hidden = m !== "prog";
+  buildStd(); buildScope(); renderResult(null); renderLog();
+  window.scrollTo({top:0});
+}
+$("#pickInst").onclick = () => setMode("inst");
+$("#pickProg").onclick = () => setMode("prog");
+$("#switchBtn").onclick = () => { $("#startView").hidden = false; $("#wsView").hidden = true; $("#switchBtn").hidden = true; $("#modePill").hidden = true; };
+
+function stdList(){
+  if (MODE === "inst") return INST.map(s => ({id:String(s.n), name:`المعيار ${AR(s.n)}: ${s.title}`, subs:s.subs.map(x => ({code:x.code, name:x.text, text:x.text}))}));
+  const g = {};
+  PROG.forEach(s => { const k = s.code.split(".")[0]; (g[k] ||= []).push({code:s.code, name:s.axis, text:s.text}); });
+  return Object.keys(g).map(k => ({id:k, name:`المعيار ${AR(k)}: ${PROG_STD[k]}`, subs:g[k]}));
+}
+function buildStd(){
+  const L = stdList();
+  $("#stdSel").innerHTML = `<option value="auto">يقترح البرنامج المعيار المناسب تلقائياً</option>` + L.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join("");
+  $("#stdSel").value = L[0].id; buildSub();
+}
+function buildSub(){
+  const v = $("#stdSel").value;
+  if (v === "auto") { $("#subSel").innerHTML = `<option value="auto">تلقائي</option>`; $("#subSel").disabled = true; showSub(); return; }
+  $("#subSel").disabled = false;
+  const s = stdList().find(x => x.id === v);
+  $("#subSel").innerHTML = s.subs.map(x => `<option value="${x.code}">${esc(MODE==="inst" ? "("+x.code+") "+x.name.slice(0,70)+(x.name.length>70?"…":"") : x.code+" "+x.name)}</option>`).join("");
+  showSub();
+}
+function curSub(){
+  const code = AUTO_SUB || $("#subSel").value; if (code === "auto") return null;
+  if (MODE === "inst") { for (const s of INST) { const x = s.subs.find(y => y.code === code); if (x) return {std:s, sub:x}; } }
+  else { const x = PROG.find(y => y.code === code); if (x) return {std:{n:x.code.split(".")[0], title:PROG_STD[x.code.split(".")[0]]}, sub:x}; }
+  return null;
+}
+function showSub(){
+  const c = curSub(); const box = $("#subBox");
+  if (!c) { box.innerHTML = `<span class="k">اقتراح تلقائي</span><br>سيقرأ البرنامج الشاهد ويختار المعيار الفرعي الأقرب له من ${MODE==="inst"?"37":"21"} معياراً، ثم يقيّمه عليه ويذكر سبب الاختيار.`; return; }
+  if (MODE === "inst") box.innerHTML = `<span class="k">النص الرسمي (${esc(c.sub.code)})</span><br>${esc(c.sub.text)}`;
+  else box.innerHTML = `<span class="k">${esc(c.sub.code)} · ${esc(c.sub.axis)}</span><br>${esc(c.sub.text)}<br><span class="k">الهدف:</span> ${esc(c.sub.goal)}`;
+}
+$("#stdSel").onchange = buildSub; $("#subSel").onchange = showSub;
+
+function buildScope(){
+  const opts = MODE === "inst"
+    ? [["full","ملف المعيار كاملاً"],["existence","الوجود"],["application","التطبيق"],["effectiveness","الفاعلية"]]
+    : [["full","ملف المعيار كاملاً"],["single","شاهد منفرد"]];
+  scope = "full";
+  $("#scopeSeg").innerHTML = opts.map(([v,t]) => `<button type="button" data-v="${v}" aria-pressed="${v==="full"}">${t}</button>`).join("");
+  $("#scopeSeg").querySelectorAll("button").forEach(b => b.onclick = () => { scope = b.dataset.v; $("#scopeSeg").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); scopeHint(); });
+  scopeHint();
+}
+function scopeHint(){
+  const h = {
+    full: MODE==="inst" ? "تُقيَّم المستويات الثلاثة من الشواهد المرفوعة معاً، والدرجة الكلية بقاعدة الملف: أي مستوى غير مُثبت يحدّ من الدرجة." : "يُحكم على المستوى من مجموع الشواهد المرفوعة لهذا المعيار.",
+    existence:"يُقيَّم الشاهد على مستوى الوجود فقط (وثيقة/سياسة معتمدة ومحدثة تغطي العناصر).",
+    application:"يُقيَّم الشاهد على مستوى التطبيق فقط (تطبيق منتظم موثق يغطي العناصر).",
+    effectiveness:"يُقيَّم الشاهد على مستوى الفاعلية فقط (أدوات قياس وتحليل وتحسينات مبنية عليها).",
+    single:"يُقرأ الشاهد وحده: أعلى مستوى يثبته هذا الملف بمفرده، مع ما يلزم من شواهد مكمّلة."
+  }[scope];
+  $("#scopeHint").textContent = h;
+}
+document.querySelectorAll("#phaseSeg button").forEach(b => b.onclick = () => { phase = b.dataset.v; document.querySelectorAll("#phaseSeg button").forEach(x => x.setAttribute("aria-pressed", x === b)); });
+
+/* ---------- files ---------- */
+const drop = $("#drop"), fin = $("#fileIn");
+drop.onclick = () => fin.click();
+drop.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fin.click(); } };
+drop.ondragover = e => { e.preventDefault(); drop.classList.add("over"); };
+drop.ondragleave = () => drop.classList.remove("over");
+drop.ondrop = e => { e.preventDefault(); drop.classList.remove("over"); addFiles(e.dataTransfer.files); };
+fin.onchange = () => { addFiles(fin.files); fin.value = ""; };
+
+const extOf = n => (n.split(".").pop() || "").toLowerCase();
+function addFiles(list){
+  try { warmLocal(); } catch {}
+  for (const f of list) {
+    const item = {id:Math.random().toString(36).slice(2), file:f, name:f.name, ext:extOf(f.name), status:"جاري القراءة…", text:"", images:[], sigImages:[], err:false, thumb:null};
+    files.push(item); renderFiles(); parseFile(item).then(() => { renderFiles(); updateRun(); });
+  }
+  updateRun();
+}
+function renderFiles(){
+  $("#files").innerHTML = files.map(it => `
+    <div class="file">
+      <div class="ic">${it.thumb ? `<img src="${it.thumb}" alt="">` : esc(it.ext.toUpperCase().slice(0,4))}</div>
+      <div style="min-width:0"><div class="nm" title="${esc(it.name)}">${esc(it.name)}</div><div class="st ${it.err?"err":""}">${esc(it.status)}</div></div>
+      <button class="x" data-id="${it.id}" aria-label="إزالة ${esc(it.name)}">×</button>
+      ${it.text ? `<details><summary>عرض النص المستخرج</summary><pre>${esc(it.text.slice(0,4000))}${it.text.length>4000?"\n…":""}</pre></details>` : ""}
+    </div>`).join("");
+  $("#files").querySelectorAll(".x").forEach(b => b.onclick = () => { files = files.filter(x => x.id !== b.dataset.id); renderFiles(); updateRun(); });
+}
+function updateRun(){
+  const ready = files.length && files.every(f => f.status !== "جاري القراءة…") && files.some(f => !f.err);
+  $("#runBtn").disabled = !ready || !ENG.ok;
+  $("#runHint").textContent = !files.length ? "ارفع ملفاً واحداً على الأقل" : !ready ? "انتظر اكتمال قراءة الملفات" : !ENG.ok ? "أدخل المفتاح المجاني أولاً" : `${AR(files.filter(f=>!f.err).length)} ملف جاهز للتدقيق`;
+}
+const clean = t => t.replace(/\u0000/g,"").replace(/[ \t]+/g," ").replace(/\n{3,}/g,"\n\n").trim();
+
+async function canvasToBlob(c){ return new Promise(r => c.toBlob(r, "image/jpeg", .82)); }
+async function imageToJpeg(file){
+  // normalise any image (incl. bmp/tiff where the browser can decode) to JPEG for the model
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; });
+    const s = Math.min(1, 2000 / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement("canvas"); c.width = Math.round(img.naturalWidth*s); c.height = Math.round(img.naturalHeight*s);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    return {blob: await canvasToBlob(c), thumb: c.toDataURL("image/jpeg", .5)};
+  } finally { URL.revokeObjectURL(url); }
+}
+
+async function parseFile(it){
+  const f = it.file, e = it.ext;
+  try {
+    if (["png","jpg","jpeg","webp","gif","bmp","tif","tiff","heic"].includes(e) || f.type.startsWith("image/")) {
+      const j = await imageToJpeg(f); it.images = [j.blob]; it.thumb = j.thumb;
+      it.status = "صورة · تُقرأ بصرياً";
+    } else if (e === "pdf") {
+      if (!window.pdfjsLib) throw new Error("تعذر تحميل قارئ PDF");
+      const pdf = await pdfjsLib.getDocument({data: new Uint8Array(await f.arrayBuffer())}).promise;
+      let out = [];
+      for (let p = 1; p <= pdf.numPages; p++) {
+        const pg = await pdf.getPage(p); const tc = await pg.getTextContent();
+        let line = "", lines = [], lastY = null;
+        for (const t of tc.items) { const y = Math.round(t.transform[5]); if (lastY !== null && Math.abs(y-lastY) > 3) { lines.push(line); line = ""; } line += t.str + (t.hasEOL ? "\n" : " "); lastY = y; }
+        lines.push(line); out.push(`[صفحة ${p}]\n` + lines.join("\n"));
+      }
+      it.text = clean(out.join("\n\n"));
+      const words = it.text.replace(/\[صفحة \d+\]/g,"").trim().length;
+      // scanned or mostly-graphic PDF: render pages as images
+      if (words < 80 * pdf.numPages || words < 200) {
+        const maxImgs = Math.min(pdf.numPages, 8);
+        for (let p = 1; p <= maxImgs; p++) {
+          const pg = await pdf.getPage(p); const vp0 = pg.getViewport({scale:1});
+          const sc = Math.min(2, 1600 / Math.max(vp0.width, vp0.height)); const vp = pg.getViewport({scale:sc});
+          const c = document.createElement("canvas"); c.width = vp.width; c.height = vp.height;
+          await pg.render({canvasContext:c.getContext("2d"), viewport:vp}).promise;
+          it.images.push(await canvasToBlob(c)); if (p === 1) it.thumb = c.toDataURL("image/jpeg", .4);
+        }
+        it.status = `PDF ممسوح · ${AR(pdf.numPages)} صفحة · ${AR(it.images.length)} صفحة تُقرأ بصرياً`;
+      } else {
+        const pg = await pdf.getPage(1); const vp0 = pg.getViewport({scale:1}); const sc = 120 / Math.max(vp0.width, vp0.height);
+        const vp = pg.getViewport({scale:sc}); const c = document.createElement("canvas"); c.width = vp.width; c.height = vp.height;
+        await pg.render({canvasContext:c.getContext("2d"), viewport:vp}).promise; it.thumb = c.toDataURL("image/jpeg", .6);
+        // first page also as image: shows signatures, stamps and letterheads that text extraction misses
+        const vpB = pg.getViewport({scale: Math.min(2, 1500/Math.max(vp0.width,vp0.height))}); const cB = document.createElement("canvas"); cB.width = vpB.width; cB.height = vpB.height;
+        await pg.render({canvasContext:cB.getContext("2d"), viewport:vpB}).promise; it.sigImages.push(await canvasToBlob(cB));
+        if (pdf.numPages > 1) {
+          const pl = await pdf.getPage(pdf.numPages); const v0 = pl.getViewport({scale:1}); const vL = pl.getViewport({scale: Math.min(2, 1500/Math.max(v0.width,v0.height))});
+          const cL = document.createElement("canvas"); cL.width = vL.width; cL.height = vL.height; await pl.render({canvasContext:cL.getContext("2d"), viewport:vL}).promise; it.sigImages.push(await canvasToBlob(cL));
+        }
+        it.status = `PDF · ${AR(pdf.numPages)} صفحة · ${AR(it.text.length)} حرف`;
+      }
+    } else if (e === "docx" || e === "docm" || e === "dotx") {
+      const buf = await f.arrayBuffer();
+      const r = await mammoth.extractRawText({arrayBuffer: buf}); it.text = clean(r.value);
+      // embedded images (signatures, stamps, photos) — up to 3
+      try { const z = await JSZip.loadAsync(buf); const media = Object.keys(z.files).filter(n => /^word\/media\/.+\.(png|jpe?g|gif|webp)$/i.test(n)).slice(0,3);
+        for (const n of media) { const b = await z.file(n).async("blob"); const j = await imageToJpeg(new File([b], n)); it.images.push(j.blob); } } catch {}
+      it.status = `Word · ${AR(it.text.length)} حرف${it.images.length ? " · " + AR(it.images.length) + " صورة مضمّنة" : ""}`;
+    } else if (["xlsx","xlsm","xls","csv","ods"].includes(e)) {
+      const wb = XLSX.read(new Uint8Array(await f.arrayBuffer()), {type:"array"});
+      it.text = clean(wb.SheetNames.map(n => `[ورقة: ${n}]\n` + XLSX.utils.sheet_to_csv(wb.Sheets[n], {blankrows:false})).join("\n\n"));
+      it.status = `جدول · ${AR(wb.SheetNames.length)} ورقة · ${AR(it.text.length)} حرف`;
+    } else if (e === "pptx") {
+      const z = await JSZip.loadAsync(await f.arrayBuffer());
+      const slides = Object.keys(z.files).filter(n => /^ppt\/slides\/slide\d+\.xml$/.test(n)).sort((a,b) => +a.match(/\d+/)[0] - +b.match(/\d+/)[0]);
+      const out = [];
+      for (const s of slides) { const x = await z.file(s).async("string"); const t = [...x.matchAll(/<a:t>([^<]*)<\/a:t>/g)].map(m => m[1]).join(" "); out.push(`[شريحة ${s.match(/\d+/)[0]}] ${t}`); }
+      const tx = document.createElement("textarea"); tx.innerHTML = out.join("\n"); it.text = clean(tx.value);
+      it.status = `عرض · ${AR(slides.length)} شريحة · ${AR(it.text.length)} حرف`;
+    } else if (["txt","md","json","xml","html","htm","rtf"].includes(e) || f.type.startsWith("text/")) {
+      let t = await f.text();
+      if (e === "html" || e === "htm") { const d = new DOMParser().parseFromString(t, "text/html"); t = d.body.innerText || d.body.textContent; }
+      if (e === "rtf") t = t.replace(/\\[a-z]+-?\d* ?|[{}]/g, "");
+      it.text = clean(t); it.status = `نص · ${AR(it.text.length)} حرف`;
+    } else if (e === "doc" || e === "ppt") {
+      throw new Error("صيغة Office القديمة (." + e + ") — احفظه بصيغة " + (e==="doc"?"DOCX":"PPTX") + " أو PDF ثم ارفعه");
+    } else {
+      throw new Error("صيغة غير مدعومة");
+    }
+    if (!it.text && !it.images.length) throw new Error("لم يُعثر على محتوى قابل للقراءة");
+  } catch (err) { it.err = true; it.status = err.message || "تعذرت قراءة الملف"; }
+}
+
+/* ---------- prompt ---------- */
+const INST_RUBRIC = `قاعدة التقييم في ملف مقاييس التقويم V2.1 (مقياس من 1 إلى 5 لكل مستوى جودة):
+[1] غير مستوفى — الوجود: لا تتوفر وثيقة تغطي المعيار. التطبيق: لا يتوفر ما يثبت التطبيق.
+[2] مستوفى جزئياً — الوجود: تتوفر وثيقة لكنها غير معتمدة أو غير محدثة أو غير مرتبطة بالمنشأة أو لا تغطي جميع عناصر المعيار. التطبيق: تطبيق جزئي أو غير منتظم أو غير موثق.
+[3] مستوفى — الوجود: وثيقة/سياسة معتمدة ومحدثة تغطي جميع العناصر الأساسية. التطبيق: تطبيق منتظم بجودة جيدة يغطي جميع العناصر. الفاعلية: تتوفر أداة أو أكثر من أدوات القياس (استبانة، مستهدفات، مؤشرات...) يُبنى على نتائج تحليلها تحسينات مناسبة.
+[4] مستوفى بإتقان — الفاعلية: كل ما في [3] مع ارتباط قياس الفاعلية بخطط المنشأة التدريبية.
+[5] مستوفى بتميز — الفاعلية: كل ما في [4] مع تنوع أدوات قياس الفاعلية وارتباطها بالمؤشرات الاستراتيجية للمنشأة.
+لا تُقيَّم الفاعلية إلا إذا كان الوجود ≥3 والتطبيق ≥3. للوجود والتطبيق الحد الأعلى 3 عملياً (3 = مستوفى).
+الارتباط بالمنشأة: ثبوت أن الوثيقة مملوكة وتابعة للمنشأة ذاتها، صادرة أو معتمدة منها، وتحمل اسمها أو شعارها.
+التوصية تُكتب عند [1] أو [2] بصيغة إلزامية تبدأ بـ «ينبغي على المنشأة التدريبية …» وتُربط بمستوى الجودة موضع الفجوة. الإشادة عند [5] فقط.`;
+
+function controlsSpec(){ return CONTROLS.map(([k,n,d]) => `"${k}": {"ok": true|false|null, "note": "…"}  // ${n}: ${d}`).join(",\n    "); }
+
+function buildPrompt(){
+  const c = curSub();
+  const ok = files.filter(f => !f.err);
+  const budget = budgetChars(); const per = Math.floor(budget / Math.max(1, ok.filter(f => f.text).length));
+  const docs = ok.map((f, i) => `=== الملف ${i+1}: ${f.name} (${f.status}) ===\n` + (f.text ? (f.text.length > per ? f.text.slice(0, per) + `\n…[اقتُطع: ${f.text.length - per} حرف إضافي]` : f.text) : "[لا يوجد نص مستخرج — المحتوى في الصور المرفقة]")).join("\n\n");
+  const note = $("#note").value.trim();
+  const org = $("#orgName").value.trim();
+  let std, rubric, schema;
+  if (MODE === "inst") {
+    if (c) std = `المعيار الرئيس ${c.std.n}: ${c.std.title}\nوصف المعيار الرئيس: ${c.std.desc}\nالمعيار الفرعي (${c.sub.code}): ${c.sub.text}`;
+    else std = "اختر المعيار الفرعي الأنسب للشاهد من القائمة التالية ثم قيّمه عليه:\n" + INST.map(s => `المعيار ${s.n} (${s.title}):\n` + s.subs.map(x => `  (${x.code}) ${x.text}`).join("\n")).join("\n");
+    rubric = INST_RUBRIC;
+    const sc = {full:"قيّم مستويات الجودة الثلاثة كلها من مجموع الشواهد. أي مستوى لا يوجد عليه دليل في الملفات اجعل score له null واذكر ذلك.", existence:"الشاهد مقدَّم لمستوى الوجود فقط: قيّم existence، واجعل application وeffectiveness قيمتهما null.", application:"الشاهد مقدَّم لمستوى التطبيق فقط: قيّم application، واجعل existence وeffectiveness null.", effectiveness:"الشاهد مقدَّم لمستوى الفاعلية فقط: قيّم effectiveness (1–5)، واجعل existence وapplication null."}[scope];
+    schema = `{
+  "sub_code": "رمز المعيار الفرعي كما في القائمة مثل 2-3",
+  "match": "عالية|متوسطة|ضعيفة|لا علاقة",
+  "match_note": "جملة: لماذا يخص الشاهد هذا المعيار أو لا",
+  "doc_summary": "سطران: ما هذا الشاهد، ومن أصدره، ومتى",
+  "quality": {
+    "existence": {"score": 1|2|3|null, "why": "تعليل مختصر مستند إلى ما في الملف"},
+    "application": {"score": 1|2|3|null, "why": "…"},
+    "effectiveness": {"score": 1|2|3|4|5|null, "why": "…"}
+  },
+  "found": ["عنصر متحقق من الشاهد مع اقتباس قصير بين علامتي «» ورقم الملف/الصفحة"],
+  "gaps": ["عنصر ناقص من متطلبات المعيار"],
+  "to_next_level": ["ما يلزم إضافته من شواهد للصعود درجة"],
+  "controls": {
+    ${controlsSpec()}
+  },
+  "recommendation": "إن وُجدت فجوة: «ينبغي على المنشأة التدريبية …» مع ذكر مستوى الجودة، وإلا نص فارغ",
+  "commendation": "نص إشادة إن كان التقييم 5، وإلا نص فارغ",
+  "rationale": "فقرة تعليل الحكم كما يكتبها رئيس فريق المراجعة",
+  "confidence": 0-100
+}
+تعليمات النطاق: ${sc}`;
+  } else {
+    const subs = c ? [c.sub] : PROG;
+    std = (c ? "" : "اختر المعيار الفرعي الأنسب للشاهد من القائمة التالية ثم قيّمه عليه:\n") + subs.map(s => `المعيار الفرعي ${s.code} — ${s.axis} (المعيار الرئيس ${s.code.split(".")[0]}: ${PROG_STD[s.code.split(".")[0]]})\nالنص: ${s.text}\nالهدف: ${s.goal}\nسلّم التحقق:\n` + s.levels.map(l => `  ${l.lv} (${l.name}): ${l.desc} | الشواهد المطلوبة: ${l.ev}`).join("\n")).join("\n\n");
+    rubric = `مقياس دائرة دمنج من 0 إلى 5: 0 عدم امتثال · 1 تخطيط · 2 تنفيذ · 3 متابعة · 4 تحسين وتطوير · 5 مثالي.
+المستوى = أعلى درجة تتحقق شروطها وشواهدها فعلاً وكل ما دونها متحقق. النتيجة: 0–1 عدم استيفاء · 2–3 استيفاء جزئي · 4–5 استيفاء كامل («متحقق» = 4 أو 5).
+${phase === "1" ? "المرحلة الأولى (قبل الطرح): تُراجع معايير المعيار 1 فقط، ويلزم المعيار الفرعي 4 أو 5 وإلا فهو عدم استيفاء (لا يوجد استيفاء جزئي في هذه المرحلة)." : "المرحلة الثانية (بعد تخريج دفعة): تُراجع المعايير 1–4."}`;
+    schema = `{
+  "sub_code": "مثل 2.4",
+  "match": "عالية|متوسطة|ضعيفة|لا علاقة",
+  "match_note": "جملة: لماذا يخص الشاهد هذا المعيار أو لا",
+  "doc_summary": "سطران: ما هذا الشاهد، ومن أصدره، ومتى",
+  "level": 0-5,
+  "ladder": [{"lv":0,"met":true|false,"note":"ما يثبت هذه الدرجة أو ينقصها"}, … حتى 5],
+  "found": ["عنصر متحقق مع اقتباس قصير بين «» ورقم الملف/الصفحة"],
+  "gaps": ["…"],
+  "to_next_level": ["ما يلزم من شواهد للصعود للدرجة التالية بحسب السلّم"],
+  "controls": {
+    ${controlsSpec()}
+  },
+  "recommendation": "إن كانت الدرجة أقل من 4: «ينبغي على …» وإلا نص فارغ",
+  "commendation": "إن كانت 5: نص إشادة، وإلا فارغ",
+  "rationale": "فقرة تعليل الحكم كما يكتبها رئيس فريق المراجعة",
+  "confidence": 0-100
+}
+${scope === "single" ? "الشاهد منفرد: حدّد أعلى درجة يثبتها هذا الملف وحده، واذكر في to_next_level الشواهد المكمّلة." : "قيّم من مجموع الشواهد المرفوعة لهذا المعيار."}`;
+  }
+  return `أنت رئيس فريق مراجعة خارجية معتمد لدى هيئة تقويم التعليم والتدريب، تدقق شواهد ${MODE==="inst"?"الاعتماد المؤسسي":"الاعتماد البرامجي"} لمنشأة تدريب تقني ومهني سعودية.
+مهمتك: اقرأ الشاهد المرفوع (النص المستخرج أدناه، ومعه القراءة البصرية للصفحات الممسوحة والصور، وللصفحة الأولى والأخيرة من ملفات PDF للتحقق من التوقيع والختم والشعار والتاريخ)، ثم احكم عليه بصرامة المقيّم الخارجي:
+- لا تفترض ما لم يظهر في الشاهد. الادعاء بلا دليل لا يُحتسب، والخطة وحدها لا تثبت التطبيق، والتطبيق وحده لا يثبت الفاعلية.
+- استند في كل حكم إلى نص أو عنصر ظاهر في الملف، واقتبس منه.
+- إن كان الشاهد لا علاقة له بالمعيار فقل ذلك صراحة واجعل الدرجة الدنيا.
+- اكتب بالعربية الفصحى المهنية المختصرة.
+- اكتب بالعربية فقط؛ لا تُدرج كلمات إنجليزية إلا أسماء الأعلام والاختصارات الرسمية.
+- الحقائق التي استخرجها البرنامج آلياً (في آخر الطلب) موثوقة فلا تناقضها؛ فإن ذُكرت سنوات في النص فلا تقل إن الوثيقة بلا أي تاريخ، بل بيّن هل هو تاريخ إصدار الوثيقة أم سنوات واردة في محتواها.
+- إن كانت صلة الشاهد بالمعيار ضعيفة فاذكر في match_note المعيار الفرعي الأنسب له.
+${org ? "المنشأة/البرنامج: " + org + "\n" : ""}${note ? "ملاحظة من المدقق: " + note + "\n" : ""}
+— المعيار —
+${std}
+
+— قواعد التقييم —
+${rubric}
+
+— محددات قبول الشاهد —
+${CONTROLS.map(([k,n,d]) => `${n}: ${d}`).join("\n")}
+
+— الشواهد المرفوعة —
+${docs}
+
+أجب بكائن JSON واحد فقط بهذا الشكل:
+${schema}`;
+}
+
+/* ---------- run ---------- */
+const INST_LV = (q) => {
+  const E = q.existence?.score ?? null, A = q.application?.score ?? null, F = q.effectiveness?.score ?? null;
+  if (scope !== "full") { const v = {existence:E, application:A, effectiveness:F}[scope]; return {level: v ?? 1, partial:true, rule: `تقييم مستوى ${ {existence:"الوجود",application:"التطبيق",effectiveness:"الفاعلية"}[scope] } وحده — الدرجة الكلية للمعيار تتطلب المستويات الثلاثة`}; }
+  const e = E ?? 1, a = A ?? 1;
+  if (e <= 1 || a <= 1) return {level:1, rule:`${E==null?"لا يوجد شاهد على الوجود":A==null?"لا يوجد شاهد على التطبيق":"الوجود أو التطبيق = 1"} ← [1] غير مستوفى`};
+  if (e === 2 || a === 2) return {level:2, rule:"الوجود ≥2 والتطبيق ≥2 وأحدهما = 2 ← [2] مستوفى جزئياً"};
+  const f = F ?? 1;
+  if (F == null) return {level:2, rule:"الوجود والتطبيق ≥3 لكن لا يوجد شاهد على الفاعلية ← تُعامل الفاعلية دون 3 فيبقى [2] (فجوة فاعلية تستدعي توصية)"};
+  if (f < 3) return {level:2, rule:"الوجود والتطبيق ≥3 والفاعلية <3 ← [2] مع توصية على الفاعلية"};
+  return {level:f, rule:`الوجود ≥3 والتطبيق ≥3 ← المستوى = مستوى الفاعلية [${f}]`};
+};
+function verdictOf(level){
+  if (MODE === "inst") return level >= 3 ? {cls:"ok", t:"متحقق", s:"أداء مرضي"} : level === 2 ? {cls:"part", t:"غير متحقق", s:"مستوفى جزئياً"} : {cls:"bad", t:"غير متحقق", s:"غير مستوفى"};
+  if (phase === "1") return level >= 4 ? {cls:"ok", t:"متحقق", s:"استيفاء كامل"} : {cls:"bad", t:"غير متحقق", s:"عدم استيفاء (المرحلة الأولى)"};
+  return level >= 4 ? {cls:"ok", t:"متحقق", s:"استيفاء كامل"} : level >= 2 ? {cls:"part", t:"غير متحقق", s:"استيفاء جزئي"} : {cls:"bad", t:"غير متحقق", s:"عدم استيفاء"};
+}
+
+/* ---------- the audit pipeline ---------- */
+function docsBlock(ok, budget){
+  const per = Math.floor(budget / Math.max(1, ok.length));
+  return ok.map((f, i) => {
+    const t = [f.text, f.visText].filter(Boolean).join("\n\n");
+    return `=== الملف ${i + 1}: ${f.name} ===\n` + (t ? (t.length > per ? t.slice(0, per) + `\n…[اقتُطع ${t.length - per} حرفاً]` : t) : "[لا يوجد نص مقروء]");
+  }).join("\n\n");
+}
+function stdBlock(){
+  const c = curSub();
+  if (MODE === "inst") return `المعيار الرئيس ${c.std.n}: ${c.std.title}\nوصفه: ${c.std.desc}\nالمعيار الفرعي (${c.sub.code}): ${c.sub.text}`;
+  return `المعيار الفرعي ${c.sub.code} — ${c.sub.axis}\nالنص: ${c.sub.text}\nالهدف: ${c.sub.goal}`;
+}
+const AUTO_HINTS_INST = `- السير الذاتية للمدربين، مؤهلاتهم وشهاداتهم العلمية والمهنية وخبراتهم، مصفوفة مؤهلات المدربين ← 1-7
+- تقويم أداء المدربين، الزيارات الإشرافية والصفية، توجيه المدربين ← 2-7
+- خطط وسجلات التطوير المهني للمدربين، الدورات وورش العمل والشهادات التدريبية لهم ← 3-7
+- بناء القدرات الداخلية، نقل المعرفة، السعودة ← 4-7
+- المجالس واللجان وقرارات تشكيلها ومحاضرها، الهيكل التنظيمي، الصلاحيات والمسؤوليات، الميثاق الأخلاقي ← 1-2
+- الخطة الاستراتيجية ومؤشراتها وتقارير متابعتها ← 2-2
+- تخطيط القوى العاملة واحتياج الموظفين وتقييم أدائهم ← 3-2
+- خطط التواصل مع أصحاب المصلحة واللقاءات والتعاميم ← 4-2
+- أنظمة المعلومات ولوحات وتقارير قياس أداء المنشأة ← 5-2
+- المرافق والصيانة ← 6-2 · الأمن والسلامة والإخلاء ← 7-2
+- اتفاقيات ومذكرات التفاهم مع جهات العمل ← 1-1 · التدريب التعاوني وجهاته ← 2-1 · الإشراف على المتدربين في التعاوني ← 3-1 · بيانات وجهات المتدربين ← 4-1
+- التسويق والاستقطاب ← 1-3 · القبول والتسجيل ← 2-3 · الإرشاد وخدمات المتدربين ← 3-3 · شؤون الخريجين ← 4-3
+- نواتج التعلم ومواءمتها مع سوق العمل ← 1-4 · مراجعة الخطط والمناهج وتحديثها ← 2-4 · الحقائب والموارد المساعدة ← 3-4 · الاختبارات وجداول المواصفات ← 4-4 · لوائح وإجراءات الاختبارات ← 5-4
+- استراتيجيات التدريب ← 1-5 · الابتكار في التدريب ← 2-5 · التقنية والمنصات ← 3-5 · المعامل والمعدات ← 4-5
+- سجلات التحصيل والنتائج ← 1-6 · الاستبقاء والتسرب ← 2-6 · المهارات الشخصية وقابلية التوظيف ← 3-6 · متابعة توظيف المتدربين ← 4-6
+- إدارة المخاطر، التقويم الذاتي، خطط التحسين ← 1-8 · شراكات الاستدامة ← 2-8 · النموذج المالي والميزانية ← 3-8 · قنوات التمويل ← 4-8 · خطط التطوير المستقبلية ← 5-8`;
+const AUTO_HINTS_PROG = `- السير الذاتية للمدربين ومؤهلاتهم وخبراتهم، أعداد المدربين ونصابهم ← 4.1 · استبقاء المدربين ← 4.2 · التطوير المهني للمدربين ← 4.3 · تقويم أداء المدربين وزياراتهم ← 4.4
+- توصيف البرنامج والإطار الوطني للمؤهلات ← 1.1 · مشاركة جهات العمل في تصميم البرنامج ← 1.2 · قوائم الموارد والتجهيزات ← 1.3 · المحتوى والحقائب ← 1.4 · تحديد استراتيجيات التدريب ← 1.5 · تحديد أدوات التقييم ← 1.6
+- تطبيق الاستراتيجيات ← 2.1 · الاختبارات ونتائجها والإجراءات التصحيحية ← 2.2 · استخدام وصيانة التجهيزات ← 2.3 · فاعلية التدريب التعاوني ← 2.4 · المؤشرات والاستبانات ← 2.5 · التقويم الذاتي والمراجعة الخارجية ← 2.6
+- الإرشاد الأكاديمي ← 3.1 · الإرشاد المهني ← 3.2 · المتميزون والمتعثرون وذوو الإعاقة ← 3.3 · الحضور والغياب ← 3.4 · الخريجون وتوظيفهم ← 3.5`;
+const STEP_JSON = 'أجب بكائن JSON واحد فقط، بلا أي نص قبله أو بعده.';
+const INST_Q = {
+  existence:`مستوى «الوجود»: هل توجد وثيقة أو سياسة أو إجراء مكتوب يغطي هذا المعيار الفرعي؟
+3 = وثيقة معتمدة ومحدّثة ومرتبطة بالمنشأة وتغطي جميع العناصر الأساسية.
+2 = وثيقة موجودة لكنها غير معتمدة، أو غير محدّثة، أو غير مرتبطة بالمنشأة، أو لا تغطي جميع العناصر.
+1 = لا توجد وثيقة تغطي المعيار في الشواهد.
+${STEP_JSON} {"score":1|2|3,"quote":"اقتباس حرفي قصير من الشاهد يثبت حكمك، أو نص فارغ","why":"جملة واحدة"}`,
+  application:`مستوى «التطبيق»: هل يوجد ما يثبت تطبيق المعيار فعلياً (محاضر، سجلات، كشوف، تقارير تنفيذ متكررة)؟ الخطة أو السياسة وحدها لا تثبت التطبيق.
+3 = تطبيق منتظم موثّق بجودة جيدة يغطي جميع العناصر.
+2 = تطبيق جزئي، أو غير منتظم، أو غير موثّق.
+1 = لا يوجد دليل تطبيق.
+${STEP_JSON} {"score":1|2|3,"quote":"اقتباس حرفي قصير أو فارغ","why":"جملة واحدة"}`,
+  effectiveness:`مستوى «الفاعلية»: هل تُقاس نتائج التطبيق وتُحلّل ويُبنى عليها تحسين؟ التطبيق وحده لا يثبت الفاعلية.
+1 أو 2 = لا توجد أداة قياس، أو توجد قياسات بلا تحليل أو بلا تحسينات مبنية عليها.
+3 = أداة قياس أو أكثر (استبانة، مستهدفات، مؤشرات) يُبنى على نتائج تحليلها تحسينات مناسبة.
+4 = كل ما في 3 مع ارتباط القياس بخطط المنشأة.
+5 = كل ما في 4 مع تنوع أدوات القياس وارتباطها بالمؤشرات الاستراتيجية.
+${STEP_JSON} {"score":1|2|3|4|5,"quote":"اقتباس حرفي قصير أو فارغ","why":"جملة واحدة"}`
+};
+function summaryAsk(computed){
+  return `النتيجة المحسوبة من الخطوات السابقة (لا تغيّرها): ${computed}
+اكتب الآن ورقة الحكم. ${STEP_JSON}
+{"match":"عالية|متوسطة|ضعيفة|لا علاقة","match_note":"جملة: صلة الشاهد بالمعيار","doc_summary":"سطران: ما الشاهد ومن أصدره ومتى",
+"found":["عنصر متحقق مع اقتباس حرفي قصير بين «» من الشاهد"],"gaps":["عنصر ناقص من متطلبات المعيار"],"to_next_level":["ما يلزم من شواهد للصعود درجة"],
+"controls":{"documentation":{"ok":true|false|null,"note":""},"approval":{"ok":true|false|null,"note":""},"comprehensive":{"ok":true|false|null,"note":""},"clarity":{"ok":true|false|null,"note":""},"linkage":{"ok":true|false|null,"note":""}},
+"recommendation":"إن وُجدت فجوة: «ينبغي على المنشأة التدريبية …» وإلا فارغ","commendation":"إن كانت الدرجة 5 فقط وإلا فارغ","rationale":"فقرة تعليل كما يكتبها رئيس فريق المراجعة","confidence":0-100}`;
+}
+
+$("#runBtn").onclick = async () => {
+  if (!ENG.ok) return;
+  const local = false;
+  const model = $("#mApi").value, vis = $("#mVis").value, think = false, numCtx = 16384, strict = $("#strictChk").checked, sig = true;
+  if (local && !model) { toast("اختر نموذج الحكم"); return; }
+  ctl = new AbortController(); const signal = ctl.signal;
+  $("#runBtn").disabled = true; $("#stopBtn").hidden = false;
+  const t0 = Date.now(); const steps = [];
+  $("#result").innerHTML = `<div class="sheet busy"><div class="spin" aria-hidden="true"></div><p class="stage" id="stg">تجهيز…</p><ol class="steps2" id="stepList"></ol><p class="hint" id="tm"></p><div class="stream" id="strm"></div></div>`;
+  const stage = t => { const s = $("#stg"); if (s) s.textContent = t; };
+  const show = t => { const s = $("#strm"); if (s) s.textContent = String(t).slice(-400); };
+  const step = (label, state = "run") => { const i = steps.findIndex(s => s.label === label); if (i < 0) steps.push({label, state}); else steps[i].state = state;
+    const el = $("#stepList"); if (el) el.innerHTML = steps.map(s => `<li class="${s.state}">${s.state === "done" ? "✓" : s.state === "skip" ? "–" : "…"} ${esc(s.label)}</li>`).join(""); stage(label); };
+  const timer = setInterval(() => { const el = $("#tm"); if (el) el.textContent = `مضى ${AR(Math.round((Date.now() - t0) / 1000))} ثانية`; }, 1000);
+  AUTO_SUB = null;
+  const ok = files.filter(f => !f.err);
+  try {
+    // 1) visual reading for the local engine (the API engine sees the images directly)
+    if (local) {
+      const todo = ok.filter(f => f.images.length || (sig && f.sigImages?.length));
+      if (todo.length && vis) {
+        let n = 0; const MAX = 8;
+        for (const f of todo) {
+          const imgs = [...f.images, ...(sig ? (f.sigImages || []) : [])];
+          const key = vis + "|" + imgs.length; if (f.visKey === key) continue;
+          const parts = [];
+          for (const [k, img] of imgs.entries()) {
+            if (n >= MAX) break; n++; step(`قراءة بصرية ${AR(n)} · ${f.name}`);
+            const txt = await ollamaChat({model:vis, signal, numCtx:8192, maxOut:900, onText:show, messages:[{role:"user", images:[await blobToB64(img)],
+              content:"هذه صورة من شاهد اعتماد لمنشأة تدريب تقني سعودية. انسخ كل النص الظاهر فيها كما هو دون ترجمة أو تلخيص. ثم اكتب سطراً يبدأ بـ «عناصر بصرية:» تذكر فيه وجود أو غياب: توقيع، ختم، شعار، تاريخ، اسم الجهة."}]});
+            parts.push(`[قراءة بصرية — صورة ${k + 1}]\n${txt.trim()}`); step(`قراءة بصرية ${AR(n)} · ${f.name}`, "done");
+          }
+          f.visText = parts.join("\n\n"); f.visKey = key;
+        }
+      }
+    }
+    const allText = ok.map(f => [f.text, f.visText].filter(Boolean).join("\n")).join("\n");
+    const hay = normAr(allText); let hay2 = hay;
+    const facts = factsOf(allText, $("#orgName").value.trim());
+
+    // 2) choose the sub-standard when asked
+    if ($("#subSel").value === "auto") {
+      step("تحديد المعيار الفرعي الأقرب");
+      const list = MODE === "inst"
+        ? INST.map(s => `■ المعيار ${s.n}: ${s.title} — ${s.desc}\n` + s.subs.map(x => `   ${x.code}: ${x.text}`).join("\n")).join("\n")
+        : Object.entries(PROG_STD).map(([n, t]) => `■ المعيار ${n}: ${t}\n` + PROG.filter(x => x.code.split(".")[0] === n).map(x => `   ${x.code}: ${x.axis} — ${x.text}`).join("\n")).join("\n");
+      const ev = ok.map(f => { const t = [f.text, f.visText].filter(Boolean).join("\n"); return `=== ${f.name} ===\n` + (t.length > 7000 ? t.slice(0, 5000) + "\n…\n" + t.slice(-2000) : t); }).join("\n\n");
+      const q = `أنت رئيس فريق مراجعة خارجية معتمد لدى هيئة تقويم التعليم والتدريب. مهمتك الآن تصنيف الشاهد تحت المعيار الفرعي الصحيح، لا تقييمه.
+فكّر بهذه الخطوات:
+1) حدّد نوع الوثيقة (سيرة ذاتية، شهادة، محضر اجتماع، قرار تشكيل، لائحة، خطة، تقرير، كشف، اتفاقية، استبانة…) وموضوعها الجوهري وما الذي تثبته.
+2) اسأل: لو قدّمت المنشأة هذه الوثيقة شاهداً، تحت أي معيار فرعي سيضعها المقيّم الخارجي؟ احكم بموضوع الوثيقة الجوهري لا بكلمات عابرة فيها؛ فذِكر «جودة» أو «حوكمة» أو «اعتماد» أو «لجنة» داخل سيرة ذاتية مثلاً لا يجعلها شاهد حوكمة.
+3) قارن أقرب ثلاثة معايير فرعية ثم اختر الأنسب.
+دليل استرشادي لأنواع الشواهد الشائعة:
+${MODE === "inst" ? AUTO_HINTS_INST : AUTO_HINTS_PROG}
+اكتب بالعربية فقط. أجب بكائن JSON فقط:
+{"doc_type":"نوع الوثيقة","topic":"موضوعها في جملة","candidates":[{"code":"","why":""},{"code":"","why":""},{"code":"","why":""}],"sub_code":"الرمز النهائي كما في القائمة","why":"جملة"}
+
+— قائمة المعايير —
+${list}
+
+— الشاهد —
+${ev}`;
+      const p = parseJSON(local ? await ollamaChat({model, signal, numCtx, json:true, maxOut:600, onText:show, messages:[{role:"user", content:q}]}) : await apiChat({prompt:q, signal, onText:show, maxTokens:1500}));
+      const code = String(p.sub_code || "").replace(/[()\s]/g, "");
+      if (!(MODE === "inst" ? INST.some(s => s.subs.some(x => x.code === code)) : PROG.some(s => s.code === code))) throw new Error("auto_fail");
+      AUTO_SUB = code; step("تحديد المعيار الفرعي الأقرب", "done");
+    }
+    const c = curSub();
+    let res;
+    if (!local) {
+      // 3a) API: one strong pass with images attached, then the page's own checks
+      const imgs = ok.flatMap(f => [...f.images, ...(f.sigImages || [])]);
+      const visTxt = await readImages(imgs, signal, show, step);
+      if (visTxt) { const vf = factsOf(allText + "\n" + visTxt, $("#orgName").value.trim()); Object.assign(facts, vf); hay2 = normAr(allText + "\n" + visTxt); }
+      step(`الحكم والتعليل (${P().name})`);
+      const prompt = buildPrompt() + (visTxt ? `\n\n— القراءة البصرية للصفحات الممسوحة والصور —\n${visTxt.slice(0, 12000)}` : "") + `\n\n— حقائق استخرجها البرنامج آلياً من النص —\n${factsText(facts)}\n\nأجب بكائن JSON واحد فقط.`;
+      res = normalise(parseJSON(await apiChat({prompt, signal, onText:show})));
+      step(`الحكم والتعليل (${P().name})`, "done");
+    } else {
+      // 3b) Local: one narrow question per step over a shared, cached prefix, then a written summary
+      const budget = Math.max(5000, Math.floor(numCtx * 1.4) - 7000);
+      const prefix = `أنت رئيس فريق مراجعة خارجية معتمد لدى هيئة تقويم التعليم والتدريب تدقق شاهد ${MODE === "inst" ? "اعتماد مؤسسي" : "اعتماد برامجي"}.
+قواعد صارمة: لا تفترض ما لم يظهر في الشاهد. الادعاء بلا دليل لا يُحتسب. كل اقتباس يجب أن يكون منسوخاً حرفياً من نص الشاهد.
+
+— المعيار —
+${stdBlock()}
+
+— حقائق استخرجها البرنامج آلياً (موثوقة) —
+${factsText(facts)}
+
+— الشاهد —
+${docsBlock(ok, budget)}
+
+— السؤال —
+`;
+      const ask = async (q, label, maxOut = 350) => {
+        step(label);
+        const out = parseJSON(await ollamaChat({model, signal, numCtx, json:true, maxOut, onText:show, messages:[{role:"user", content:prefix + q}]}));
+        step(label, "done"); return out;
+      };
+      const verify = (claimed, quote) => !strict || quoteOk(quote, hay);
+      let computed, extra = {};
+      if (MODE === "inst") {
+        const Q = {}, levels = scope === "full" ? ["existence","application","effectiveness"] : [scope];
+        const NM = {existence:"الوجود", application:"التطبيق", effectiveness:"الفاعلية"};
+        for (const k of levels) {
+          if (k === "effectiveness" && scope === "full" && ((Q.existence?.score ?? 1) < 3 || (Q.application?.score ?? 1) < 3)) { Q[k] = {score:null, why:"لم تُقيَّم لأن الوجود أو التطبيق دون 3 (قاعدة الملف V2.1)"}; step(`مستوى ${NM[k]}`, "skip"); continue; }
+          const a = await ask(INST_Q[k], `مستوى ${NM[k]}`);
+          let s = Math.max(1, Math.min(k === "effectiveness" ? 5 : 3, Math.round(+a.score || 1))); let why = String(a.why || "");
+          if (s > 1 && !verify(s, a.quote)) { s -= 1; why += " (خُفّضت درجة لأن الاقتباس الداعم غير موجود في نص الشاهد)"; }
+          Q[k] = {score:s, why, quote:String(a.quote || "")};
+        }
+        extra.quality = Q;
+        computed = levels.map(k => `${NM[k]}=${Q[k].score ?? "لم يُقيَّم"}`).join("، ");
+      } else {
+        const lv = PROG.find(p => p.code === c.sub.code).levels; const ladder = [{lv:0, met:true, note:"نقطة البداية"}]; let level = 0;
+        for (let L = 1; L <= 5; L++) {
+          const d = lv[L];
+          const a = await ask(`المستوى ${L} (${d.name}): ${d.desc}\nالشواهد المطلوبة لهذا المستوى: ${d.ev}\nهل يثبت الشاهد هذا المستوى فعلاً؟ ${STEP_JSON} {"met":true|false,"quote":"اقتباس حرفي قصير يثبت ذلك أو فارغ","note":"جملة واحدة"}`, `المستوى ${AR(L)}: ${d.name}`);
+          let met = a.met === true || a.met === "true"; let note = String(a.note || "");
+          if (met && !verify(true, a.quote)) { met = false; note += " (لم يُقبل: الاقتباس الداعم غير موجود في نص الشاهد)"; }
+          ladder.push({lv:L, met, note});
+          if (!met) { for (let r = L + 1; r <= 5; r++) { ladder.push({lv:r, met:false, note:"لم يُفحص لأن المستوى الأدنى غير متحقق"}); step(`المستوى ${AR(r)}: ${lv[r].name}`, "skip"); } break; }
+          level = L;
+        }
+        extra.level = level; extra.ladder = ladder;
+        computed = `المستوى ${level} (${lv[level].name})`;
+      }
+      const sum = await ask(summaryAsk(computed), "كتابة التعليل والتوصية", 1600);
+      if (MODE === "inst") sum.quality = extra.quality; else { sum.level = extra.level; sum.ladder = extra.ladder; }
+      res = normalise(sum);
+      if (MODE === "prog") { res.level = extra.level; res.ladder = extra.ladder; }
+    }
+    // 4) the page's own checks: facts override, quotes verified against the file text
+    res.facts = facts;
+    res.controls = res.controls || {};
+    res.controls.dated = {ok:facts.dated, note:facts.dated ? `آخر سنة مذكورة ${facts.lastH ? facts.lastH + "هـ" : ""} ${facts.lastG ? facts.lastG + "م" : ""}`.trim() : "لا يظهر تاريخ في نص الشاهد"};
+    res.controls.currency = {ok:facts.recent, note:facts.recent === null ? "لا يمكن الحكم دون تاريخ" : facts.recent ? "يخص العام الحالي أو السابق" : "تاريخه أقدم من العام السابق"};
+    if (facts.orgMatch !== null) res.controls.linkage = {ok:facts.orgMatch, note:facts.orgMatch ? "اسم المنشأة مذكور في الشاهد" : "اسم المنشأة غير مذكور في نص الشاهد"};
+    res.foundCheck = res.found.map(t => { const qs = quotesIn(t); return {t, st: !qs.length ? "none" : qs.every(q => quoteOk(q, hay2)) ? "ok" : "bad"}; });
+    res.sub_code = AUTO_SUB || $("#subSel").value;
+    res.engine = `${P().name} · ${LAST_MODEL || $("#mApi").value}`;
+    res.secs = Math.round((Date.now() - t0) / 1000);
+    res.imgDropped = 0; res.files = ok.map(f => f.name);
+    res.mode = MODE; res.phase = phase; res.scope = scope; res.org = $("#orgName").value.trim(); res.at = new Date().toISOString();
+    renderResult(res);
+    LOG.unshift(res); LOG = LOG.slice(0, 80); store.set("aud-log", LOG); renderLog();
+  } catch (e) {
+    let msg;
+    if (e?.name === "AbortError") msg = "أُوقف التدقيق.";
+    else if (e?.message === "bad_json") msg = "جاء رد النموذج بصيغة غير مكتملة. أعد المحاولة، أو اختر سياقاً أطول أو نموذجاً أكبر.";
+    else if (e?.message === "auto_fail") msg = "لم يتمكن النموذج من تحديد المعيار الفرعي. اختر المعيار يدوياً ثم أعد التدقيق.";
+    else if (e instanceof TypeError) msg = `تعذّر الاتصال بخدمة ${P().name}. تحقق من الإنترنت ثم أعد المحاولة.`;
+    else if (/^api 401/.test(e?.message || "")) msg = `مفتاح ${P().name} غير صحيح أو حُذف. أنشئ مفتاحاً جديداً من ${P().url.replace("https://", "")}.`;
+    else if (e?.message === "puter_credit") msg = "انتهى الرصيد المجاني لحساب Puter هذا الشهر. اختر نموذجاً أخف (Sonnet بدل Opus)، أو بدّل المحرك إلى OpenRouter أو Mistral أو Gemini.";
+    else if (e?.message === "puter_signin") msg = "يلزم تسجيل الدخول في Puter (مجاني). اضغط زر «تسجيل الدخول في Puter» ثم أعد التدقيق.";
+    else if (e?.message === "free_day") msg = `بلغت الحد المجاني اليومي لهذا النموذج في ${P().name}. اختر نموذجاً آخر من القائمة، أو بدّل المحرك، أو أكمل غداً.`;
+    else if (e?.message === "free_nofree") msg = "هذا النموذج غير متاح في الخطة المجانية. اختر نموذج Flash من القائمة.";
+    else if (e?.message === "free_blocked") msg = "رفض النموذج معالجة هذا الشاهد لأسباب تتعلق بسياسة المحتوى. جرّب المحرك الآخر.";
+    else if (e?.message === "free_big") msg = "الشاهد أطول مما يقبله هذا النموذج. ارفع ملفات أقل، أو استخدم Gemini (يقبل شواهد أطول).";
+    else if (e?.message === "free_busy") msg = `خدمة ${P().name} مشغولة الآن. أعد المحاولة بعد دقيقة.`;
+    else if (/^api (404|400)/.test(e?.message || "") && /model/i.test(e.message)) msg = `النموذج المختار غير متاح الآن في ${P().name}. اختر نموذجاً آخر من القائمة.`;
+    else msg = "تعذّر إكمال التدقيق: " + (e?.message || "خطأ غير معروف");
+    $("#result").innerHTML = `<div class="err">${esc(msg)}</div>`;
+  } finally {
+    AUTO_SUB = null; LAST_MODEL = ""; clearInterval(timer); $("#stopBtn").hidden = true; updateRun();
+  }
+};
+
+/* extra blocks on the verdict sheet: automatic facts and quote verification */
+const _renderResult = renderResult;
+renderResult = function(r){
+  _renderResult(r);
+  if (!r || !$("#sheet")) return;
+  const secs = [...document.querySelectorAll("#sheet .sec")];
+  if (r.facts) {
+    const f = r.facts, chip = (ok, t) => `<span class="chip ${ok === true ? "ok" : ok === false ? "bad" : "na"}">${t}</span>`;
+    const box = document.createElement("div"); box.className = "sec";
+    box.innerHTML = `<h3>فحص آلي للنص <small>يستخرجه البرنامج بنفسه دون ذكاء اصطناعي</small></h3><div style="display:flex;flex-wrap:wrap;gap:6px">
+      ${chip(f.dated, f.dated ? "مؤرخ" : "بلا تاريخ")} ${chip(f.recent, f.recent === null ? "الحداثة غير معروفة" : f.recent ? "حديث" : "قديم")}
+      ${f.lastH ? `<span class="chip na">آخر هجري ${AR(f.lastH)}</span>` : ""} ${f.lastG ? `<span class="chip na">آخر ميلادي ${AR(f.lastG)}</span>` : ""}
+      ${chip(f.appr > 0 ? true : null, `ألفاظ اعتماد/توقيع/ختم: ${AR(f.appr)}`)} ${f.orgMatch === null ? "" : chip(f.orgMatch, f.orgMatch ? "اسم المنشأة مذكور" : "اسم المنشأة غير مذكور")}</div>`;
+    secs[1]?.after(box);
+  }
+  if (r.foundCheck?.length) {
+    const ul = [...document.querySelectorAll("#sheet .list.found")][0];
+    if (ul) ul.innerHTML = r.foundCheck.map(x => `<li>${esc(x.t)} ${x.st === "ok" ? '<span class="chip ok">اقتباس موثّق</span>' : x.st === "bad" ? '<span class="chip bad">الاقتباس غير موجود في الملف</span>' : '<span class="chip na">بلا اقتباس</span>'}</li>`).join("");
+    const v = r.foundCheck.filter(x => x.st === "ok").length, n = r.foundCheck.filter(x => x.st !== "none").length;
+    const head = document.querySelector("#sheet .sheet-h .chip")?.parentElement;
+    if (head && n) head.insertAdjacentHTML("beforeend", `<span class="chip ${v === n ? "ok" : v ? "part" : "bad"}">اقتباسات موثّقة ${AR(v)} من ${AR(n)}</span>`);
+  }
+  const foot = document.querySelector("#sheet .foot .hint");
+  if (foot && r.engine) foot.textContent = `${r.engine}${r.secs ? " · " + AR(r.secs) + " ثانية" : ""} · تقدير مساعد، والحكم النهائي لفريق المراجعة.`;
+};
+$("#stopBtn").onclick = () => ctl?.abort();
+
+function normalise(r){
+  r = r && typeof r === "object" ? r : {};
+  const arr = v => Array.isArray(v) ? v.map(String).filter(Boolean) : [];
+  const out = {sub_code:String(r.sub_code||""), match:String(r.match||""), match_note:String(r.match_note||""), doc_summary:String(r.doc_summary||""),
+    found:arr(r.found), gaps:arr(r.gaps), next:arr(r.to_next_level), controls:r.controls||{}, recommendation:String(r.recommendation||""), commendation:String(r.commendation||""), rationale:String(r.rationale||""), confidence:Math.max(0,Math.min(100,+r.confidence||0))};
+  if (MODE === "inst") {
+    const q = r.quality || {}; const sc = (v,mx) => v==null||v===""||isNaN(+v) ? null : Math.max(1,Math.min(mx,Math.round(+v)));
+    out.quality = {existence:{score:sc(q.existence?.score,3), why:String(q.existence?.why||"")}, application:{score:sc(q.application?.score,3), why:String(q.application?.why||"")}, effectiveness:{score:sc(q.effectiveness?.score,5), why:String(q.effectiveness?.why||"")}};
+    const L = INST_LV(out.quality); out.level = L.level; out.rule = L.rule; out.partial = !!L.partial;
+  } else {
+    out.level = Math.max(0, Math.min(5, Math.round(+r.level || 0)));
+    out.ladder = Array.isArray(r.ladder) ? r.ladder : [];
+  }
+  return out;
+}
+function subTitle(mode, code){
+  if (mode === "inst") { for (const s of INST) { const x = s.subs.find(y => y.code === code); if (x) return {std:`المعيار ${s.n}: ${s.title}`, sub:`(${code}) ${x.text}`}; } }
+  else { const x = PROG.find(y => y.code === code); if (x) return {std:`المعيار ${x.code.split(".")[0]}: ${PROG_STD[x.code.split(".")[0]]}`, sub:`${code} ${x.axis}`}; }
+  return {std:"", sub:code || "—"};
+}
+
+/* ---------- render ---------- */
+function renderResult(r){
+  const box = $("#result");
+  if (!r) {
+    box.innerHTML = `<div class="empty">
+      <span class="ex">كيف يبدو الحكم</span>
+      <h3>ورقة الحكم تظهر هنا بعد التدقيق</h3>
+      <p>ستجد فيها: ختم المستوى والدرجة، ${MODE==="inst"?"تقييم الوجود والتطبيق والفاعلية وقاعدة احتساب الدرجة الكلية":"سلّم دمنج من 0 إلى 5 وما تحقق من كل درجة"}، ما ثبت بالاقتباس من الملف، ما ينقص، ما يلزم للصعود درجة، محددات قبول الشاهد السبعة، ونص التوصية أو الإشادة جاهزاً للنسخ.</p>
+      <div class="ladder ${MODE==="inst"?"five":""}">${(MODE==="inst"?[1,2,3,4,5]:[0,1,2,3,4,5]).map(l => `<div class="rung on" style="background:${LVC[l]}"><b>${AR(l)}</b>${MODE==="inst"?INST_NAMES[l]:PROG[0].levels[l].name}</div>`).join("")}</div>
+    </div>`; return;
+  }
+  const v = verdictOf(r.level); const st = subTitle(r.mode, r.sub_code);
+  const lvName = r.mode === "inst" ? INST_NAMES[r.level] : (PROG.find(p => p.code === r.sub_code)?.levels[r.level]?.name || "");
+  const rungs = (r.mode==="inst"?[1,2,3,4,5]:[0,1,2,3,4,5]).map(l => {
+    const nm = r.mode==="inst" ? INST_NAMES[l] : (PROG.find(p => p.code === r.sub_code)?.levels[l]?.name || PROG[0].levels[l].name);
+    const on = l <= r.level;
+    return `<div class="rung ${on?"on":""} ${l===r.level?"cur":""}" style="${on?`background:${LVC[l]}`:""}"><b>${AR(l)}</b>${esc(nm)}</div>`;
+  }).join("");
+  const mchip = {"عالية":"ok","متوسطة":"part","ضعيفة":"bad","لا علاقة":"bad"}[r.match] || "na";
+  const qBlock = r.mode === "inst" ? `<div class="sec"><h3>مستويات الجودة الثلاثة</h3><div class="ql">${[["existence","الوجود",3],["application","التطبيق",3],["effectiveness","الفاعلية",5]].map(([k,n,mx]) => { const q = r.quality[k]; const s = q.score; const cls = s==null?"na":s>=3?"ok":s===2?"part":"bad";
+      return `<div class="qc"><div class="h"><span>${n}</span><span class="chip ${cls}">${s==null?"لا يوجد شاهد":`<span class="num">${AR(s)}</span> من ${AR(mx)}`}</span></div><p>${esc(q.why||"—")}</p></div>`; }).join("")}</div><p class="hint"><b>قاعدة الدرجة الكلية:</b> ${esc(r.rule)}</p></div>` : "";
+  const ladderBlock = r.mode === "prog" && r.ladder.length ? `<div class="sec"><h3>سلّم التحقق <small>ما يثبت كل درجة في الشاهد</small></h3><ul class="list">${r.ladder.map(x => `<li><b>${AR(+x.lv||0)}</b> — <span class="chip ${x.met?"ok":"bad"}">${x.met?"متحقق":"غير متحقق"}</span> ${esc(x.note||"")}</li>`).join("")}</ul></div>` : "";
+  const ctrls = CONTROLS.map(([k,n]) => { const c = r.controls?.[k] || {}; const ok = c.ok; const col = ok===true?"var(--ok)":ok===false?"var(--bad)":"var(--l0)";
+    return `<div class="ctl"><span class="n"><i class="d" style="background:${col}"></i>${n}<span class="hint" style="margin-inline-start:auto">${ok===true?"مستوفى":ok===false?"غير مستوفى":"غير ظاهر"}</span></span><p>${esc(c.note||"")}</p></div>`; }).join("");
+  const li = (a, cls) => a.length ? `<ul class="list ${cls}">${a.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : `<p class="hint">لا يوجد.</p>`;
+  box.innerHTML = `<article class="sheet" id="sheet">
+    <div class="sheet-h">
+      <div style="display:grid;gap:6px;min-width:0">
+        <span class="t">${esc(st.std)}${r.org?" · "+esc(r.org):""}</span>
+        <h2>${esc(st.sub)}</h2>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="chip ${v.cls}">${v.t} · ${v.s}</span><span class="chip ${mchip}">صلة الشاهد بالمعيار: ${esc(r.match||"—")}</span>${r.mode==="prog"?`<span class="chip na">المرحلة ${r.phase==="1"?"الأولى":"الثانية"}</span>`:""}${r.partial?`<span class="chip na">تقييم مستوى جودة واحد</span>`:""}</div>
+        <p class="hint">${esc(r.match_note)}</p>
+      </div>
+      <div class="stamp ${v.cls}" aria-label="المستوى ${r.level}"><div><b class="num">${AR(r.level)}</b><span>${esc(lvName)}</span></div></div>
+    </div>
+    <div class="sec"><div class="ladder ${r.mode==="inst"?"five":""}">${rungs}</div></div>
+    <div class="sec"><h3>ما هذا الشاهد</h3><p>${esc(r.doc_summary)}</p><p class="hint">الملفات: ${r.files.map(esc).join("، ")}</p></div>
+    <div class="sec"><h3>تعليل الحكم</h3><p class="rat">${esc(r.rationale)}</p>
+      <div style="display:flex;align-items:center;gap:10px"><span class="hint">ثقة التقدير</span><div class="meter" style="flex:1;max-width:220px"><i style="width:${r.confidence}%"></i></div><span class="hint num">${AR(r.confidence)}٪</span></div></div>
+    ${qBlock}${ladderBlock}
+    <div class="sec"><h3>ما ثبت في الشاهد</h3>${li(r.found,"found")}</div>
+    <div class="sec"><h3>ما ينقص</h3>${li(r.gaps,"gap")}</div>
+    <div class="sec"><h3>ما يلزم للصعود درجة</h3>${li(r.next,"next")}</div>
+    <div class="sec"><h3>محددات قبول الشاهد</h3><div class="ctrls">${ctrls}</div></div>
+    ${r.recommendation ? `<div class="sec"><h3>نص التوصية</h3><div class="rec" id="recTxt">${esc(r.recommendation)}</div></div>` : ""}
+    ${r.commendation ? `<div class="sec"><h3>نص الإشادة</h3><div class="rec praise">${esc(r.commendation)}</div></div>` : ""}
+    ${r.imgDropped ? `<div class="sec"><p class="warn">لم تُرسل ${AR(r.imgDropped)} صورة/صفحة لتجاوز الحد المسموح في الطلب الواحد؛ قُرئ النص المستخرج منها فقط إن وُجد.</p></div>` : ""}
+    <div class="foot"><button class="btn sm" id="cpBtn">نسخ الحكم والتعليل</button><button class="btn sm ghost" id="newBtn">شاهد جديد</button>
+      <span class="hint" style="margin-inline-start:auto;align-self:center">تقدير آلي مساعد من نموذج ذكاء اصطناعي مجاني، والحكم النهائي لفريق المراجعة.</span></div>
+  </article>`;
+  $("#cpBtn").onclick = () => copyText(plainOf(r));
+  $("#newBtn").onclick = () => { files = []; renderFiles(); updateRun(); $("#note").value = ""; renderResult(null); window.scrollTo({top:0, behavior:"smooth"}); };
+  box.scrollIntoView({behavior:"smooth", block:"start"});
+}
+function plainOf(r){
+  const st = subTitle(r.mode, r.sub_code); const v = verdictOf(r.level);
+  return [`${r.mode==="inst"?"الاعتماد المؤسسي":"الاعتماد البرامجي"} — ${st.std}`, `المعيار الفرعي: ${st.sub}`, `المستوى: ${r.level} (${v.s}) — ${v.t}`, r.rule?`قاعدة الاحتساب: ${r.rule}`:"", `التعليل: ${r.rationale}`, r.found.length?"ما ثبت:\n- "+r.found.join("\n- "):"", r.gaps.length?"ما ينقص:\n- "+r.gaps.join("\n- "):"", r.next.length?"للصعود درجة:\n- "+r.next.join("\n- "):"", r.recommendation?`التوصية: ${r.recommendation}`:"", r.commendation?`الإشادة: ${r.commendation}`:""].filter(Boolean).join("\n\n");
+}
+async function copyText(t){
+  try { await navigator.clipboard.writeText(t); toast("نُسخ"); }
+  catch { const ta = document.createElement("textarea"); ta.value = t; document.body.append(ta); ta.select(); try{ document.execCommand("copy"); toast("نُسخ"); }catch{ toast("حدّد النص وانسخه يدوياً"); } ta.remove(); }
+}
+
+function renderLog(){
+  const list = LOG.filter(x => x.mode === MODE);
+  $("#logBox").hidden = !list.length;
+  $("#logList").innerHTML = list.map((r, i) => { const v = verdictOf(r.level); const st = subTitle(r.mode, r.sub_code);
+    return `<div class="logrow"><span class="lv" style="background:${LVC[r.level]}">${AR(r.level)}</span><span class="ttl" title="${esc(st.sub)}">${esc(st.sub)} <span class="hint">· ${esc(r.files.join("، "))}</span></span><span class="chip ${v.cls}">${v.t}</span><button class="btn sm ghost" data-i="${LOG.indexOf(r)}">عرض</button></div>`; }).join("");
+  $("#logList").querySelectorAll("button").forEach(b => b.onclick = () => { const r = LOG[+b.dataset.i]; phase = r.phase; renderResult(r); });
+}
+$("#clrBtn").onclick = () => { LOG = LOG.filter(x => x.mode !== MODE); store.set("aud-log", LOG); renderLog(); toast("مُسح السجل"); };
+
+/* ---------- exports ---------- */
+function save(filename, data){
+  const blob = new Blob([data], {type: filename.endsWith(".csv") ? "text/csv;charset=utf-8" : "text/html;charset=utf-8"});
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename; document.body.append(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); toast("حُفظ في مجلد التنزيلات");
+}
+$("#csvBtn").onclick = () => {
+  const rows = [["النوع","المعيار الرئيس","المعيار الفرعي","المستوى","الحكم","صلة الشاهد","الملفات","التعليل","التوصية","التاريخ"]];
+  LOG.filter(x => x.mode === MODE).forEach(r => { const st = subTitle(r.mode, r.sub_code); const v = verdictOf(r.level);
+    rows.push([r.mode==="inst"?"مؤسسي":"برامجي", st.std, st.sub, r.level, v.t+" - "+v.s, r.match, r.files.join(" | "), r.rationale, r.recommendation, r.at.slice(0,10)]); });
+  save("سجل تدقيق الشواهد.csv", "﻿" + rows.map(r => r.map(c => `"${String(c??"").replace(/"/g,'""')}"`).join(",")).join("\r\n"));
+};
+$("#repBtn").onclick = () => {
+  const list = LOG.filter(x => x.mode === MODE);
+  const body = list.map(r => { const st = subTitle(r.mode, r.sub_code); const v = verdictOf(r.level);
+    const ul = a => a.length ? "<ul>" + a.map(x => `<li>${esc(x)}</li>`).join("") + "</ul>" : "<p>لا يوجد.</p>";
+    return `<section><h2>${esc(st.sub)}</h2><p class="m">${esc(st.std)}${r.org?" · "+esc(r.org):""} · ${esc(r.files.join("، "))}</p>
+    <table><tr><th>المستوى</th><td>${r.level} — ${esc(v.s)}</td><th>الحكم</th><td>${esc(v.t)}</td></tr>${r.rule?`<tr><th>قاعدة الاحتساب</th><td colspan="3">${esc(r.rule)}</td></tr>`:""}${r.quality?`<tr><th>الوجود</th><td>${r.quality.existence.score??"—"}</td><th>التطبيق</th><td>${r.quality.application.score??"—"}</td></tr><tr><th>الفاعلية</th><td colspan="3">${r.quality.effectiveness.score??"—"}</td></tr>`:""}</table>
+    <h3>التعليل</h3><p>${esc(r.rationale)}</p><h3>ما ثبت</h3>${ul(r.found)}<h3>ما ينقص</h3>${ul(r.gaps)}<h3>للصعود درجة</h3>${ul(r.next)}
+    ${r.recommendation?`<h3>التوصية</h3><p class="rec">${esc(r.recommendation)}</p>`:""}${r.commendation?`<h3>الإشادة</h3><p class="rec">${esc(r.commendation)}</p>`:""}</section>`; }).join("");
+  const html = `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="author" content="علي الأحمري"><title>تقرير تدقيق الشواهد</title><style>body{font-family:"Sakkal Majalla","Traditional Arabic",Tahoma,sans-serif;font-size:18px;line-height:1.7;color:#14251F;max-width:900px;margin:30px auto;padding:0 20px}h1{color:#0D5A46}h2{color:#0D5A46;border-bottom:2px solid #8A6A1F;padding-bottom:4px;margin-top:34px}h3{margin:14px 0 4px}.m{color:#4A5C55}table{border-collapse:collapse;width:100%}th,td{border:1px solid #D5DDD7;padding:6px 10px;text-align:right}th{background:#EBEFEA;width:18%}.rec{background:#F3EAD3;padding:8px 12px;border-right:4px solid #8A6A1F}</style></head><body><h1>تقرير تدقيق شواهد ${MODE==="inst"?"الاعتماد المؤسسي":"الاعتماد البرامجي"}</h1><p class="m">مُعِدّ التقرير: وحدة الجودة بمنطقة مكة المكرمة · عدد المعايير المدققة: ${list.length} · ${new Date().toLocaleDateString("ar-SA")}</p><p class="m">تقدير آلي مساعد للمدقق مبني على ${MODE==="inst"?"ملف مقاييس التقويم للمراجعة الخارجية V2.1":"محددات ومقاييس التحقق للاعتماد البرامجي"}، والحكم النهائي لفريق المراجعة.</p>${body}</body></html>`;
+  save("تقرير تدقيق الشواهد.html", html);
+};
+
+/* ---------- boot ---------- */
+try { if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"; } catch {}
+const saved = store.get("aud-mode", null);
+if (saved === "inst" || saved === "prog") { /* keep start screen visible so the choice is explicit, but remember last mode */ $(saved === "inst" ? "#pickInst" : "#pickProg").querySelector(".go").textContent += " (آخر استخدام)"; }
+</script>
+
+</body>
+</html>
