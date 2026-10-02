@@ -538,7 +538,7 @@ async function groqChat({model, messages, json = false, signal, onText, maxToken
 let LAST_MODEL = "";
 function gemFallbacks(first){
   const all = ENG.api.models || [], out = [first];
-  for (const rx of M_JUDGE) for (const id of all) if (out.length < 4 && rx.test(id) && !out.includes(id)) out.push(id);
+  for (const rx of M_JUDGE) for (const id of all) if (out.length < 2 && rx.test(id) && !out.includes(id)) out.push(id);
   return out;
 }
 async function gemChat({model, parts, json = false, signal, onText, maxTokens = 8192}){
@@ -564,14 +564,14 @@ async function gemChat({model, parts, json = false, signal, onText, maxTokens = 
         if (/limit:\s*0\b/i.test(t)) { lastErr = "free_nofree"; break; }
         if (/PerDay|per day/i.test(t)) { lastErr = "free_day"; break; }
         const ra = parseFloat((t.match(/"retryDelay":\s*"([\d.]+)s"/) || [])[1]) || parseFloat(res.headers.get("retry-after")) || 20;
-        if (hasNext && ra > 15) { lastErr = "free_busy"; break; }   // quota is per model: switching is faster than waiting
+        if (ra > 10) { lastErr = "free_busy"; break; }   // faster to hand over to the next model/engine than to wait   // quota is per model: switching is faster than waiting
         onText?.(waitMsg(ra), true); await sleep(Math.min(65, ra + 1) * 1000, signal); continue;
       }
       if ([500, 502, 503, 504].includes(res.status)) {
         busy++; lastErr = "free_busy";
-        if (busy >= (hasNext ? 2 : 5)) break;
+        if (busy >= (hasNext ? 1 : 2)) break;
         onText?.(`خدمة Gemini مزدحمة… إعادة المحاولة (${AR(busy)})`, true);
-        await sleep(Math.min(30, 4 * 2 ** (busy - 1)) * 1000 + Math.random() * 1500, signal); continue;
+        await sleep(3000 + Math.random() * 1500, signal); continue;
       }
       if (res.status === 404 && hasNext) { lastErr = "api 404: model"; break; }
       if ([400, 403].includes(res.status) && /API key|API_KEY/i.test(t)) throw new Error("api 401: " + t.slice(0, 200));
