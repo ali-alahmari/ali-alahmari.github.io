@@ -144,6 +144,7 @@ select:focus,input:focus,textarea:focus{border-color:var(--accent);outline:none}
 .qc p{font-size:14px;color:var(--ink-2)}
 .list{margin:0;padding-inline-start:20px;display:grid;gap:4px;font-size:15px}
 .list.found li::marker{color:var(--ok)}.list.gap li::marker{color:var(--bad)}.list.next li::marker{color:var(--gold)}
+.vq{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:15px}
 .ctrls{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
 .ctl{border:1px solid var(--rule);border-radius:10px;padding:8px 10px;font-size:13.5px;display:grid;gap:2px}
 .ctl .n{font-family:var(--display);font-weight:600;font-size:14px;display:flex;gap:6px;align-items:center}
@@ -260,7 +261,7 @@ label.opts2 input{margin-top:6px;flex:none}
     </div>
     <div class="field engine" id="engine">
       <label class="lbl" for="provSel">محرك التحليل المجاني</label>
-      <select id="provSel"><optgroup label="المحركات الأساسية (بالترتيب)"><option value="gemini">١. Gemini Flash — الأدق في العربي ويقرأ المستندات</option><option value="nvidia">٢. NVIDIA — DeepSeek وKimi بلا حد يومي</option><option value="mistral">٣. Mistral Large — رصيد مجاني سخي</option><option value="groq">٤. Groq — الأسرع للشواهد القصيرة</option><option value="cerebras">٥. Cerebras — سريع جداً (اختياري)</option><option value="sambanova">٦. SambaNova — احتياطي سريع (اختياري)</option></optgroup><optgroup label="احتياطي أخير (يُستخدم بعد نفاد الأساسية)"><option value="openrouter">OpenRouter — نماذج مجانية محدودة</option><option value="pollinations">Pollinations — وسيط غير رسمي</option><option value="puter">Claude عبر Puter — رصيد محدود</option></optgroup></select>
+      <select id="provSel"><optgroup label="المحركات الأساسية (بالترتيب)"><option value="gemini">١. Gemini Flash — الأدق في العربي ويقرأ المستندات</option><option value="cohere">٢. Cohere Command A — قوي جداً في العربي (جديد)</option><option value="github">٣. GitHub Models — GPT-4.1 بحسابك في GitHub (جديد)</option><option value="nvidia">٤. NVIDIA — DeepSeek وKimi بلا حد يومي</option><option value="mistral">٥. Mistral Large — رصيد مجاني سخي</option><option value="groq">٦. Groq — الأسرع للشواهد القصيرة</option><option value="zai">٧. Z.ai GLM-4.7 Flash — مجاني بالكامل (جديد)</option><option value="cerebras">٨. Cerebras — سريع جداً (اختياري)</option><option value="sambanova">٩. SambaNova — احتياطي سريع (اختياري)</option></optgroup><optgroup label="احتياطي أخير (يُستخدم بعد نفاد الأساسية)"><option value="openrouter">OpenRouter — نماذج مجانية محدودة</option><option value="pollinations">Pollinations — وسيط غير رسمي</option><option value="puter">Claude عبر Puter — رصيد محدود</option></optgroup></select>
       <div id="apiBox" style="display:grid;gap:6px;margin-top:4px">
         <div class="eng-st"><i class="dot" id="apiDot"></i><span id="apiTxt">أدخل المفتاح المجاني</span></div>
         <button type="button" class="btn sm pri" id="puterBtn" hidden>تسجيل الدخول في Puter (مجاني)</button>
@@ -268,7 +269,7 @@ label.opts2 input{margin-top:6px;flex:none}
         <div style="display:flex;gap:6px" id="keyRow"><input type="password" id="apiKey" placeholder="" autocomplete="off"><button type="button" class="btn sm" id="apiSave">حفظ</button><button type="button" class="btn sm ghost" id="apiDel">حذف</button></div>
         <p class="hint" id="keyHow"></p>
         <div id="relayBox" hidden style="display:grid;gap:6px">
-          <label class="lbl" for="relayUrl">رابط الوسيط (Cloudflare Worker) — مطلوب لـ NVIDIA وCerebras وSambaNova</label>
+          <label class="lbl" for="relayUrl">رابط الوسيط (Cloudflare Worker) — مطلوب لـ Cohere وGitHub وZ.ai وNVIDIA وCerebras وSambaNova</label>
           <div style="display:flex;gap:6px"><input type="url" id="relayUrl" dir="ltr" placeholder="https://auditor-relay.xxxx.workers.dev" autocomplete="off"><button type="button" class="btn sm" id="relaySave">حفظ</button></div>
           <p class="hint" id="relayHint"></p>
         </div>
@@ -355,6 +356,15 @@ const PROVS = {
            info:"Mistral Large 3 / Medium 3.5 برصيد مجاني شهري (نحو 10$)."},
   gemini: {name:"Gemini", ph:"AIza…", url:"https://aistudio.google.com/apikey", howto:"افتح صفحة المفاتيح وسجّل بحساب Google، ثم اضغط Create API key وانسخ المفتاح والصقه هنا.",
            info:"نماذج Gemini Flash المجانية، وتقرأ الصور والمستندات الطويلة مباشرة."},
+  cohere: {name:"Cohere", ph:"…", url:"https://dashboard.cohere.com/api-keys", direct:"https://api.cohere.ai/compatibility/v1", relay:true, models:["command-a-plus-05-2026","command-a-reasoning-08-2025","command-a-03-2025","c4ai-aya-expanse-32b","command-a-vision-07-2025"],
+           howto:"سجّل في dashboard.cohere.com (مجاني بلا بطاقة)، ثم من API Keys انسخ Trial Key والصقه هنا.",
+           info:"Command A — من أقوى النماذج في العربية، سياق طويل (٢٥٦ ألف token)، نحو ١٠٠٠ طلب شهرياً مجاناً. يعمل عبر الوسيط."},
+  github: {name:"GitHub Models", ph:"github_pat_… أو ghp_…", url:"https://github.com/settings/personal-access-tokens/new", direct:"https://models.github.ai/inference", relay:true, models:["openai/gpt-4.1","openai/gpt-4o","deepseek/deepseek-v3-0324","meta/llama-4-maverick-17b-128e-instruct-fp8","openai/gpt-4.1-mini"],
+           howto:"من حسابك في GitHub افتح Fine-grained token، وفي Permissions اختر Models: Read، ثم أنشئ الرمز وانسخه هنا.",
+           info:"GPT-4.1 مجاناً بحسابك في GitHub — دقيق جداً في العربية، نحو ٥٠ طلباً يومياً، والشاهد الواحد يُختصر لأن حد الطلب ٨ آلاف token. يعمل عبر الوسيط."},
+  zai:    {name:"Z.ai GLM", ph:"…", url:"https://z.ai/manage-apikey/apikey-list", direct:"https://api.z.ai/api/paas/v4", relay:true, models:["glm-4.7-flash","glm-4.5-flash"],
+           howto:"سجّل في z.ai ثم من API Keys أنشئ مفتاحاً وانسخه هنا.",
+           info:"GLM-4.7-Flash مجاني بالكامل وسياقه طويل — احتياطي سريع. يعمل عبر الوسيط."},
   groq:   {name:"Groq", ph:"gsk_…", url:"https://console.groq.com/keys", base:"https://api.groq.com/openai/v1", howto:"افتح صفحة المفاتيح، ثم اضغط Create API Key وانسخ المفتاح والصقه هنا.",
            info:"أسرع المحركات، ونماذجه أصغر."}
 };
@@ -373,7 +383,7 @@ const pref = () => store.get("aud-free", {});
 const savePref = p => store.set("aud-free", Object.assign(pref(), p));
 const keyName = p => "aud-key-" + p;
 const getKey = p => { try { return localStorage.getItem(keyName(p)) || (p === "groq" ? localStorage.getItem("aud-groq-key") || "" : ""); } catch { return ""; } };
-const ENGINE_ORDER = ["gemini", "nvidia", "mistral", "groq", "cerebras", "sambanova", "openrouter", "pollinations", "puter"];
+const ENGINE_ORDER = ["gemini", "cohere", "github", "nvidia", "mistral", "groq", "zai", "cerebras", "sambanova", "openrouter", "pollinations", "puter"];
 const engineUsable = p => p === "puter" ? location.protocol !== "file:" : (!!getKey(p) && (!PROVS[p]?.relay || !!getRelay()));
 let PROV = PROVS[pref().prov2] ? pref().prov2 : (ENGINE_ORDER.find(p => p !== "puter" && engineUsable(p)) || "gemini");
 if (PROV === "puter" && location.protocol === "file:") PROV = "gemini";
@@ -385,6 +395,9 @@ const PO_JUDGE = [/claude.*opus/i, /claude/i, /gpt-5|openai-large/i, /gemini.*pr
 const CE_JUDGE = [/gpt-oss-120b/i, /qwen-3\.8/i, /qwen/i, /llama/i];
 const SN_JUDGE = [/deepseek-v3\.2/i, /deepseek-v3/i, /gpt-oss-120b/i, /llama-3\.3-70b/i, /deepseek/i];
 const NV_JUDGE = [/kimi-k3/i, /glm-5/i, /deepseek-v4/i, /nemotron-3-ultra/i, /kimi/i, /deepseek/i, /qwen3/i, /gpt-oss-120b/i];
+const CO_JUDGE = [/command-a-plus/i, /command-a-reasoning/i, /command-a-0/i, /command-a(?!-vision|-translate)/i, /aya-expanse-32b/i];
+const GH_JUDGE = [/(^|\/)gpt-4\.1$/i, /(^|\/)gpt-4o$/i, /deepseek-v3/i, /llama-4-maverick/i, /gpt-4\.1-mini/i];
+const ZA_JUDGE = [/glm-4\.7-flash/i, /glm-4\.5-flash/i, /flash/i];
 const PU_JUDGE = [/claude-sonnet-5-5/i, /claude-opus-5-5/i, /claude-sonnet-5/i, /claude-opus-5/i, /claude/i];
 let puterReady = null;
 function loadPuter(){
@@ -416,6 +429,18 @@ async function listModels(){
     return {all, judgePref:PU_JUDGE, vis:all, visAll:true};
   }
   if (PROVS[PROV].relay && !getRelay()) throw new Error("no_relay");
+  if (["cohere", "github", "zai"].includes(PROV)) {
+    let ids = [];
+    try { const r = await fetch(P().base + "/models", {headers:{Authorization:"Bearer " + apiKey}});
+      if ([401, 403].includes(r.status)) throw new Error(401);
+      if (r.ok) { const j = await r.json(), arr = Array.isArray(j) ? j : (j.data || j.models || []);
+        ids = [...new Set(arr.filter(m => !m.rate_limit_tier || /^(low|high)$/i.test(m.rate_limit_tier)).map(m => typeof m === "string" ? m : (m.id || m.name || "")).filter(i => i && !/embed|rerank|transcribe|translate|tts|whisper|audio|image|r1|o1|o3|o4|gpt-5|grok|nano/i.test(i)))]; } }
+    catch (e) { if (e.message === "401") throw e; }
+    if (!ids.length) ids = P().models.slice();
+    const jp = {cohere:CO_JUDGE, github:GH_JUDGE, zai:ZA_JUDGE}[PROV];
+    const vis = PROV === "cohere" ? ids.filter(i => /vision/i.test(i)) : PROV === "github" ? ids.filter(i => /gpt-4\.1$|gpt-4o$|llama-4/i.test(i)) : [];
+    return {all:ids, judgePref:jp, vis, visAll:false};
+  }
   if (PROV === "pollinations" || PROVS[PROV].relay) {
     let r = await fetch(P().base + "/models", {headers:{Authorization:"Bearer " + apiKey}});
     if (!r.ok && PROV === "pollinations") r = await fetch("https://gen.pollinations.ai/text/models", {headers:{Authorization:"Bearer " + apiKey}});
@@ -518,12 +543,12 @@ async function groqChat({model, messages, json = false, signal, onText, maxToken
   for (let attempt = 0; attempt < 6; attempt++) {
     const hd = {Authorization:"Bearer " + apiKey, "Content-Type":"application/json"};
     if (PROV === "openrouter") { hd["X-Title"] = "Evidence Auditor"; }
-    if (["mistral", "nvidia", "sambanova"].includes(PROV)) { delete body.reasoning_effort; if (body.max_completion_tokens) { body.max_tokens = body.max_completion_tokens; delete body.max_completion_tokens; } }
+    if (["mistral", "nvidia", "sambanova", "cohere", "github", "zai"].includes(PROV)) { if (PROV === "github") body.max_completion_tokens = Math.min(body.max_completion_tokens || 4000, 4000); delete body.reasoning_effort; if (body.max_completion_tokens) { body.max_tokens = body.max_completion_tokens; delete body.max_completion_tokens; } }
     const res = await fetch((P().base || GROQ) + "/chat/completions", {method:"POST", signal, headers:hd, body:JSON.stringify(body)});
     if (res.ok) { const j = await res.json(); const out = j.choices?.[0]?.message?.content || ""; onText?.(out, false); return out; }
     const t = await res.text();
     if (res.status === 429) {
-      if (/per day|TPD|RPD|free-models-per-day|daily/i.test(t)) throw new Error("free_day");
+      if (/per day|TPD|RPD|free-models-per-day|daily|ByDay|monthly|per month|trial key/i.test(t)) throw new Error("free_day");
       const ra = parseFloat(res.headers.get("retry-after")) || parseFloat((t.match(/try again in ([\d.]+)s/i) || [])[1]) || 20;
       if (ra > 10 && moreEngines()) throw new Error("free_busy");   // faster to hand over than to wait
       onText?.(waitMsg(ra), true); await sleep(Math.min(65, ra + 1) * 1000, signal); continue;
@@ -532,7 +557,7 @@ async function groqChat({model, messages, json = false, signal, onText, maxToken
     if (res.status >= 500) { if (attempt >= 1 && moreEngines()) throw new Error("free_busy"); onText?.(`خدمة ${P().name} مزدحمة… إعادة المحاولة`, true); await sleep((moreEngines() ? 3000 : 6000 * (attempt + 1)), signal); continue; }
     if (res.status === 400 && json && /json|response_format|validate/i.test(t)) { delete body.response_format; continue; }
     if (res.status === 400 && /reasoning/i.test(t)) { delete body.reasoning_effort; continue; }
-    if (res.status === 413 || /too large|context_length|maximum context/i.test(t)) throw new Error("free_big");
+    if (res.status === 413 || /too large|context_length|maximum context|tokens_limit_reached|Request body too large/i.test(t)) throw new Error("free_big");
     throw new Error("api " + res.status + ": " + t.slice(0, 300));
   }
   throw new Error("free_busy");
@@ -651,9 +676,10 @@ async function apiChat0({prompt, signal, onText, maxTokens = 6000}){
 }
 
 /* ---------- automatic fallback across engines (best first) ---------- */
-let CUR = {}, RUN_START = null;
-const isFallbackErr = e => !!e && e.name !== "AbortError" && (["free_day", "free_busy", "free_nofree", "free_big", "no_relay", "no_models", "bad_json", "puter_credit", "puter_signin", "puter_file", "free_blocked"].includes(e.message) || e instanceof TypeError || /^api (5\d\d|429|402|401|403|404)/.test(e.message || ""));
-const errLabel = e => ({free_big:"الشاهد أطول من حدّه", no_relay:"لا يوجد وسيط", bad_json:"رد غير منظم", free_day:"بلغ الحد اليومي", free_busy:"مزدحم", free_nofree:"غير متاح مجاناً", puter_credit:"نفد الرصيد", puter_signin:"يلزم تسجيل الدخول", puter_file:"لا يعمل من ملف محلي", free_blocked:"رفض المحتوى"})[e?.message] || (e instanceof TypeError ? "تعذّر الاتصال" : "خطأ في الخدمة");
+let CUR = {}, RUN_START = null, TRAIL = [];
+const isModelErr = e => /^api (400|404|422)/.test(e?.message || "") && /model/i.test(e?.message || "");
+const isFallbackErr = e => !!e && e.name !== "AbortError" && (["free_day", "free_busy", "free_nofree", "free_big", "no_relay", "no_models", "bad_json", "puter_credit", "puter_signin", "puter_file", "free_blocked"].includes(e.message) || e instanceof TypeError || /^api (5\d\d|429|402|401|403|404)/.test(e.message || "") || isModelErr(e));
+const errLabel = e => ({free_big:"الشاهد أطول من حدّه", no_relay:"لا يوجد وسيط", bad_json:"رد غير منظم", free_day:"بلغ الحد اليومي", free_busy:"مزدحم", free_nofree:"غير متاح مجاناً", puter_credit:"نفد الرصيد", puter_signin:"يلزم تسجيل الدخول", puter_file:"لا يعمل من ملف محلي", free_blocked:"رفض المحتوى", no_models:"لا توجد نماذج متاحة"})[e?.message] || (isModelErr(e) ? "النموذج غير متاح" : /^api 401/.test(e?.message||"") ? "المفتاح غير صحيح" : /^api 429/.test(e?.message||"") ? "تجاوز الحد" : null) || (e instanceof TypeError ? "تعذّر الاتصال" : "خطأ في الخدمة");
 async function switchEngine(prov){
   PROV = prov; apiKey = getKey(prov);
   const {all, judgePref, vis} = await listModels();
@@ -668,7 +694,7 @@ async function switchEngine(prov){
 // Best engine first; a busy engine hands over to the next. If every engine is busy, wait a little and start again
 // from the top (Gemini first). Engines out for the day (daily limit, bad key, no credit) are skipped in later rounds.
 const MAX_ROUNDS = 4;
-const isDeadErr = e => ["free_day", "free_nofree", "puter_credit", "puter_signin", "puter_file", "no_relay"].includes(e?.message) || /^api (401|402|403|404)/.test(e?.message || "");
+const isDeadErr = e => isModelErr(e) || ["free_day", "free_nofree", "puter_credit", "puter_signin", "puter_file", "no_relay"].includes(e?.message) || /^api (401|402|403|404)/.test(e?.message || "");
 async function withFallback(fn, onText, signal){
   const dead = new Set(); DEAD = dead;
   let tried = new Set(); TRIED = tried; ROUNDS_LEFT = MAX_ROUNDS - 1;
@@ -676,6 +702,13 @@ async function withFallback(fn, onText, signal){
     try { return await fn(); }
     catch (e) {
       if (!isFallbackErr(e) || !$("#autoFb")?.checked) throw e;
+      TRAIL.push(`${P().name} (${CUR.judge || $("#mApi")?.value || "—"}): ${errLabel(e)}`);
+      if (isModelErr(e)) {
+        try { const {all, judgePref} = await listModels(); const bad = (CUR.badModels = CUR.badModels || new Set()); bad.add(CUR.judge || $("#mApi").value);
+          const ok = m => !bad.has(m) && !/embed|whisper|tts|image|guard|rerank|audio|moderation/i.test(m);
+          let alt = null; for (const rx of (judgePref || [])) { alt = all.find(m => rx.test(m) && ok(m)); if (alt) break; } alt = alt || all.find(ok);
+          if (alt && bad.size < 4) { CUR.judge = alt; if (CUR.vis && bad.has(CUR.vis)) CUR.vis = alt; onText?.(`${P().name}: النموذج غير متاح — تجربة ${alt}`, true); continue; } } catch {}
+      }
       tried.add(PROV); if (isDeadErr(e)) dead.add(PROV);
       let switched = false;
       for (const next of ENGINE_ORDER) {
@@ -700,7 +733,7 @@ async function withFallback(fn, onText, signal){
 const apiChat = args => withFallback(() => apiChat0(args), args.onText, args.signal);
 const readImages = (images, signal, onText, step) => withFallback(() => readImages0(images, signal, onText, step), onText, signal);
 function restoreEngine(){ if (RUN_START && RUN_START !== PROV) { PROV = RUN_START; apiKey = getKey(PROV); } CUR = {}; RUN_START = null; }
-const budgetChars = () => ({puter:120000, gemini:90000, pollinations:80000, nvidia:80000, openrouter:60000, mistral:60000, sambanova:40000, cerebras:40000, groq:20000}[PROV] || 30000);
+const budgetChars = () => ({github:14000, cohere:120000, zai:60000, puter:120000, gemini:90000, pollinations:80000, nvidia:80000, openrouter:60000, mistral:60000, sambanova:40000, cerebras:40000, groq:20000}[PROV] || 30000);
 
 function parseJSON(t){
   t = String(t || "").replace(/<think>[\s\S]*?<\/think>/g, "").trim();
@@ -1136,7 +1169,7 @@ $("#runBtn").onclick = async () => {
   const step = (label, state = "run") => { const i = steps.findIndex(s => s.label === label); if (i < 0) steps.push({label, state}); else steps[i].state = state;
     const el = $("#stepList"); if (el) el.innerHTML = steps.map(s => `<li class="${s.state}">${s.state === "done" ? "✓" : s.state === "skip" ? "–" : "…"} ${esc(s.label)}</li>`).join(""); stage(label); };
   const timer = setInterval(() => { const el = $("#tm"); if (el) el.textContent = `مضى ${AR(Math.round((Date.now() - t0) / 1000))} ثانية`; }, 1000);
-  AUTO_SUB = null; RUN_START = PROV; CUR = {};
+  AUTO_SUB = null; RUN_START = PROV; CUR = {}; TRAIL = [];
   const ok = files.filter(f => !f.err);
   try {
     // 1) visual reading for the local engine (the API engine sees the images directly)
@@ -1283,9 +1316,12 @@ ${docsBlock(ok, budget)}
     else if (e?.message === "free_blocked") msg = "رفض النموذج معالجة هذا الشاهد لأسباب تتعلق بسياسة المحتوى. جرّب المحرك الآخر.";
     else if (e?.message === "free_big") msg = "الشاهد أطول مما يقبله هذا النموذج. ارفع ملفات أقل، أو استخدم Gemini (يقبل شواهد أطول).";
     else if (e?.message === "free_busy") msg = `خدمة ${P().name} مشغولة الآن. أعد المحاولة بعد دقيقة.`;
-    else if (/^api (404|400)/.test(e?.message || "") && /model/i.test(e.message)) msg = `النموذج المختار غير متاح الآن في ${P().name}. اختر نموذجاً آخر من القائمة.`;
+    else if (isModelErr(e)) msg = `النموذج المختار غير متاح الآن في ${P().name}.`;
     else msg = "تعذّر إكمال التدقيق: " + (e?.message || "خطأ غير معروف");
-    $("#result").innerHTML = `<div class="err">${esc(msg)}</div>`;
+    const usable = ENGINE_ORDER.filter(p => p !== "puter" && engineUsable(p)).map(p => PROVS[p].name);
+    const trail = TRAIL.length ? `<p style="margin-top:8px"><b>ما جرّبه البرنامج بالترتيب:</b></p><ul style="margin:4px 0 0;padding-inline-start:20px">${TRAIL.map(t => `<li>${esc(t)}</li>`).join("")}</ul>` : "";
+    const keys = `<p class="hint" style="margin-top:8px">المحركات التي لديك مفتاح لها: ${usable.length ? esc(usable.join("، ")) : "لا شيء"}. ${usable.length < 3 ? "أضف مفتاحاً مجانياً لـ Gemini أو Groq أو NVIDIA من إعدادات المحرك ليستمر التدقيق دون توقف." : "أعد المحاولة بعد دقيقة، أو اختر Gemini يدوياً."}</p>`;
+    $("#result").innerHTML = `<div class="err">${esc(msg)}${trail}${keys}</div>`;
   } finally {
     AUTO_SUB = null; LAST_MODEL = ""; restoreEngine(); clearInterval(timer); $("#stopBtn").hidden = true; updateRun();
   }
@@ -1327,8 +1363,6 @@ function normalise(r){
     const q = r.quality || {}; const sc = (v,mx) => v==null||v===""||isNaN(+v) ? null : Math.max(1,Math.min(mx,Math.round(+v)));
     out.quality = {existence:{score:sc(q.existence?.score,3), why:String(q.existence?.why||"")}, application:{score:sc(q.application?.score,3), why:String(q.application?.why||"")}, effectiveness:{score:sc(q.effectiveness?.score,5), why:String(q.effectiveness?.why||"")}};
     const L = INST_LV(out.quality); out.level = L.level; out.rule = L.rule; out.partial = !!L.partial;
-    if (!out.partial) { if (out.level >= 3) out.recommendation = ""; if (out.level < 5) out.commendation = ""; } // V2.8
-    if (!out.partial) { if (out.level >= 3) out.recommendation = ""; if (out.level < 5) out.commendation = ""; } // V2.8
     if (!out.partial) { if (out.level >= 3) out.recommendation = ""; if (out.level < 5) out.commendation = ""; } // V2.8
   } else {
     out.level = Math.max(0, Math.min(5, Math.round(+r.level || 0)));
@@ -1389,19 +1423,27 @@ function renderResult(r){
     ${r.recommendation ? `<div class="sec"><h3>نص التوصية</h3><div class="rec" id="recTxt">${esc(r.recommendation)}</div></div>` : ""}
     ${r.commendation ? `<div class="sec"><h3>نص الإشادة</h3><div class="rec praise">${esc(r.commendation)}</div></div>` : ""}
     ${r.suggestion ? `<div class="sec"><h3>مقترح (غير إلزامي)</h3><div class="rec">${esc(r.suggestion)}</div></div>` : ""}
-    ${r.suggestion ? `<div class="sec"><h3>مقترح (غير إلزامي)</h3><div class="rec">${esc(r.suggestion)}</div></div>` : ""}
-    ${r.suggestion ? `<div class="sec"><h3>مقترح (غير إلزامي)</h3><div class="rec">${esc(r.suggestion)}</div></div>` : ""}
+    <div class="sec" id="visBox"><h3>تحقّق بصري منك <small>افتح الملف وأجب؛ يُحتسب في محددات القبول والتقرير</small></h3>
+      ${[["approval","هل يظهر التوقيع أو الاعتماد من صاحب الصلاحية؟"],["linkage","هل يظهر شعار المنشأة أو ختمها؟"]].map(([k,q]) => `<div class="vq"><span>${q}</span><div class="seg" style="width:170px;flex:none">${[["yes","نعم"],["no","لا"]].map(([v,t]) => `<button type="button" data-vk="${k}" data-vv="${v}" aria-pressed="${r.visual?.[k]===v}">${t}</button>`).join("")}</div></div>`).join("")}
+      <p class="hint">${r.visual ? `سُجّل تحقّقك ${r.visual.at ? "في " + esc(r.visual.at) : ""}، ويظهر في المحددات أعلاه وفي التقرير المنزَّل.` : "النماذج المجانية قد لا ترى الصور، فتأكد بنفسك من التوقيع والختم."}</p></div>
     ${r.imgDropped ? `<div class="sec"><p class="warn">لم تُرسل ${AR(r.imgDropped)} صورة/صفحة لتجاوز الحد المسموح في الطلب الواحد؛ قُرئ النص المستخرج منها فقط إن وُجد.</p></div>` : ""}
     <div class="foot"><button class="btn sm" id="cpBtn">نسخ الحكم والتعليل</button><button class="btn sm ghost" id="newBtn">شاهد جديد</button>
       <span class="hint" style="margin-inline-start:auto;align-self:center">تقدير آلي مساعد من نموذج ذكاء اصطناعي مجاني، والحكم النهائي لفريق المراجعة.</span></div>
   </article>`;
   $("#cpBtn").onclick = () => copyText(plainOf(r));
+  document.querySelectorAll("#visBox [data-vk]").forEach(b => b.onclick = () => {
+    const k = b.dataset.vk, yes = b.dataset.vv === "yes";
+    r.visual = Object.assign(r.visual || {}, {[k]: b.dataset.vv, at: new Date().toLocaleDateString("ar-SA")});
+    r.controls = r.controls || {};
+    r.controls[k] = {ok: yes, note: k === "approval" ? (yes ? "تحقّق المدقق بصرياً: التوقيع/الاعتماد ظاهر" : "تحقّق المدقق بصرياً: لا يظهر توقيع أو اعتماد") : (yes ? "تحقّق المدقق بصرياً: الشعار/الختم ظاهر" : "تحقّق المدقق بصرياً: لا يظهر شعار أو ختم")};
+    store.set("aud-log", LOG); renderResult(r); document.getElementById("visBox")?.scrollIntoView({block:"center"});
+  });
   $("#newBtn").onclick = () => { files = []; renderFiles(); updateRun(); $("#note").value = ""; renderResult(null); window.scrollTo({top:0, behavior:"smooth"}); };
   box.scrollIntoView({behavior:"smooth", block:"start"});
 }
 function plainOf(r){
   const st = subTitle(r.mode, r.sub_code); const v = verdictOf(r.level, r.sub_code);
-  return [`${r.mode==="inst"?"الاعتماد المؤسسي":"الاعتماد البرامجي"} — ${st.std}`, `المعيار الفرعي: ${st.sub}`, `المستوى: ${r.level} (${v.s}) — ${v.t}`, r.rule?`قاعدة الاحتساب: ${r.rule}`:"", `التعليل: ${r.rationale}`, r.found.length?"ما ثبت:\n- "+r.found.join("\n- "):"", r.gaps.length?"ما ينقص:\n- "+r.gaps.join("\n- "):"", r.next.length?"للصعود درجة:\n- "+r.next.join("\n- "):"", r.recommendation?`التوصية: ${r.recommendation}`:"", r.commendation?`الإشادة: ${r.commendation}`:"", r.suggestion?`المقترح: ${r.suggestion}`:""].filter(Boolean).join("\n\n");
+  return [`${r.mode==="inst"?"الاعتماد المؤسسي":"الاعتماد البرامجي"} — ${st.std}`, `المعيار الفرعي: ${st.sub}`, `المستوى: ${r.level} (${v.s}) — ${v.t}`, r.rule?`قاعدة الاحتساب: ${r.rule}`:"", `التعليل: ${r.rationale}`, r.found.length?"ما ثبت:\n- "+r.found.join("\n- "):"", r.gaps.length?"ما ينقص:\n- "+r.gaps.join("\n- "):"", r.next.length?"للصعود درجة:\n- "+r.next.join("\n- "):"", r.visual?`التحقق البصري: التوقيع/الاعتماد ${r.visual.approval==="yes"?"ظاهر":r.visual.approval==="no"?"غير ظاهر":"-"} · الشعار/الختم ${r.visual.linkage==="yes"?"ظاهر":r.visual.linkage==="no"?"غير ظاهر":"-"}`:"", r.recommendation?`التوصية: ${r.recommendation}`:"", r.commendation?`الإشادة: ${r.commendation}`:"", r.suggestion?`المقترح: ${r.suggestion}`:""].filter(Boolean).join("\n\n");
 }
 async function copyText(t){
   try { await navigator.clipboard.writeText(t); toast("نُسخ"); }
@@ -1424,9 +1466,9 @@ function save(filename, data){
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); toast("حُفظ في مجلد التنزيلات");
 }
 $("#csvBtn").onclick = () => {
-  const rows = [["النوع","المعيار الرئيس","المعيار الفرعي","المستوى","الحكم","صلة الشاهد","الملفات","التعليل","التوصية","التاريخ"]];
+  const rows = [["النوع","المعيار الرئيس","المعيار الفرعي","المستوى","الحكم","صلة الشاهد","الملفات","التعليل","التوصية","التحقق البصري","التاريخ"]];
   LOG.filter(x => x.mode === MODE).forEach(r => { const st = subTitle(r.mode, r.sub_code); const v = verdictOf(r.level, r.sub_code);
-    rows.push([r.mode==="inst"?"مؤسسي":"برامجي", st.std, st.sub, r.level, v.t+" - "+v.s, r.match, r.files.join(" | "), r.rationale, r.recommendation, r.at.slice(0,10)]); });
+    rows.push([r.mode==="inst"?"مؤسسي":"برامجي", st.std, st.sub, r.level, v.t+" - "+v.s, r.match, r.files.join(" | "), r.rationale, r.recommendation, r.visual ? `توقيع: ${r.visual.approval==="yes"?"نعم":r.visual.approval==="no"?"لا":"-"} / ختم: ${r.visual.linkage==="yes"?"نعم":r.visual.linkage==="no"?"لا":"-"}` : "", r.at.slice(0,10)]); });
   save("سجل تدقيق الشواهد.csv", "﻿" + rows.map(r => r.map(c => `"${String(c??"").replace(/"/g,'""')}"`).join(",")).join("\r\n"));
 };
 $("#repBtn").onclick = () => {
@@ -1435,7 +1477,7 @@ $("#repBtn").onclick = () => {
     const ul = a => a.length ? "<ul>" + a.map(x => `<li>${esc(x)}</li>`).join("") + "</ul>" : "<p>لا يوجد.</p>";
     return `<section><h2>${esc(st.sub)}</h2><p class="m">${esc(st.std)}${r.org?" · "+esc(r.org):""} · ${esc(r.files.join("، "))}</p>
     <table><tr><th>المستوى</th><td>${r.level} — ${esc(v.s)}</td><th>الحكم</th><td>${esc(v.t)}</td></tr>${r.rule?`<tr><th>قاعدة الاحتساب</th><td colspan="3">${esc(r.rule)}</td></tr>`:""}${r.quality?`<tr><th>الوجود</th><td>${r.quality.existence.score??"—"}</td><th>التطبيق</th><td>${r.quality.application.score??"—"}</td></tr><tr><th>الفاعلية</th><td colspan="3">${r.quality.effectiveness.score??"—"}</td></tr>`:""}</table>
-    <h3>التعليل</h3><p>${esc(r.rationale)}</p><h3>ما ثبت</h3>${ul(r.found)}<h3>ما ينقص</h3>${ul(r.gaps)}<h3>للصعود درجة</h3>${ul(r.next)}
+    <h3>التعليل</h3><p>${esc(r.rationale)}</p>${r.visual?`<p class="m">التحقق البصري من المدقق: التوقيع/الاعتماد ${r.visual.approval==="yes"?"ظاهر":r.visual.approval==="no"?"غير ظاهر":"لم يُحدَّد"} · الشعار/الختم ${r.visual.linkage==="yes"?"ظاهر":r.visual.linkage==="no"?"غير ظاهر":"لم يُحدَّد"}</p>`:""}<h3>ما ثبت</h3>${ul(r.found)}<h3>ما ينقص</h3>${ul(r.gaps)}<h3>للصعود درجة</h3>${ul(r.next)}
     ${r.recommendation?`<h3>التوصية</h3><p class="rec">${esc(r.recommendation)}</p>`:""}${r.commendation?`<h3>الإشادة</h3><p class="rec">${esc(r.commendation)}</p>`:""}${r.suggestion?`<h3>المقترح</h3><p class="rec">${esc(r.suggestion)}</p>`:""}${r.suggestion?`<h3>المقترح</h3><p class="rec">${esc(r.suggestion)}</p>`:""}${r.suggestion?`<h3>المقترح</h3><p class="rec">${esc(r.suggestion)}</p>`:""}</section>`; }).join("");
   const html = `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="author" content="علي الأحمري"><title>تقرير تدقيق الشواهد</title><style>body{font-family:"Sakkal Majalla","Traditional Arabic",Tahoma,sans-serif;font-size:18px;line-height:1.7;color:#14251F;max-width:900px;margin:30px auto;padding:0 20px}h1{color:#0D5A46}h2{color:#0D5A46;border-bottom:2px solid #8A6A1F;padding-bottom:4px;margin-top:34px}h3{margin:14px 0 4px}.m{color:#4A5C55}table{border-collapse:collapse;width:100%}th,td{border:1px solid #D5DDD7;padding:6px 10px;text-align:right}th{background:#EBEFEA;width:18%}.rec{background:#F3EAD3;padding:8px 12px;border-right:4px solid #8A6A1F}</style></head><body><h1>تقرير تدقيق شواهد ${MODE==="inst"?"الاعتماد المؤسسي":"الاعتماد البرامجي"}</h1><p class="m">مُعِدّ التقرير: وحدة الجودة بمنطقة مكة المكرمة · عدد المعايير المدققة: ${list.length} · ${new Date().toLocaleDateString("ar-SA")}</p><p class="m">تقدير آلي مساعد للمدقق مبني على ${MODE==="inst"?"ملف مقاييس التقويم للمراجعة الخارجية V2.1":"محددات ومقاييس التحقق للاعتماد البرامجي"}، والحكم النهائي لفريق المراجعة.</p>${body}</body></html>`;
   save("تقرير تدقيق الشواهد.html", html);
