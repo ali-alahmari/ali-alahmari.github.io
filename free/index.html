@@ -504,6 +504,9 @@ async function blobToB64(b){
   for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000));
   return btoa(s);
 }
+let TRIED = new Set(), DEAD = new Set(), ROUNDS_LEFT = 0;
+// true while a busy engine can hand over (another engine untried, or another round from the top still to come)
+const moreEngines = () => !!document.querySelector("#autoFb")?.checked && (ROUNDS_LEFT > 0 || ENGINE_ORDER.some(p => p !== PROV && !TRIED.has(p) && !DEAD.has(p) && engineUsable(p)));
 const sleep = (ms, signal) => new Promise((res, rej) => { const t = setTimeout(res, ms); signal?.addEventListener("abort", () => { clearTimeout(t); rej(new DOMException("aborted", "AbortError")); }); });
 const waitMsg = s => `بلغ الحد المجاني للدقيقة… انتظار ${Math.ceil(s)} ثانية ثم المتابعة تلقائياً`;
 
@@ -522,10 +525,11 @@ async function groqChat({model, messages, json = false, signal, onText, maxToken
     if (res.status === 429) {
       if (/per day|TPD|RPD|free-models-per-day|daily/i.test(t)) throw new Error("free_day");
       const ra = parseFloat(res.headers.get("retry-after")) || parseFloat((t.match(/try again in ([\d.]+)s/i) || [])[1]) || 20;
+      if (ra > 10 && moreEngines()) throw new Error("free_busy");   // faster to hand over than to wait
       onText?.(waitMsg(ra), true); await sleep(Math.min(65, ra + 1) * 1000, signal); continue;
     }
     if (res.status === 402) throw new Error("free_day");
-    if (res.status >= 500) { onText?.(`خدمة ${P().name} مزدحمة… إعادة المحاولة`, true); await sleep(6000 * (attempt + 1), signal); continue; }
+    if (res.status >= 500) { if (attempt >= 1 && moreEngines()) throw new Error("free_busy"); onText?.(`خدمة ${P().name} مزدحمة… إعادة المحاولة`, true); await sleep((moreEngines() ? 3000 : 6000 * (attempt + 1)), signal); continue; }
     if (res.status === 400 && json && /json|response_format|validate/i.test(t)) { delete body.response_format; continue; }
     if (res.status === 400 && /reasoning/i.test(t)) { delete body.reasoning_effort; continue; }
     if (res.status === 413 || /too large|context_length|maximum context/i.test(t)) throw new Error("free_big");
@@ -564,14 +568,14 @@ async function gemChat({model, parts, json = false, signal, onText, maxTokens = 
         if (/limit:\s*0\b/i.test(t)) { lastErr = "free_nofree"; break; }
         if (/PerDay|per day/i.test(t)) { lastErr = "free_day"; break; }
         const ra = parseFloat((t.match(/"retryDelay":\s*"([\d.]+)s"/) || [])[1]) || parseFloat(res.headers.get("retry-after")) || 20;
-        if (ra > 10) { lastErr = "free_busy"; break; }   // faster to hand over to the next model/engine than to wait   // quota is per model: switching is faster than waiting
+        if (ra > 10 && (hasNext || moreEngines())) { lastErr = "free_busy"; break; }   // faster to hand over to the next model/engine than to wait   // quota is per model: switching is faster than waiting
         onText?.(waitMsg(ra), true); await sleep(Math.min(65, ra + 1) * 1000, signal); continue;
       }
       if ([500, 502, 503, 504].includes(res.status)) {
         busy++; lastErr = "free_busy";
-        if (busy >= (hasNext ? 1 : 2)) break;
+        if (busy >= (hasNext || moreEngines() ? 1 : 5)) break;
         onText?.(`خدمة Gemini مزدحمة… إعادة المحاولة (${AR(busy)})`, true);
-        await sleep(3000 + Math.random() * 1500, signal); continue;
+        await sleep((moreEngines() ? 3000 : Math.min(30, 4 * 2 ** (busy - 1)) * 1000) + Math.random() * 1500, signal); continue;
       }
       if (res.status === 404 && hasNext) { lastErr = "api 404: model"; break; }
       if ([400, 403].includes(res.status) && /API key|API_KEY/i.test(t)) throw new Error("api 401: " + t.slice(0, 200));
@@ -600,6 +604,7 @@ async function puterChat({model, prompt, images = [], signal, onText, maxTokens 
       if (/insufficient|funds|credit|quota|limit|usage|balance|upgrade/i.test(m) && !/rate/i.test(m)) throw new Error("puter_credit");
       if (/not.?found|unknown model|invalid model/i.test(m)) throw new Error("api 404: model " + m.slice(0, 120));
       if (/sign.?in|auth|401/i.test(m)) throw new Error("puter_signin");
+      if (attempt >= 1 && moreEngines()) throw new Error("free_busy");
       onText?.("خدمة Puter مشغولة… إعادة المحاولة", true); await sleep(5000 * (attempt + 1), signal);
     }
   }
@@ -660,26 +665,40 @@ async function switchEngine(prov){
   const v = (sp.vis !== undefined && (sp.vis === "" || vis.includes(sp.vis))) ? sp.vis : ((prov === "gemini" || prov === "puter") ? judge : (vis[0] || ""));
   CUR = {judge, vis:v};
 }
-async function withFallback(fn, onText){
-  const tried = new Set();
-  for (;;) {
+// Best engine first; a busy engine hands over to the next. If every engine is busy, wait a little and start again
+// from the top (Gemini first). Engines out for the day (daily limit, bad key, no credit) are skipped in later rounds.
+const MAX_ROUNDS = 4;
+const isDeadErr = e => ["free_day", "free_nofree", "puter_credit", "puter_signin", "puter_file", "no_relay"].includes(e?.message) || /^api (401|402|403|404)/.test(e?.message || "");
+async function withFallback(fn, onText, signal){
+  const dead = new Set(); DEAD = dead;
+  let tried = new Set(); TRIED = tried; ROUNDS_LEFT = MAX_ROUNDS - 1;
+  for (let round = 1; ; ) {
     try { return await fn(); }
     catch (e) {
       if (!isFallbackErr(e) || !$("#autoFb")?.checked) throw e;
-      tried.add(PROV);
+      tried.add(PROV); if (isDeadErr(e)) dead.add(PROV);
       let switched = false;
       for (const next of ENGINE_ORDER) {
-        if (tried.has(next) || !engineUsable(next)) continue;
+        if (tried.has(next) || dead.has(next) || !engineUsable(next)) continue;
         const from = P().name;
         try { await switchEngine(next); switched = true; onText?.(`${from}: ${errLabel(e)} — التحويل تلقائياً إلى ${P().name} (${CUR.judge})`, true); break; }
-        catch { tried.add(next); }
+        catch { tried.add(next); dead.add(next); }
       }
-      if (!switched) throw e;
+      if (switched) continue;
+      // every engine tried in this round: start over from the best one that is still alive
+      const alive = ENGINE_ORDER.filter(p => !dead.has(p) && engineUsable(p));
+      if (!alive.length || round >= MAX_ROUNDS) throw e;
+      round++; ROUNDS_LEFT = MAX_ROUNDS - round;
+      const wait = 15 * (round - 1);
+      onText?.(`كل المحركات مزدحمة الآن — إعادة المحاولة من البداية بـ ${PROVS[alive[0]].name} بعد ${wait} ثانية (الجولة ${round} من ${MAX_ROUNDS})`, true);
+      await sleep(wait * 1000, signal);
+      tried = new Set(); TRIED = tried;
+      try { await switchEngine(alive[0]); } catch { dead.add(alive[0]); }
     }
   }
 }
-const apiChat = args => withFallback(() => apiChat0(args), args.onText);
-const readImages = (images, signal, onText, step) => withFallback(() => readImages0(images, signal, onText, step), onText);
+const apiChat = args => withFallback(() => apiChat0(args), args.onText, args.signal);
+const readImages = (images, signal, onText, step) => withFallback(() => readImages0(images, signal, onText, step), onText, signal);
 function restoreEngine(){ if (RUN_START && RUN_START !== PROV) { PROV = RUN_START; apiKey = getKey(PROV); } CUR = {}; RUN_START = null; }
 const budgetChars = () => ({puter:120000, gemini:90000, pollinations:80000, nvidia:80000, openrouter:60000, mistral:60000, sambanova:40000, cerebras:40000, groq:20000}[PROV] || 30000);
 
