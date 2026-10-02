@@ -424,7 +424,9 @@ async function listModels(){
     const ids = [...new Set(arr.map(m => typeof m === "string" ? m : (m.id || m.name || "")).filter(i => i && !/embed|rerank|guard|safety|tts|whisper|audio|image|flux|reward|parse|retriever|clip/i.test(i)))].sort();
     if (PROV === "cerebras") return {all:ids, judgePref:CE_JUDGE, vis:ids.filter(i => /qwen-3\.8|vl|vision|llama-4|gemma/i.test(i)), visAll:false};
     if (PROV === "sambanova") return {all:ids, judgePref:SN_JUDGE, vis:ids.filter(i => /vl|vision|llama-4|maverick/i.test(i)), visAll:false};
-    if (PROV === "nvidia") return {all:ids, judgePref:NV_JUDGE, vis:ids.filter(i => /vl\b|vision|-vl|kimi-k3|llama-4|gemma-?[34]|nemotron.*vl|phi-4-multimodal/i.test(i)), visAll:false};
+    if (PROV === "nvidia") { const VP = [/kimi-k3/i, /gemma-?4/i, /llama-4.*maverick/i, /qwen.*vl/i, /llama-3\.2-90b-vision/i, /llama-4/i];
+      const vr = i => { const k = VP.findIndex(rx => rx.test(i)); return k < 0 ? 99 : k; };
+      return {all:ids, judgePref:NV_JUDGE, vis:ids.filter(i => /vl\b|vision|-vl|kimi-k3|llama-4|gemma-?[34]|nemotron.*vl|phi-4-multimodal/i.test(i)).sort((a, b) => vr(a) - vr(b)), visAll:false}; }
     return {all:ids, judgePref:PO_JUDGE, vis:ids.filter(i => /claude|gpt|openai|gemini|grok/i.test(i)), visAll:false};
   }
   if (PROV === "openrouter") {
@@ -651,9 +653,12 @@ async function switchEngine(prov){
   PROV = prov; apiKey = getKey(prov);
   const {all, judgePref, vis} = await listModels();
   if (!all.length) throw new Error("no_models");
-  let judge = null; for (const rx of judgePref) { judge = all.find(i => rx.test(i)); if (judge) break; }
+  const sp = pref()[prov] || {};
+  let judge = (sp.judge && all.includes(sp.judge)) ? sp.judge : null;
+  if (!judge) for (const rx of judgePref) { judge = all.find(i => rx.test(i)); if (judge) break; }
   judge = judge || all[0];
-  CUR = {judge, vis: (prov === "gemini" || prov === "puter") ? judge : (vis[0] || "")};
+  const v = (sp.vis !== undefined && (sp.vis === "" || vis.includes(sp.vis))) ? sp.vis : ((prov === "gemini" || prov === "puter") ? judge : (vis[0] || ""));
+  CUR = {judge, vis:v};
 }
 async function withFallback(fn, onText){
   const tried = new Set();
