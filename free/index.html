@@ -545,7 +545,7 @@ async function groqChat({model, messages, json = false, signal, onText, maxToken
     if (PROV === "openrouter") { hd["X-Title"] = "Evidence Auditor"; }
     if (["mistral", "nvidia", "sambanova", "cohere", "github", "zai"].includes(PROV)) { if (PROV === "github") body.max_completion_tokens = Math.min(body.max_completion_tokens || 4000, 4000); delete body.reasoning_effort; if (body.max_completion_tokens) { body.max_tokens = body.max_completion_tokens; delete body.max_completion_tokens; } }
     const res = await fetch((P().base || GROQ) + "/chat/completions", {method:"POST", signal, headers:hd, body:JSON.stringify(body)});
-    if (res.ok) { const j = await res.json(); const out = j.choices?.[0]?.message?.content || ""; LAST_MODEL = model; onText?.(out, false); return out; }
+    if (res.ok) { const raw = await res.text(); let j; try { j = JSON.parse(raw); } catch { if (attempt < 2) { onText?.(`${P().name}: رد غير مفهوم من الخدمة… إعادة المحاولة`, true); await sleep(1500, signal); continue; } throw new Error("bad_reply"); } const out = j.choices?.[0]?.message?.content || ""; if (!out.trim()) { if (attempt < 2) continue; throw new Error("bad_reply"); } LAST_MODEL = model; onText?.(out, false); return out; }
     const t = await res.text();
     if (res.status === 429) {
       if (/per day|TPD|RPD|free-models-per-day|daily|ByDay|monthly|per month|trial key/i.test(t)) throw new Error("free_day");
@@ -679,8 +679,8 @@ async function apiChat0({prompt, signal, onText, maxTokens = 6000}){
 /* ---------- automatic fallback across engines (best first) ---------- */
 let CUR = {}, RUN_START = null, TRAIL = [];
 const isModelErr = e => /^api (400|404|422)/.test(e?.message || "") && /model/i.test(e?.message || "");
-const isFallbackErr = e => !!e && e.name !== "AbortError" && (["free_day", "free_busy", "free_nofree", "free_big", "no_relay", "no_models", "bad_json", "puter_credit", "puter_signin", "puter_file", "free_blocked"].includes(e.message) || e instanceof TypeError || /^api (5\d\d|429|402|401|403|404|422)/.test(e.message || "") || isModelErr(e));
-const errLabel = e => ({free_big:"الشاهد أطول من حدّه", no_relay:"لا يوجد وسيط", bad_json:"رد غير منظم", free_day:"بلغ الحد اليومي", free_busy:"مزدحم", free_nofree:"غير متاح مجاناً", puter_credit:"نفد الرصيد", puter_signin:"يلزم تسجيل الدخول", puter_file:"لا يعمل من ملف محلي", free_blocked:"رفض المحتوى", no_models:"لا توجد نماذج متاحة"})[e?.message] || (isModelErr(e) ? "النموذج غير متاح" : /^api 401/.test(e?.message||"") ? "المفتاح غير صحيح" : /^api 429/.test(e?.message||"") ? "تجاوز الحد" : null) || (e instanceof TypeError ? "تعذّر الاتصال" : "خطأ في الخدمة");
+const isFallbackErr = e => !!e && e.name !== "AbortError" && (e instanceof SyntaxError || ["bad_reply", "free_day", "free_busy", "free_nofree", "free_big", "no_relay", "no_models", "bad_json", "puter_credit", "puter_signin", "puter_file", "free_blocked"].includes(e.message) || e instanceof TypeError || /^api (5\d\d|429|402|401|403|404|422)/.test(e.message || "") || isModelErr(e));
+const errLabel = e => ({free_big:"الشاهد أطول من حدّه", no_relay:"لا يوجد وسيط", bad_json:"رد غير منظم", free_day:"بلغ الحد اليومي", free_busy:"مزدحم", free_nofree:"غير متاح مجاناً", puter_credit:"نفد الرصيد", puter_signin:"يلزم تسجيل الدخول", puter_file:"لا يعمل من ملف محلي", free_blocked:"رفض المحتوى", no_models:"لا توجد نماذج متاحة", bad_reply:"رد غير مفهوم من الخدمة"})[e?.message] || (isModelErr(e) ? "النموذج غير متاح" : /^api 401/.test(e?.message||"") ? "المفتاح غير صحيح" : /^api 429/.test(e?.message||"") ? "تجاوز الحد" : null) || (e instanceof TypeError ? "تعذّر الاتصال" : "خطأ في الخدمة");
 async function switchEngine(prov){
   PROV = prov; apiKey = getKey(prov); LAST_MODEL = "";
   const {all, judgePref, vis} = await listModels();
