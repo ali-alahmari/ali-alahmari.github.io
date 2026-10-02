@@ -260,13 +260,18 @@ label.opts2 input{margin-top:6px;flex:none}
     </div>
     <div class="field engine" id="engine">
       <label class="lbl" for="provSel">محرك التحليل المجاني</label>
-      <select id="provSel"><option value="puter">Claude عبر Puter — الأقوى (بلا مفتاح)</option><option value="pollinations">Pollinations — Claude وGPT وGemini بمفتاح واحد</option><option value="openrouter">OpenRouter — نماذج مجانية كبيرة (Kimi وDeepSeek وNemotron)</option><option value="mistral">Mistral Large — رصيد شهري مجاني</option><option value="gemini">Gemini Flash — سياق طويل</option><option value="groq">Groq — الأسرع</option></select>
+      <select id="provSel"><optgroup label="المحركات الأساسية (بالترتيب)"><option value="gemini">١. Gemini Flash — الأدق في العربي ويقرأ المستندات</option><option value="nvidia">٢. NVIDIA — DeepSeek وKimi بلا حد يومي</option><option value="mistral">٣. Mistral Large — رصيد مجاني سخي</option><option value="groq">٤. Groq — الأسرع للشواهد القصيرة</option><option value="cerebras">٥. Cerebras — سريع جداً (اختياري)</option><option value="sambanova">٦. SambaNova — احتياطي سريع (اختياري)</option></optgroup><optgroup label="احتياطي أخير (يُستخدم بعد نفاد الأساسية)"><option value="openrouter">OpenRouter — نماذج مجانية محدودة</option><option value="pollinations">Pollinations — وسيط غير رسمي</option><option value="puter">Claude عبر Puter — رصيد محدود</option></optgroup></select>
       <div id="apiBox" style="display:grid;gap:6px;margin-top:4px">
         <div class="eng-st"><i class="dot" id="apiDot"></i><span id="apiTxt">أدخل المفتاح المجاني</span></div>
         <button type="button" class="btn sm pri" id="puterBtn" hidden>تسجيل الدخول في Puter (مجاني)</button>
         <label class="lbl" for="apiKey" id="keyLbl">المفتاح</label>
         <div style="display:flex;gap:6px" id="keyRow"><input type="password" id="apiKey" placeholder="" autocomplete="off"><button type="button" class="btn sm" id="apiSave">حفظ</button><button type="button" class="btn sm ghost" id="apiDel">حذف</button></div>
         <p class="hint" id="keyHow"></p>
+        <div id="relayBox" hidden style="display:grid;gap:6px">
+          <label class="lbl" for="relayUrl">رابط الوسيط (Cloudflare Worker) — مطلوب لـ NVIDIA وCerebras وSambaNova</label>
+          <div style="display:flex;gap:6px"><input type="url" id="relayUrl" dir="ltr" placeholder="https://auditor-relay.xxxx.workers.dev" autocomplete="off"><button type="button" class="btn sm" id="relaySave">حفظ</button></div>
+          <p class="hint" id="relayHint"></p>
+        </div>
         <label class="lbl" for="mApi">نموذج الحكم</label>
         <select id="mApi"></select>
         <label class="lbl" for="mVis">نموذج قراءة الصور والمستندات الممسوحة</label>
@@ -332,14 +337,18 @@ const store = { get(k,d){ try{ const v=localStorage.getItem(k); return v?JSON.pa
 let MODE = null, files = [], scope = "full", phase = "2", ctl = null, AUTO_SUB = null;
 let LOG = store.get("aud-log", []);
 
-/* ---------- engine: free providers (Groq or Google Gemini), key kept only in this browser ---------- */
+/* ---------- engine: free providers, best first (Gemini → NVIDIA → Mistral → Groq → Cerebras → SambaNova), weak ones last; keys kept only in this browser ---------- */
 const PROVS = {
   puter:  {name:"Claude (Puter)", nokey:true, url:"https://puter.com", howto:"لا يحتاج مفتاحاً: اضغط «تسجيل الدخول في Puter» وأنشئ حساباً مجانياً مرة واحدة. لكل حساب رصيد شهري مجاني، وعند نفاده يمكن التبديل لمحرك آخر.",
            info:"يستخدم نماذج Claude (Sonnet 5.5 / Opus 5.5) — الأقرب لنسخة Claude. Opus أدق لكنه يستهلك الرصيد أسرع."},
   pollinations:{name:"Pollinations", ph:"sk_… أو pk_…", url:"https://enter.pollinations.ai", base:"https://gen.pollinations.ai/v1", howto:"سجّل في Pollinations (مجاني)، ثم من لوحة الحساب أنشئ مفتاحاً وانسخه هنا.",
            info:"منصة واحدة تتيح Claude وGPT-5 وGemini وDeepSeek وGrok برصيد يومي مجاني (pollen)، وتعمل من المتصفح مباشرة."},
-  nvidia: {name:"NVIDIA", ph:"nvapi-…", url:"https://build.nvidia.com/settings/api-keys", base:"https://integrate.api.nvidia.com/v1", howto:"سجّل في build.nvidia.com (مجاني، بلا بطاقة)، ثم من API Keys أنشئ مفتاحاً وانسخه هنا.",
-           info:"أقوى النماذج المفتوحة مجاناً: Kimi K3 وGLM-5.3 وDeepSeek V4.1 وNemotron 3 Ultra — حتى 40 طلباً في الدقيقة. إن ظهر «تعذّر الاتصال» فالخدمة تمنع الاتصال من المتصفح؛ استخدم OpenRouter."},
+  nvidia: {name:"NVIDIA", ph:"nvapi-…", url:"https://build.nvidia.com/settings/api-keys", direct:"https://integrate.api.nvidia.com/v1", relay:true, howto:"سجّل في build.nvidia.com (مجاني، بلا بطاقة)، ثم من API Keys أنشئ مفتاحاً وانسخه هنا.",
+           info:"أقوى النماذج المفتوحة مجاناً (DeepSeek وKimi وGLM وQwen) — حتى 40 طلباً في الدقيقة وبلا حد يومي. يعمل عبر الوسيط لأن NVIDIA تمنع الاتصال المباشر من المتصفح."},
+  cerebras:{name:"Cerebras", ph:"csk-…", url:"https://cloud.cerebras.ai", direct:"https://api.cerebras.ai/v1", relay:true, howto:"سجّل في cloud.cerebras.ai ثم من API Keys أنشئ مفتاحاً وانسخه هنا (قد تطلب الخدمة إضافة وسيلة دفع لتفعيل الرصيد المجاني).",
+           info:"أسرع خدمة استدلال (gpt-oss-120b وQwen) — مليون token يومياً و٥ طلبات في الدقيقة. اختياري."},
+  sambanova:{name:"SambaNova", ph:"…", url:"https://cloud.sambanova.ai/apis", direct:"https://api.sambanova.ai/v1", relay:true, howto:"سجّل في cloud.sambanova.ai ثم من APIs أنشئ مفتاحاً وانسخه هنا.",
+           info:"DeepSeek V3 وgpt-oss بسرعة عالية — الحد المجاني صغير (نحو ٢٠ طلباً يومياً)، لذا يأتي احتياطياً. اختياري."},
   openrouter:{name:"OpenRouter", ph:"sk-or-…", url:"https://openrouter.ai/keys", base:"https://openrouter.ai/api/v1", howto:"سجّل في OpenRouter ثم اضغط Create Key وانسخ المفتاح والصقه هنا.",
            info:"يعرض النماذج المجانية أولاً (Nemotron 3 Ultra، Inkling، Qwen…) — الحد المجاني نحو 50 طلباً يومياً. إن كان في حسابك رصيد تظهر النماذج المدفوعة أيضاً (منها Claude)."},
   mistral:{name:"Mistral", ph:"…", url:"https://console.mistral.ai/api-keys", base:"https://api.mistral.ai/v1", howto:"سجّل في Mistral (الخطة المجانية)، ثم من API Keys اضغط Create new key وانسخه هنا.",
@@ -350,6 +359,10 @@ const PROVS = {
            info:"أسرع المحركات، ونماذجه أصغر."}
 };
 const GROQ = "https://api.groq.com/openai/v1", GEM = "https://generativelanguage.googleapis.com/v1beta";
+/* relay: a free Cloudflare Worker that forwards requests to services that block browsers (CORS). Keys stay in this browser. */
+const RELAY_DEFAULT = "https://auditor-relay.alrabia02.workers.dev";   // ضع هنا رابط الوسيط بعد نشره ليعمل لكل المستخدمين دون إدخال
+const getRelay = () => { try { return (localStorage.getItem("aud-relay") || RELAY_DEFAULT || "").trim().replace(/\/+$/, ""); } catch { return RELAY_DEFAULT; } };
+for (const [id, pv] of Object.entries(PROVS)) if (pv.relay) Object.defineProperty(pv, "base", {get(){ const r = getRelay(); return r ? `${r}/${id}/v1` : pv.direct; }});
 const ENG = {ok:false, kind:"api", models:[], api:{ok:false, models:[]}};
 const G_VIS = /(qwen3\.8|vl\b|vision|scout|maverick|llava|gemma-?4)/i;
 const G_JUDGE = [/gpt-oss-120b/i, /qwen3\.8/i, /qwen3-32b/i, /llama-3\.3-70b/i, /kimi/i, /gpt-oss-20b/i];
@@ -360,13 +373,17 @@ const pref = () => store.get("aud-free", {});
 const savePref = p => store.set("aud-free", Object.assign(pref(), p));
 const keyName = p => "aud-key-" + p;
 const getKey = p => { try { return localStorage.getItem(keyName(p)) || (p === "groq" ? localStorage.getItem("aud-groq-key") || "" : ""); } catch { return ""; } };
-let PROV = (PROVS[pref().prov] && pref().prov !== "nvidia") ? pref().prov : (["puter","pollinations","openrouter","gemini","mistral","groq"].find(p => p === "puter" ? location.protocol !== "file:" : !!getKey(p)) || (location.protocol === "file:" ? "gemini" : "puter"));
+const ENGINE_ORDER = ["gemini", "nvidia", "mistral", "groq", "cerebras", "sambanova", "openrouter", "pollinations", "puter"];
+const engineUsable = p => p === "puter" ? location.protocol !== "file:" : (!!getKey(p) && (!PROVS[p]?.relay || !!getRelay()));
+let PROV = PROVS[pref().prov2] ? pref().prov2 : (ENGINE_ORDER.find(p => p !== "puter" && engineUsable(p)) || "gemini");
 if (PROV === "puter" && location.protocol === "file:") PROV = "gemini";
 let apiKey = getKey(PROV);
 const P = () => PROVS[PROV];
 const OR_JUDGE = [/nemotron-3-ultra/i, /inkling(?!-small)/i, /kimi/i, /deepseek/i, /qwen3\.8/i, /gpt-oss-120b/i, /llama-4/i];
 const MI_JUDGE = [/^mistral-large-latest$/i, /mistral-large/i, /^mistral-medium-latest$/i, /mistral-medium/i];
 const PO_JUDGE = [/claude.*opus/i, /claude/i, /gpt-5|openai-large/i, /gemini.*pro/i, /deepseek/i, /grok/i, /gemini/i];
+const CE_JUDGE = [/gpt-oss-120b/i, /qwen-3\.8/i, /qwen/i, /llama/i];
+const SN_JUDGE = [/deepseek-v3\.2/i, /deepseek-v3/i, /gpt-oss-120b/i, /llama-3\.3-70b/i, /deepseek/i];
 const NV_JUDGE = [/kimi-k3/i, /glm-5/i, /deepseek-v4/i, /nemotron-3-ultra/i, /kimi/i, /deepseek/i, /qwen3/i, /gpt-oss-120b/i];
 const PU_JUDGE = [/claude-sonnet-5-5/i, /claude-opus-5-5/i, /claude-sonnet-5/i, /claude-opus-5/i, /claude/i];
 let puterReady = null;
@@ -384,6 +401,8 @@ function paintProv(){
   $("#keyHow").innerHTML = `للحصول على مفتاح مجاني: <a href="${P().url}" target="_blank" rel="noopener">صفحة مفاتيح ${P().name}</a> — ${esc(P().howto)} لا يحتاج بطاقة ائتمان.`;
   $("#privNote").textContent = P().info || ""; $("#privNote").style.color = "";
   const nk = !!P().nokey; $("#keyLbl").hidden = nk; $("#keyRow").hidden = nk; $("#puterBtn").hidden = !nk;
+  $("#relayBox").hidden = !P().relay; $("#relayUrl").value = getRelay();
+  $("#relayHint").textContent = getRelay() ? "الوسيط محفوظ — يمرر الطلب فقط ولا يحفظ مفتاحك." : "أنشئ الوسيط مرة واحدة من حساب Cloudflare المجاني (الملف relay/worker.js) والصق رابطه هنا.";
   $("#provName").textContent = P().name;
 }
 async function listModels(){
@@ -396,12 +415,15 @@ async function listModels(){
     const all = [...new Set([...base.filter(b => !cl.length || cl.includes(b)), ...cl, ...others])];
     return {all, judgePref:PU_JUDGE, vis:all, visAll:true};
   }
-  if (PROV === "pollinations" || PROV === "nvidia") {
+  if (PROVS[PROV].relay && !getRelay()) throw new Error("no_relay");
+  if (PROV === "pollinations" || PROVS[PROV].relay) {
     let r = await fetch(P().base + "/models", {headers:{Authorization:"Bearer " + apiKey}});
     if (!r.ok && PROV === "pollinations") r = await fetch("https://gen.pollinations.ai/text/models", {headers:{Authorization:"Bearer " + apiKey}});
     if (!r.ok) throw new Error([401, 403].includes(r.status) ? 401 : r.status);
     const j = await r.json(), arr = Array.isArray(j) ? j : (j.data || j.models || []);
     const ids = [...new Set(arr.map(m => typeof m === "string" ? m : (m.id || m.name || "")).filter(i => i && !/embed|rerank|guard|safety|tts|whisper|audio|image|flux|reward|parse|retriever|clip/i.test(i)))].sort();
+    if (PROV === "cerebras") return {all:ids, judgePref:CE_JUDGE, vis:ids.filter(i => /qwen-3\.8|vl|vision|llama-4|gemma/i.test(i)), visAll:false};
+    if (PROV === "sambanova") return {all:ids, judgePref:SN_JUDGE, vis:ids.filter(i => /vl|vision|llama-4|maverick/i.test(i)), visAll:false};
     if (PROV === "nvidia") return {all:ids, judgePref:NV_JUDGE, vis:ids.filter(i => /vl\b|vision|-vl|kimi-k3|llama-4|gemma-?[34]|nemotron.*vl|phi-4-multimodal/i.test(i)), visAll:false};
     return {all:ids, judgePref:PO_JUDGE, vis:ids.filter(i => /claude|gpt|openai|gemini|grok/i.test(i)), visAll:false};
   }
@@ -456,11 +478,12 @@ async function checkApi(){
     if (PROV === "puter") { let u = null; try { u = window.puter.auth.isSignedIn() ? await window.puter.auth.getUser() : null; } catch {}
       st.textContent = u ? `جاهز · مسجّل باسم ${u.username} · ${AR(all.length)} نموذج` : "جاهز · سجّل الدخول في Puter مرة واحدة (أو سيُطلب منك عند أول تدقيق)"; }
     else st.textContent = `المفتاح صالح · ${AR(all.length)} نموذج متاح في ${P().name}`;
-  } catch (e) { ENG.api.ok = false; $("#apiDot").style.background = "var(--bad)"; st.textContent = String(e.message) === "401" ? "المفتاح غير صحيح" : PROV === "puter" ? (location.protocol === "file:" ? "محرك Claude عبر Puter لا يعمل من ملف على الجهاز — افتح البرنامج من رابطه: ali-alahmari.github.io/free" : "تعذّر تحميل Puter. تحقق من الإنترنت ثم أعد المحاولة.") : `تعذّر الاتصال بخدمة ${P().name}. تحقق من الإنترنت.`; }
+  } catch (e) { ENG.api.ok = false; $("#apiDot").style.background = "var(--bad)"; st.textContent = String(e.message) === "no_relay" ? `${P().name} يحتاج رابط الوسيط (Cloudflare) — الصقه في الخانة أدناه` : String(e.message) === "401" ? "المفتاح غير صحيح" : PROV === "puter" ? (location.protocol === "file:" ? "محرك Claude عبر Puter لا يعمل من ملف على الجهاز — افتح البرنامج من رابطه: ali-alahmari.github.io/free" : "تعذّر تحميل Puter. تحقق من الإنترنت ثم أعد المحاولة.") : `تعذّر الاتصال بخدمة ${P().name}. تحقق من الإنترنت.`; }
   setEngine();
 }
 const savePP = o => { const all = pref(); all[PROV] = Object.assign(all[PROV] || {}, o); store.set("aud-free", all); };
-$("#provSel").addEventListener("change", () => { PROV = $("#provSel").value; savePref({prov:PROV}); apiKey = getKey(PROV); $("#mApi").innerHTML = ""; $("#mVis").innerHTML = ""; paintProv(); checkApi(); });
+$("#relaySave").onclick = () => { const v = $("#relayUrl").value.trim(); try { v ? localStorage.setItem("aud-relay", v) : localStorage.removeItem("aud-relay"); } catch {} paintProv(); checkApi(); toast(v ? "حُفظ رابط الوسيط" : "حُذف رابط الوسيط"); };
+$("#provSel").addEventListener("change", () => { PROV = $("#provSel").value; savePref({prov2:PROV}); apiKey = getKey(PROV); $("#mApi").innerHTML = ""; $("#mVis").innerHTML = ""; paintProv(); checkApi(); });
 $("#puterBtn").onclick = async () => { try { const pt = await loadPuter(); await pt.auth.signIn(); toast("تم تسجيل الدخول في Puter"); } catch { toast("لم يكتمل تسجيل الدخول"); } checkApi(); };
 $("#apiSave").onclick = () => { const v = $("#apiKey").value.trim(); if (!v) return; apiKey = v; try { localStorage.setItem(keyName(PROV), apiKey); } catch {} paintProv(); checkApi(); };
 $("#apiDel").onclick = () => { apiKey = ""; try { localStorage.removeItem(keyName(PROV)); if (PROV === "groq") localStorage.removeItem("aud-groq-key"); } catch {} paintProv(); checkApi(); toast("حُذف المفتاح من هذا المتصفح"); };
@@ -490,7 +513,7 @@ async function groqChat({model, messages, json = false, signal, onText, maxToken
   for (let attempt = 0; attempt < 6; attempt++) {
     const hd = {Authorization:"Bearer " + apiKey, "Content-Type":"application/json"};
     if (PROV === "openrouter") { hd["X-Title"] = "Evidence Auditor"; }
-    if (PROV === "mistral") { delete body.reasoning_effort; if (body.max_completion_tokens) { body.max_tokens = body.max_completion_tokens; delete body.max_completion_tokens; } }
+    if (["mistral", "nvidia", "sambanova"].includes(PROV)) { delete body.reasoning_effort; if (body.max_completion_tokens) { body.max_tokens = body.max_completion_tokens; delete body.max_completion_tokens; } }
     const res = await fetch((P().base || GROQ) + "/chat/completions", {method:"POST", signal, headers:hd, body:JSON.stringify(body)});
     if (res.ok) { const j = await res.json(); const out = j.choices?.[0]?.message?.content || ""; onText?.(out, false); return out; }
     const t = await res.text();
@@ -621,11 +644,9 @@ async function apiChat0({prompt, signal, onText, maxTokens = 6000}){
 }
 
 /* ---------- automatic fallback across engines (best first) ---------- */
-const ENGINE_ORDER = ["puter", "pollinations", "openrouter", "gemini", "mistral", "groq"];
 let CUR = {}, RUN_START = null;
-const engineUsable = p => p === "puter" ? location.protocol !== "file:" : !!getKey(p);
-const isFallbackErr = e => !!e && e.name !== "AbortError" && (["free_day", "free_busy", "free_nofree", "puter_credit", "puter_signin", "puter_file", "free_blocked"].includes(e.message) || e instanceof TypeError || /^api (5\d\d|429|402|401|403|404)/.test(e.message || ""));
-const errLabel = e => ({free_day:"بلغ الحد اليومي", free_busy:"مزدحم", free_nofree:"غير متاح مجاناً", puter_credit:"نفد الرصيد", puter_signin:"يلزم تسجيل الدخول", puter_file:"لا يعمل من ملف محلي", free_blocked:"رفض المحتوى"})[e?.message] || (e instanceof TypeError ? "تعذّر الاتصال" : "خطأ في الخدمة");
+const isFallbackErr = e => !!e && e.name !== "AbortError" && (["free_day", "free_busy", "free_nofree", "free_big", "no_relay", "no_models", "bad_json", "puter_credit", "puter_signin", "puter_file", "free_blocked"].includes(e.message) || e instanceof TypeError || /^api (5\d\d|429|402|401|403|404)/.test(e.message || ""));
+const errLabel = e => ({free_big:"الشاهد أطول من حدّه", no_relay:"لا يوجد وسيط", bad_json:"رد غير منظم", free_day:"بلغ الحد اليومي", free_busy:"مزدحم", free_nofree:"غير متاح مجاناً", puter_credit:"نفد الرصيد", puter_signin:"يلزم تسجيل الدخول", puter_file:"لا يعمل من ملف محلي", free_blocked:"رفض المحتوى"})[e?.message] || (e instanceof TypeError ? "تعذّر الاتصال" : "خطأ في الخدمة");
 async function switchEngine(prov){
   PROV = prov; apiKey = getKey(prov);
   const {all, judgePref, vis} = await listModels();
@@ -655,7 +676,7 @@ async function withFallback(fn, onText){
 const apiChat = args => withFallback(() => apiChat0(args), args.onText);
 const readImages = (images, signal, onText, step) => withFallback(() => readImages0(images, signal, onText, step), onText);
 function restoreEngine(){ if (RUN_START && RUN_START !== PROV) { PROV = RUN_START; apiKey = getKey(PROV); } CUR = {}; RUN_START = null; }
-const budgetChars = () => ({puter:120000, gemini:90000, pollinations:80000, nvidia:80000, openrouter:60000, mistral:60000}[PROV] || 30000);
+const budgetChars = () => ({puter:120000, gemini:90000, pollinations:80000, nvidia:80000, openrouter:60000, mistral:60000, sambanova:40000, cerebras:40000, groq:20000}[PROV] || 30000);
 
 function parseJSON(t){
   t = String(t || "").replace(/<think>[\s\S]*?<\/think>/g, "").trim();
