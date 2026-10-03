@@ -184,6 +184,12 @@ label.opts2 input{margin-top:6px;flex:none}
 .cand.sib{border-style:dashed}
 @media (max-width:560px){.cand{grid-template-columns:auto minmax(0,1fr)}.cand .chip{grid-column:2}}
 #multiBar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:var(--sheet);border:1px solid var(--rule);border-radius:12px;padding:8px 12px}
+
+#diagBox{margin-top:10px;overflow-x:auto}
+#diagBox table{width:100%;border-collapse:collapse;font-size:13px}
+#diagBox th,#diagBox td{border-bottom:1px solid var(--line,#D5DDD7);padding:6px 8px;text-align:right;vertical-align:top}
+#diagBox th{font-weight:700;background:rgba(13,90,70,.06)}
+#diagBox .s-ok{color:#1E7A4F;font-weight:700}#diagBox .s-warn{color:#9A6A00;font-weight:700}#diagBox .s-bad{color:#B3412E;font-weight:700}#diagBox .s-na{color:#6B7A74}
 </style>
 </head>
 <body>
@@ -268,7 +274,7 @@ label.opts2 input{margin-top:6px;flex:none}
     </div>
     <div class="field engine" id="engine">
       <label class="lbl" for="provSel">محرك التحليل المجاني</label>
-      <select id="provSel"><optgroup label="المحركات الأساسية (بالترتيب)"><option value="gemini">١. Gemini Flash — الأدق في العربي ويقرأ المستندات</option><option value="cohere">٢. Cohere Command A — قوي جداً في العربي (جديد)</option><option value="github">٣. GitHub Models — GPT-4.1 بحسابك في GitHub (جديد)</option><option value="nvidia">٤. NVIDIA — DeepSeek وKimi بلا حد يومي</option><option value="mistral">٥. Mistral Large — رصيد مجاني سخي</option><option value="groq">٦. Groq — الأسرع للشواهد القصيرة</option><option value="zai">٧. Z.ai GLM-4.7 Flash — مجاني بالكامل (جديد)</option><option value="cerebras">٨. Cerebras — سريع جداً (اختياري)</option><option value="sambanova">٩. SambaNova — احتياطي سريع (اختياري)</option></optgroup><optgroup label="احتياطي أخير (يُستخدم بعد نفاد الأساسية)"><option value="openrouter">OpenRouter — نماذج مجانية محدودة</option><option value="pollinations">Pollinations — وسيط غير رسمي</option><option value="puter">Claude عبر Puter — رصيد محدود</option></optgroup></select>
+      <select id="provSel"><optgroup label="المحركات الأساسية (بالترتيب)"><option value="gemini">١. Gemini Flash — الأدق في العربي ويقرأ المستندات</option><option value="cohere">٢. Cohere Command A — قوي جداً في العربي (جديد)</option><option value="github">٣. GitHub Models — GPT-4.1 بحسابك في GitHub (جديد)</option><option value="nvidia">٤. NVIDIA — DeepSeek وKimi بلا حد يومي</option><option value="mistral">٥. Mistral Large — رصيد مجاني سخي</option><option value="groq">٦. Groq — الأسرع للشواهد القصيرة</option><option value="zai">٧. Z.ai GLM-4.7 Flash — مجاني بالكامل (جديد)</option><option value="cerebras">٨. Cerebras — سريع جداً (اختياري)</option><option value="sambanova">٩. SambaNova — رصيد تجريبي فقط (اختياري)</option></optgroup><optgroup label="احتياطي أخير (يُستخدم بعد نفاد الأساسية)"><option value="openrouter">OpenRouter — نماذج مجانية محدودة</option><option value="pollinations">Pollinations — وسيط غير رسمي</option><option value="puter">Claude عبر Puter — رصيد محدود</option></optgroup></select>
       <div id="apiBox" style="display:grid;gap:6px;margin-top:4px">
         <div class="eng-st"><i class="dot" id="apiDot"></i><span id="apiTxt">أدخل المفتاح المجاني</span></div>
         <button type="button" class="btn sm pri" id="puterBtn" hidden>تسجيل الدخول في Puter (مجاني)</button>
@@ -289,6 +295,9 @@ label.opts2 input{margin-top:6px;flex:none}
       </div>
       <label class="opts2" style="margin-top:6px"><input type="checkbox" id="autoFb" checked> التحويل التلقائي إلى المحرك التالي (الأفضل أولاً) عند نفاد الرصيد أو التعطل — يشمل المحركات التي حفظت مفاتيحها</label>
       <label class="opts2" style="margin-top:6px"><input type="checkbox" id="strictChk" checked> صرامة الأدلة: لا يُقبل حكم إيجابي إلا باقتباس موجود فعلاً في نص الشاهد</label>
+      <div style="margin-top:10px"><button class="btn sm" id="diagBtn" type="button">فحص جميع المحركات</button>
+        <span class="hint">يجرّب كل مفتاح محفوظ بطلب قصير ويبيّن ما يعمل منها الآن. لا يُرسل أي شاهد.</span></div>
+      <div id="diagBox" hidden></div>
     </div>
     <div class="run">
       <button class="btn pri" id="runBtn" disabled>دقّق الشاهد</button>
@@ -357,7 +366,7 @@ const PROVS = {
   cerebras:{name:"Cerebras", ph:"csk-…", url:"https://cloud.cerebras.ai", direct:"https://api.cerebras.ai/v1", relay:true, howto:"سجّل في cloud.cerebras.ai ثم من API Keys أنشئ مفتاحاً وانسخه هنا (قد تطلب الخدمة إضافة وسيلة دفع لتفعيل الرصيد المجاني).",
            info:"أسرع خدمة استدلال (gpt-oss-120b وQwen) — مليون token يومياً و٥ طلبات في الدقيقة. اختياري."},
   sambanova:{name:"SambaNova", ph:"…", url:"https://cloud.sambanova.ai/apis", direct:"https://api.sambanova.ai/v1", relay:true, howto:"سجّل في cloud.sambanova.ai ثم من APIs أنشئ مفتاحاً وانسخه هنا.",
-           info:"DeepSeek V3 وgpt-oss بسرعة عالية — الحد المجاني صغير (نحو ٢٠ طلباً يومياً)، لذا يأتي احتياطياً. اختياري."},
+           info:"DeepSeek V3 وgpt-oss بسرعة عالية — صار برصيد تجريبي محدود (نحو ٥$) لا مجانياً دائماً، لذا يأتي احتياطياً. اختياري."},
   openrouter:{name:"OpenRouter", ph:"sk-or-…", url:"https://openrouter.ai/keys", base:"https://openrouter.ai/api/v1", howto:"سجّل في OpenRouter ثم اضغط Create Key وانسخ المفتاح والصقه هنا.",
            info:"يعرض النماذج المجانية أولاً (Nemotron 3 Ultra، Inkling، Qwen…) — الحد المجاني نحو 50 طلباً يومياً. إن كان في حسابك رصيد تظهر النماذج المدفوعة أيضاً (منها Claude)."},
   mistral:{name:"Mistral", ph:"…", url:"https://console.mistral.ai/api-keys", base:"https://api.mistral.ai/v1", howto:"سجّل في Mistral (الخطة المجانية)، ثم من API Keys اضغط Create new key وانسخه هنا.",
@@ -1542,7 +1551,7 @@ function suggestPrompt(evText){
   return `أنت رئيس فريق مراجعة خارجية معتمد لدى هيئة تقويم التعليم والتدريب. مهمتك تصنيف الشاهد لا تقييمه.
 الشاهد الواحد قد يخدم أكثر من معيار فرعي. حدّد:
 1) نوع الوثيقة وموضوعها الجوهري.
-2) أقرب نوع من «أنواع الشواهد» أدناه (انسخ الاسم حرفياً) أو «أخرى».
+2) أقرب نوع من «أنواع الشواهد» أدناه (انسخ الاسم حرفياً) أو «أخرى». صنّف الوثيقة بما هي عليه لا بما تستند إليه: خطة تحسين مبنية على نتائج استبانة نوعها «خطط التحسين المبنية على القياس ومتابعة تنفيذها» لا «استبانة…»، ومحضر اجتماع يناقش اتفاقية نوعه «محاضر…» لا «اتفاقيات…».
 3) طبيعة ما يثبته: وجود (سياسة/دليل/خطة معتمدة) أو تطبيق (محاضر/سجلات/تقارير تنفيذ) أو فاعلية (قياس/تحليل/خطة تحسين مبنية على قياس).
 4) أقرب ثلاثة معايير فرعية بالترتيب، واحكم بموضوع الوثيقة الجوهري لا بكلمات عابرة. استعمل الرموز بصيغة المعيار.الفرعي مثل 6.4.
 أجب بكائن JSON فقط:
@@ -1571,12 +1580,27 @@ function hintOf(ev, m, modelHint, mapNat){
   if (e) return e[1].includes(modelHint) ? modelHint : e[1][e[1].length - 1];
   return modelHint;
 }
+// fixes the evidence type for the common confusions (a plan built on a survey is a plan, minutes about an agreement are minutes…)
+const EV_RULES = [
+  [/خط(ة|ط)\s*(ال)?تحسين/, "خطط التحسين المبنية على القياس ومتابعة تنفيذها"],
+  [/تقويم\s*ذاتي|التقويم الذاتي|دراسة ذاتية/, "تقرير التقويم الذاتي"],
+  [/مح(ضر|اضر)[^.،]*(أصحاب العمل|جهات التوظيف|الشركات|المجلس الاستشاري)/, "محاضر الاجتماعات مع أصحاب العمل وتوصياتها"],
+  [/مح(ضر|اضر)/, "محاضر مجلس الإدارة / المجلس الاستشاري / اللجان"],
+  [/اتفاقي|مذكرة تفاهم|مذكرات تفاهم/, "اتفاقيات ومذكرات الشراكة الموقعة"],
+  [/سير(ة)? ذاتية|مؤهلات المدرب|ملف(ات)? المدرب/, "ملفات المدربين ومؤهلاتهم وتقييم أدائهم"],
+];
+function fixEvType(p){
+  const said = String(p.evidence_type || "أخرى"), head = String(p.doc_type || "") + " | " + String(p.topic || "");
+  for (const [rx, ev] of EV_RULES) if (rx.test(head) && EMAP.rows.some(r => r[0] === ev)) return ev;
+  return said;
+}
+const ST_RANK = {ok:0, gdoc:1, doc:2, title:3, gen:4, model:5};
 function renderSuggest(p){
   const norm = raw => { raw = String(raw || "").replace(/[()\s]/g, ""); return MODE === "inst" ? toMap(raw) : raw.replace("-", "."); };
   const cands = (p.candidates || []).map(c => ({m: norm(c.code), why: String(c.why || ""), hint: String(c.level_hint || "")})).filter(c => validCode(c.m));
   const seen = new Set(); const C = cands.filter(c => !seen.has(c.m) && seen.add(c.m)).slice(0, 3);
   if (!C.length) throw new Error("auto_fail");
-  const ev = String(p.evidence_type || "أخرى"); const mapNat = natureOf(ev); const nat = mapNat || String(p.nature || ""); C.forEach(c => c.hint = hintOf(ev, c.m, c.hint, mapNat));
+  const ev = fixEvType(p); const mapNat = natureOf(ev); const nat = mapNat || String(p.nature || ""); C.forEach(c => c.hint = hintOf(ev, c.m, c.hint, mapNat)); C.sort((a, b) => ST_RANK[linkStatus(ev, a.m).k] - ST_RANK[linkStatus(ev, b.m).k]);
   const sib = siblingsOf(C[0].m).filter(x => !C.some(c => c.m === x));
   const sc = SCOPE_OF[nat];
   const box = $("#result");
@@ -1667,6 +1691,63 @@ $("#runBtn").onclick = async () => {
   } finally { window.ZERO_T = false; restoreEngine(); $("#stopBtn").hidden = true; updateRun(); }
 };
 updateRun();
+
+/* ---------- فحص جميع المحركات: طلب قصير لكل مفتاح محفوظ ---------- */
+function diagMsg(e){
+  const m = String(e?.message || e || "");
+  if (e?.name === "AbortError") return ["bad", "لم يرد خلال ٤٥ ثانية"];
+  if (/^(api )?40[13]\b|^401$/.test(m)) return ["bad", "المفتاح غير صالح أو انتهت صلاحيته — أنشئ مفتاحاً جديداً"];
+  if (/^api 402|402/.test(m)) return ["bad", "يحتاج رصيداً أو وسيلة دفع"];
+  if (m === "free_day") return ["warn", "بلغ الحد اليومي/الشهري — يعود تلقائياً لاحقاً"];
+  if (m === "free_nofree") return ["bad", "النموذج غير متاح في الخطة المجانية"];
+  if (m === "free_busy" || /^api (5\d\d|429)/.test(m)) return ["warn", "مزدحم الآن — يعمل غالباً بعد دقائق"];
+  if (m === "no_relay") return ["bad", "يحتاج الوسيط (Cloudflare) ولم يُحفظ رابطه"];
+  if (m === "no_models") return ["bad", "لم تُرجع الخدمة أي نموذج"];
+  if (e instanceof TypeError) return ["bad", "تعذّر الاتصال (الشبكة أو الوسيط)"];
+  if (m === "bad_reply" || m === "bad_json" || e instanceof SyntaxError) return ["warn", "يرد لكن بصيغة غير منظمة"];
+  return ["bad", m.slice(0, 90)];
+}
+async function diagEngines(){
+  const box = $("#diagBox"), btn = $("#diagBtn"); box.hidden = false; btn.disabled = true;
+  const keep = {PROV, apiKey, CUR, LAST_MODEL};
+  const rows = ENGINE_ORDER.map(p => ({p, name:PROVS[p].name, st:"na", msg:"بانتظار الفحص…"}));
+  const cls = {ok:"s-ok", warn:"s-warn", bad:"s-bad", na:"s-na"}, ico = {ok:"✓ يعمل", warn:"⚠ مؤقت", bad:"✗ لا يعمل", na:"—"};
+  const paint = () => {
+    const ok = rows.filter(r => r.st === "ok").length, keyed = rows.filter(r => r.keyed).length;
+    box.innerHTML = `<p class="hint" style="margin:0 0 6px">${AR(ok)} محرك يعمل من ${AR(keyed)} محفوظ المفتاح · ${new Date().toLocaleString("ar-SA")}</p>
+      <table><thead><tr><th>المحرك</th><th>الحالة</th><th>النموذج المختار</th><th>الزمن</th><th>التفاصيل</th></tr></thead><tbody>${rows.map(r =>
+      `<tr><td>${esc(r.name)}</td><td class="${cls[r.st]}">${ico[r.st]}</td><td dir="ltr" style="text-align:left">${esc(r.model || "")}</td><td>${r.ms ? AR((r.ms / 1000).toFixed(1)) + " ث" : ""}</td><td>${esc(r.msg)}</td></tr>`).join("")}</tbody></table>`;
+  };
+  paint();
+  try {
+    for (const r of rows) {
+      const p = r.p;
+      if (p === "puter") { r.msg = "يُفحص عند الاستخدام لأنه يحتاج تسجيل دخول Puter"; paint(); continue; }
+      if (!getKey(p)) { r.msg = "لا يوجد مفتاح محفوظ (اختياري)"; paint(); continue; }
+      r.keyed = true;
+      if (PROVS[p].relay && !getRelay()) { [r.st, r.msg] = ["bad", "يحتاج الوسيط (Cloudflare) ولم يُحفظ رابطه"]; paint(); continue; }
+      r.msg = "جارٍ الفحص…"; paint();
+      const t0 = performance.now(), ctl2 = new AbortController(), to = setTimeout(() => ctl2.abort(), 45000);
+      try {
+        PROV = p; apiKey = getKey(p); CUR = {}; LAST_MODEL = "";
+        const {all, judgePref} = await listModels();
+        if (!all.length) throw new Error("no_models");
+        const sp = pref()[p] || {}; let judge = sp.judge && all.includes(sp.judge) ? sp.judge : null;
+        if (!judge) for (const rx of judgePref) { judge = all.find(i => rx.test(i)); if (judge) break; }
+        r.model = judge = judge || all[0]; CUR = {judge, vis:""};
+        const out = await apiChat0({prompt:'هذا اختبار اتصال. أجب بكائن JSON فقط بلا أي نص آخر: {"ok":true,"msg":"تم"}', signal:ctl2.signal, onText:() => {}, maxTokens:400});
+        let j = null; try { j = parseJSON(out); } catch {}
+        if (LAST_MODEL) r.model = LAST_MODEL;
+        [r.st, r.msg] = j && j.ok ? ["ok", `يعمل ويعيد JSON سليماً · ${AR(all.length)} نموذج متاح`] : ["warn", "يرد لكن بصيغة غير منظمة"];
+      } catch (e) { [r.st, r.msg] = diagMsg(e); }
+      finally { clearTimeout(to); r.ms = Math.round(performance.now() - t0); paint(); }
+    }
+  } finally {
+    ({PROV, apiKey, CUR, LAST_MODEL} = keep); btn.disabled = false;
+    try { store.set("aud-diag", rows.map(r => ({p:r.p, st:r.st, msg:r.msg, model:r.model || "", at:Date.now()}))); } catch {}
+  }
+}
+$("#diagBtn").onclick = () => diagEngines();
 </script>
 
 </body>
