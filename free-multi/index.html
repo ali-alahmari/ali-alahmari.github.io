@@ -1516,7 +1516,7 @@ function linkStatus(evType, m){
   const row = EMAP.rows.find(r => r[0] === evType); const ids = EMAP.evc[evType];
   const doc = !!row && row[EKEY()].some(x => x[0] === m);
   const title = !!ids && EMAP.cl.some(c => ids.includes(c[0]) && (MODE === "inst" ? c[2] : c[3]).includes(m));
-  if (row && !ids) return {k:"gen", t:"شاهد عام: يُقبل بمحور يخص هذا المعيار"};
+  if (row && !ids) return doc ? {k:"gdoc", t:"شاهد عام · مذكور لهذا المعيار في وثيقة الأمثلة"} : {k:"gen", t:"شاهد عام: يُقبل إن تناول محوراً يخص هذا المعيار"};
   if (doc && title) return {k:"ok", t:"مؤكَّد بالوثيقة والمسمى"};
   if (doc) return {k:"doc", t:"من وثيقة الأمثلة فقط: تحقّق من المحتوى"};
   if (title) return {k:"title", t:"من المسمى فقط: تحقّق"};
@@ -1576,10 +1576,11 @@ function renderSuggest(p){
    <div class="sec"><h3>اختر المعايير التي تقيّم الشاهد عليها</h3>
    ${C.map((c, i) => { const st = linkStatus(ev, c.m); return `<label class="cand"><input type="checkbox" data-m="${c.m}" ${i === 0 || st.k === "ok" ? "checked" : ""}>
      <span><b class="code">${c.m}</b> ${esc(subLabel(c.m))}<br><span class="hint">${esc(c.why)}${c.hint ? " · المستوى المتوقع: " + esc(c.hint) : ""}</span></span>
-     <span class="chip ${st.k === "ok" ? "ok" : st.k === "model" ? "bad" : "part"}">${esc(st.t)}</span></label>`; }).join("")}
-   ${sib.length ? `<p class="hint" style="margin-top:6px">معايير شقيقة بالمسمى قد يخدمها الشاهد أيضاً:</p>${sib.map(m => `<label class="cand sib"><input type="checkbox" data-m="${m}"><span><b class="code">${m}</b> ${esc(subLabel(m))}</span><span class="chip na">${esc(linkStatus(ev, m).t)}</span></label>`).join("")}` : ""}
+     <span class="chip ${st.k === "ok" || st.k === "gdoc" ? "ok" : st.k === "model" ? "bad" : "part"}">${esc(st.t)}</span></label>`; }).join("")}
+   ${sib.length ? `<p class="hint" style="margin-top:6px">معايير شقيقة بالمسمى قد يخدمها الشاهد أيضاً:</p>${sib.map((m, j) => `<label class="cand sib"${j >= 4 ? ' hidden data-more="1"' : ""}><input type="checkbox" data-m="${m}"><span><b class="code">${m}</b> ${esc(subLabel(m))}</span><span class="chip na">${esc(linkStatus(ev, m).t)}</span></label>`).join("")}${sib.length > 4 ? `<button class="btn sm" id="sibMore" type="button">عرض ${sib.length - 4} معايير شقيقة أخرى</button>` : ""}` : ""}
    </div>
    <div class="foot"><button class="btn pri" id="goMulti" type="button">قيّم على المعايير المحددة</button><span class="hint" style="align-self:center">يُقيَّم الشاهد على كل معيار محدد ويُسجَّل لكل معيار سطر مستقل.</span></div></article>`;
+  $("#sibMore")?.addEventListener("click", e => { document.querySelectorAll('.cand.sib[data-more]').forEach(x => x.hidden = false); e.target.remove(); });
   $("#useScope")?.addEventListener("click", () => { const b = document.querySelector(`#scopeSeg button[data-v="${sc}"]`); b?.click(); $("#useScope").closest("p").remove(); });
   $("#goMulti").onclick = async () => {
     const pick = [...document.querySelectorAll(".cand input:checked")].map(x => x.dataset.m);
