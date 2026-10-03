@@ -1558,19 +1558,32 @@ ${list}
 ${evText}`;
 }
 function validCode(m){ const code = fromMap(m); return MODE === "inst" ? INST.some(s => s.subs.some(x => x.code === code)) : PROG.some(x => x.code === code); }
+// nature of the evidence fixed by the map when one level clearly dominates (e.g. improvement plans → فاعلية)
+function natureOf(ev){
+  const row = EMAP.rows.find(r => r[0] === ev); if (!row || MODE !== "inst") return "";
+  const c = {}; row[1].forEach(([, ls]) => ls.forEach(l => c[l] = (c[l] || 0) + 1));
+  const n = row[1].length, top = Object.entries(c).sort((a, b) => b[1] - a[1])[0];
+  return n >= 3 && top && top[1] / n >= 0.75 ? top[0] : "";
+}
+function hintOf(ev, m, modelHint, mapNat){
+  const row = EMAP.rows.find(r => r[0] === ev); const e = row && MODE === "inst" ? row[1].find(x => x[0] === m) : null;
+  if (mapNat) return mapNat;
+  if (e) return e[1].includes(modelHint) ? modelHint : e[1][e[1].length - 1];
+  return modelHint;
+}
 function renderSuggest(p){
   const norm = raw => { raw = String(raw || "").replace(/[()\s]/g, ""); return MODE === "inst" ? toMap(raw) : raw.replace("-", "."); };
   const cands = (p.candidates || []).map(c => ({m: norm(c.code), why: String(c.why || ""), hint: String(c.level_hint || "")})).filter(c => validCode(c.m));
   const seen = new Set(); const C = cands.filter(c => !seen.has(c.m) && seen.add(c.m)).slice(0, 3);
   if (!C.length) throw new Error("auto_fail");
-  const ev = String(p.evidence_type || "أخرى"); const nat = String(p.nature || "");
+  const ev = String(p.evidence_type || "أخرى"); const mapNat = natureOf(ev); const nat = mapNat || String(p.nature || ""); C.forEach(c => c.hint = hintOf(ev, c.m, c.hint, mapNat));
   const sib = siblingsOf(C[0].m).filter(x => !C.some(c => c.m === x));
   const sc = SCOPE_OF[nat];
   const box = $("#result");
   box.innerHTML = `<article class="sheet"><div class="sec"><span class="t" style="font-family:var(--display);font-size:13px;color:var(--ink-2)">الربط المتعدد · خطوة ١ من ٢</span>
    <h2 style="font-size:21px">المعايير المرشحة لهذا الشاهد</h2>
    <p>${esc(p.doc_type || "")}${p.topic ? " — " + esc(p.topic) : ""}</p>
-   <p class="hint">نوع الشاهد في الخريطة: <b>${esc(ev)}</b>${nat ? " · طبيعته: <b>" + esc(nat) + "</b>" : ""}</p>
+   <p class="hint">نوع الشاهد في الخريطة: <b>${esc(ev)}</b>${nat ? " · طبيعته: <b>" + esc(nat) + "</b>" + (mapNat ? " (من الخريطة)" : "") : ""}</p>
    ${sc && scope === "full" && MODE === "inst" ? `<p class="warn">الشاهد ملف واحد طبيعته «${esc(nat)}»، والنطاق المختار «ملف المعيار كاملاً» سيعطي درجة منخفضة لغياب المستويين الآخرين. <button class="btn sm" id="useScope" type="button">قيّمه على مستوى ${esc(nat)}</button></p>` : ""}
    </div>
    <div class="sec"><h3>اختر المعايير التي تقيّم الشاهد عليها</h3>
