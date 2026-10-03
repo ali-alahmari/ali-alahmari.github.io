@@ -594,7 +594,7 @@ async function gemChat({model, parts, json = false, signal, onText, maxTokens = 
         const j = await res.json(), c = j.candidates?.[0];
         const out = (c?.content?.parts || []).filter(x => !x.thought && x.text).map(x => x.text).join("");
         if (!out && (c?.finishReason === "SAFETY" || j.promptFeedback?.blockReason)) throw new Error("free_blocked");
-        if (!out && c?.finishReason === "MAX_TOKENS" && body.generationConfig.maxOutputTokens < 30000) { body.generationConfig.maxOutputTokens *= 2; continue; }
+        if ((!out || json) && c?.finishReason === "MAX_TOKENS" && body.generationConfig.maxOutputTokens < 30000) { body.generationConfig.maxOutputTokens *= 2; continue; }
         LAST_MODEL = m; onText?.(out, false); return out;
       }
       const t = await res.text();
@@ -1612,8 +1612,23 @@ function scopeWarn(){
 { const _k = kbFor; kbFor = code => _k(code) + mapFor(code); }
 { const _u = updateRun; updateRun = function(){ _u(); scopeWarn(); }; const _h = scopeHint; scopeHint = function(){ _h(); scopeWarn(); }; }
 const RUN_ONE = $("#runBtn").onclick;
+let SUGGEST_BYPASS = false;
+// reads the model's suggestion even when the JSON is broken or cut off
+function salvageSuggest(raw){
+  const ok = c => { c = String(c || "").replace(/[()\s]/g, ""); return validCode(MODE === "inst" ? toMap(c) : c.replace("-", ".")); };
+  let p = null; try { p = parseJSON(raw); } catch {}
+  if (Array.isArray(p)) p = p.find(x => x && typeof x === "object" && (x.candidates || x.code)) || null;
+  if (p && !p.candidates && p.code) p = {candidates:[p]};
+  if (p && Array.isArray(p.candidates) && p.candidates.some(c => ok(c?.code))) return p;
+  const t = String(raw || ""), cands = [], seen = new Set();
+  const re = /"code"\s*:\s*"([^"]+)"(?:[^{}]*?"why"\s*:\s*"([^"]*)")?(?:[^{}]*?"level_hint"\s*:\s*"([^"]*)")?/g; let m;
+  while ((m = re.exec(t))) { const c = m[1].trim(); if (ok(c) && !seen.has(c)) { seen.add(c); cands.push({code:c, why:m[2] || "", level_hint:m[3] || ""}); } }
+  if (!cands.length) return null;
+  const f = k => (t.match(new RegExp('"' + k + '"\\s*:\\s*"([^"]*)"')) || [])[1] || "";
+  return {doc_type:f("doc_type"), topic:f("topic"), evidence_type:f("evidence_type"), nature:f("nature"), candidates:cands.slice(0, 3)};
+}
 $("#runBtn").onclick = async () => {
-  if (FORCE_SUB || $("#subSel").value !== "auto") { MULTI = null; $("#multiBar").hidden = true; return RUN_ONE(); }
+  if (SUGGEST_BYPASS || FORCE_SUB || $("#subSel").value !== "auto") { MULTI = null; $("#multiBar").hidden = true; return RUN_ONE(); }
   if (!ENG.ok) return;
   MULTI = null; $("#multiBar").hidden = true;
   ctl = new AbortController(); $("#runBtn").disabled = true; $("#stopBtn").hidden = false;
@@ -1622,8 +1637,17 @@ $("#runBtn").onclick = async () => {
   try {
     const ok = files.filter(f => !f.err);
     const evText = ok.map(f => { const t = [f.text, f.visText].filter(Boolean).join("\n") || "[صور فقط]"; return `=== ${f.name} ===\n` + (t.length > 7000 ? t.slice(0, 5000) + "\n…\n" + t.slice(-2000) : t); }).join("\n\n");
-    const p = parseJSON(await apiChat({prompt: suggestPrompt(evText), signal: ctl.signal, onText: () => {}, maxTokens: 1500}));
-    renderSuggest(p || {});
+    let p = null;
+    for (let tryN = 0; tryN < 2 && !p; tryN++) {
+      const raw = await apiChat({prompt: suggestPrompt(evText) + (tryN ? "\n\nتنبيه: الرد السابق لم يكن JSON صالحاً. أعد كائن JSON واحداً فقط، واجعل why أقل من 12 كلمة." : ""), signal: ctl.signal, onText: () => {}, maxTokens: 4000});
+      p = salvageSuggest(raw);
+    }
+    if (!p) { // last resort: the original single-standard auto classification
+      window.ZERO_T = false; restoreEngine(); $("#stopBtn").hidden = true;
+      toast("تعذّر ترشيح عدة معايير — يكمل البرنامج بالمعيار الأقرب تلقائياً");
+      SUGGEST_BYPASS = true; try { return await RUN_ONE(); } finally { SUGGEST_BYPASS = false; }
+    }
+    renderSuggest(p);
   } catch (e) {
     $("#result").innerHTML = `<div class="err">${e?.name === "AbortError" ? "أُوقف." : "تعذّر ترشيح المعايير: " + esc(e?.message || "") + " — اختر المعيار يدوياً."}</div>`;
   } finally { window.ZERO_T = false; restoreEngine(); $("#stopBtn").hidden = true; updateRun(); }
