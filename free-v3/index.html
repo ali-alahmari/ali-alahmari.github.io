@@ -435,7 +435,7 @@ const NV_JUDGE = [/kimi-k3/i, /glm-5/i, /deepseek-v4/i, /nemotron-3-ultra/i, /ki
 const CO_JUDGE = [/command-a-plus/i, /command-a-reasoning/i, /command-a-0/i, /command-a(?!-vision|-translate)/i, /aya-expanse-32b/i];
 const GH_JUDGE = [/(^|\/)gpt-4\.1$/i, /(^|\/)gpt-4o$/i, /deepseek-v3/i, /llama-4-maverick/i, /gpt-4\.1-mini/i];
 const ZA_JUDGE = [/glm-4\.7-flash/i, /glm-4\.5-flash/i, /flash/i];
-const CF_JUDGE = [/qwen3\.8/i, /gemma-?4/i, /llama-4-scout/i, /mistral-small/i];
+const CF_JUDGE = [/llama-4-scout/i, /gemma-?4/i, /mistral-small/i, /qwen3\.8/i];
 const KI_JUDGE = [/qwen3\.8.*free/i, /nemotron-3-ultra.*free/i, /step-3\.7.*free/i, /kilo-auto\/free/i, /:free$/i];
 const OV_JUDGE = [/qwen3\.5-397b/i, /qwen3\.8/i, /gpt-oss-120b/i, /llama-3_?3-70b/i];
 const L7_JUDGE = [/^default$/i, /^fast$/i];
@@ -729,8 +729,8 @@ async function apiChat0({prompt, signal, onText, maxTokens = 6000}){
 /* ---------- automatic fallback across engines (best first) ---------- */
 let CUR = {}, RUN_START = null, TRAIL = [];
 const isModelErr = e => /^api (400|404|422)/.test(e?.message || "") && /model/i.test(e?.message || "");
-const isFallbackErr = e => !!e && e.name !== "AbortError" && (e instanceof SyntaxError || ["bad_reply", "free_day", "free_busy", "free_nofree", "free_big", "no_relay", "no_models", "bad_json", "puter_credit", "puter_signin", "puter_file", "free_blocked"].includes(e.message) || e instanceof TypeError || /^api (5\d\d|429|402|401|403|404|422)/.test(e.message || "") || isModelErr(e));
-const errLabel = e => ({free_big:"الشاهد أطول من حدّه", no_relay:"لا يوجد وسيط", bad_json:"رد غير منظم", free_day:"بلغ الحد اليومي", free_busy:"مزدحم", free_nofree:"غير متاح مجاناً", puter_credit:"نفد الرصيد", puter_signin:"يلزم تسجيل الدخول", puter_file:"لا يعمل من ملف محلي", free_blocked:"رفض المحتوى", no_models:"لا توجد نماذج متاحة", bad_reply:"رد غير مفهوم من الخدمة"})[e?.message] || (isModelErr(e) ? "النموذج غير متاح" : /^api 401/.test(e?.message||"") ? "المفتاح غير صحيح" : /^api 429/.test(e?.message||"") ? "تجاوز الحد" : null) || (e instanceof TypeError ? "تعذّر الاتصال" : "خطأ في الخدمة");
+const isFallbackErr = e => !!e && e.name !== "AbortError" && (e instanceof SyntaxError || ["bad_reply", "free_day", "free_busy", "free_nofree", "free_big", "no_relay", "no_models", "bad_json", "puter_credit", "puter_signin", "puter_file", "free_blocked"].includes(e.message) || e instanceof TypeError || /^api (5\d\d|429|408|413|402|401|403|404|422)/.test(e.message || "") || isModelErr(e));
+const errLabel = e => ({free_big:"الشاهد أطول من حدّه", no_relay:"لا يوجد وسيط", bad_json:"رد غير منظم", free_day:"بلغ الحد اليومي", free_busy:"مزدحم", free_nofree:"غير متاح مجاناً", puter_credit:"نفد الرصيد", puter_signin:"يلزم تسجيل الدخول", puter_file:"لا يعمل من ملف محلي", free_blocked:"رفض المحتوى", no_models:"لا توجد نماذج متاحة", bad_reply:"رد غير مفهوم من الخدمة"})[e?.message] || (isModelErr(e) ? "النموذج غير متاح" : /^api 401/.test(e?.message||"") ? "المفتاح غير صحيح" : /^api 429/.test(e?.message||"") ? "تجاوز الحد" : /^api 408/.test(e?.message||"") ? "انتهت مهلة الخدمة" : /^api 413/.test(e?.message||"") ? "الشاهد أطول من حدّه" : null) || (e instanceof TypeError ? "تعذّر الاتصال" : "خطأ في الخدمة");
 async function switchEngine(prov){
   PROV = prov; apiKey = getKey(prov); LAST_MODEL = "";
   const {all, judgePref, vis} = await listModels();
@@ -784,7 +784,7 @@ async function withFallback(fn, onText, signal){
 const apiChat = args => withFallback(() => apiChat0(args), args.onText, args.signal);
 const readImages = (images, signal, onText, step) => withFallback(() => readImages0(images, signal, onText, step), onText, signal);
 function restoreEngine(){ if (RUN_START && RUN_START !== PROV) { PROV = RUN_START; apiKey = getKey(PROV); } CUR = {}; RUN_START = null; }
-const budgetChars = () => ({github:14000, cohere:120000, zai:60000, puter:120000, gemini:90000, pollinations:80000, nvidia:80000, openrouter:60000, mistral:60000, sambanova:40000, cerebras:40000, groq:12000, cloudflare:60000, kilo:80000, ovh:50000, llm7:25000, hf:40000}[PROV] || 30000);
+const budgetChars = () => ({github:14000, cohere:120000, zai:60000, puter:120000, gemini:90000, pollinations:80000, nvidia:80000, openrouter:60000, mistral:60000, sambanova:40000, cerebras:40000, groq:12000, cloudflare:24000, kilo:80000, ovh:50000, llm7:25000, hf:40000}[PROV] || 30000);
 
 function parseJSON(t){
   t = String(t || "").replace(/<think>[\s\S]*?<\/think>/g, "").trim();
