@@ -1948,7 +1948,9 @@ function precText(code){
 function v3Schema(){
   const sv = currentSelf();
   const selfTxt = sv ? `تقييم المنشأة الذاتي لهذا المعيار: ${MODE === "inst" ? sv + " من 5" : (sv === "yes" ? "«متوفر»" : "«غير متوفر»")}. إن كان الفرق بين حكمك ودرجة المنشأة درجتين فأكثر${MODE === "prog" ? " (أو اختارت «متوفر» وحكمك 0 أو 1)" : ""} فاكتب تعليلاً محايداً محدداً: لماذا لا تؤيد الشواهد درجة المنشأة، وما الذي غاب أو لم يكفِ (الاعتماد، تكرار التطبيق، القياس، المستهدف، خطة التحسين…). لا تغيّر حكمك لتقليص الفارق؛ فالتقييم الذاتي يُعتدّ به بقدر ما تؤيده الأدلة. وإن لم يبلغ الفرق ذلك فاجعله نصاً فارغاً.` : "نص فارغ.";
-  return `\n\nأضف إلى كائن JSON نفسه هذين الحقلين:\n"survey": إن كان بين الشواهد استبانة أو قياس رأي فاكتب {"population": حجم المجتمع رقماً أو null, "respondents": عدد المستجيبين رقماً أو null, "used_for": "effectiveness" إن بنيت عليه حكم الفاعلية وإلا "other"}، وإلا null\n"self_gap_reason": ${selfTxt}`;
+  const list = MODE === "inst" ? INST.flatMap(st => st.subs.map(x => `${x.code}: ${x.text.slice(0, 60)}`)) : PROG.map(x => `${x.code}: ${(x.axis || "")} — ${x.text.slice(0, 50)}`);
+  const cl = `\n"closest": إن كانت صلة الشاهد بالمعيار المختار «ضعيفة» أو «لا علاقة» فاذكر حتى 3 معايير فرعية من القائمة التالية هي الأقرب لموضوع الشاهد، مرتبة من الأقرب: [{"code":"الرمز كما في القائمة","why":"جملة قصيرة","level_hint":"الوجود|التطبيق|الفاعلية"}]، وإلا [].\nقائمة المعايير الفرعية:\n${list.join("\n")}`;
+  return `\n\nأضف إلى كائن JSON نفسه هذه الحقول:` + cl + `\n"survey": إن كان بين الشواهد استبانة أو قياس رأي فاكتب {"population": حجم المجتمع رقماً أو null, "respondents": عدد المستجيبين رقماً أو null, "used_for": "effectiveness" إن بنيت عليه حكم الفاعلية وإلا "other"}، وإلا null\n"self_gap_reason": ${selfTxt}`;
 }
 { const _bp = buildPrompt; buildPrompt = function(){
     if (MODE === "ntep") return ntepPrompt();
@@ -1980,6 +1982,8 @@ function v3Schema(){
         if (out.level < 5) out.commendation = "";
       }
     }
+    const valid = new Set(MODE === "inst" ? INST.flatMap(st => st.subs.map(x => x.code)) : PROG.map(x => x.code));
+    out.closest = (Array.isArray(r?.closest) ? r.closest : []).map(x => ({code:String(x?.code || "").replace(/[()\s]/g, ""), why:String(x?.why || ""), hint:String(x?.level_hint || "")})).filter(x => valid.has(x.code) && x.code !== out.sub_code).slice(0, 3);
     const self = currentSelf();
     if (self) {
       out.self = self;
@@ -1989,11 +1993,23 @@ function v3Schema(){
     }
     return out;
   }; }
+function v3Rerun(code){
+  const main = MODE === "inst" ? code.split("-")[1] : code.split(".")[0];
+  $("#stdSel").value = main; buildSub(); $("#subSel").value = code; showSub();
+  if (typeof buildScope === "function") buildScope();
+  window.scrollTo({top:0, behavior:"smooth"}); setTimeout(() => $("#runBtn").click(), 150);
+}
 function v3Decorate(r){
   const sheet = $("#sheet"); if (!sheet) return;
   const head = sheet.querySelector(".sheet-h .chip")?.parentElement;
   if (head && r.mode === "inst" && isCrit(r.sub_code)) head.insertAdjacentHTML("beforeend", `<span class="crit">★ معيار حرج${r.level < 3 ? " — دون [3]" : ""}</span>`);
   const foot = sheet.querySelector(".foot"); const add = [];
+  if (r.closest && r.closest.length && /ضعيفة|لا علاقة/.test(r.match || "")) {
+    const nm = c => MODE === "inst" ? (INST.flatMap(st => st.subs).find(x => x.code === c)?.text || "") : (PROG.find(x => x.code === c)?.text || "");
+    const box = `<div class="sec" id="closestBox" style="background:var(--gold-soft,#F8EBCB)"><h3>المعيار الأقرب لهذا الشاهد <small>صلته بالمعيار المختار «${esc(r.match)}»</small></h3>${r.closest.map((c, i) => `<div class="prec" style="display:flex;gap:10px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap"><div style="min-width:0;flex:1"><b>${isCrit(c.code) ? "★ " : ""}(${esc(c.code)})</b> ${esc(nm(c.code).slice(0, 140))}${c.hint ? ` <span class="tag">${esc(c.hint)}</span>` : ""}<br><span class="hint">${esc(c.why)}</span></div><button class="btn sm${i ? " ghost" : " pri"}" data-closest="${esc(c.code)}">قيّمه على (${esc(c.code)})</button></div>`).join("")}</div>`;
+    const head = sheet.querySelector(".sheet-h"); if (head) head.insertAdjacentHTML("afterend", box);
+    sheet.querySelectorAll("[data-closest]").forEach(b => b.onclick = () => v3Rerun(b.dataset.closest));
+  }
   if (r.survey) add.push(`<div class="sec"><h3>كفاية عينة الاستبانة <small>معادلة ستيفن ثامبسون (P=0.5، Z=1.96، d=0.05)</small></h3><p><span class="chip ${r.survey.cls}">${r.survey.cls === "ok" ? "كافية" : r.survey.cls === "part" ? "كافية جزئياً" : "غير كافية"}</span> المستجيبون ${AR(r.survey.n)} من عينة مطلوبة ${AR(r.survey.need)} لمجتمع ${AR(r.survey.N)} (${AR(r.survey.pct)}٪).</p></div>`);
   if (r.self) add.push(`<div class="sec"><h3>المقارنة بالتقييم الذاتي</h3><p>تقييم المنشأة: <b>${r.mode === "inst" ? AR(r.self) + " — " + INST_NAMES[+r.self] : (r.self === "yes" ? "متوفر" : "غير متوفر")}</b> · حكم المدقق: <b>${AR(r.level)}</b>${r.selfGap >= 2 ? ` · <span class="chip bad">فرق كبير</span>` : ` · <span class="chip ok">فرق مقبول</span>`}</p>${r.self_reason ? `<p class="rec" style="margin-top:6px">${esc(r.self_reason)}</p>` : ""}</div>`);
   const P0 = PRECEDENTS[String(r.sub_code || "")];
