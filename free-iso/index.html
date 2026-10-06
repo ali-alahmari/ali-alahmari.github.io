@@ -93,9 +93,9 @@ a{color:var(--accent)}
 <body>
 <div class="wrap">
   <header style="display:flex;flex-direction:column;gap:6px">
-    <p class="eyebrow">ISO 9001:2026 · النسخة المجانية · مستويات الوجود والتطبيق والفاعلية</p>
+    <p class="eyebrow">ISO 9001:2026 · النسخة المجانية · نتائج التدقيق بالمسميات المعتمدة</p>
     <h1>مدقق شواهد ISO 9001</h1>
-    <p class="muted">ارفع شاهداً أو أكثر؛ يقترح المدقق أقرب بند ومستواه، ويحكم على قبوله بمحددات الشاهد، ويذكر ما ينقص والتصنيف المحتمل للملاحظة. يعمل بمحركات ذكاء اصطناعي مجانية بمفاتيحك، والمفاتيح تُحفظ في هذا المتصفح فقط. القرار النهائي للمدقق البشري.</p>
+    <p class="muted">ارفع شاهداً أو أكثر؛ يقترح المدقق أقرب بند ومستواه، وهل يثبت أن المتطلب موثّق أم مطبّق أم فعّال، ثم يقترح تصنيف نتيجة التدقيق بالمسميات المعتمدة في ISO (مطابقة، عدم مطابقة رئيسية أو ثانوية، فرصة للتحسين) ويبيّن كفاية الدليل وما ينقص. يعمل بمحركات ذكاء اصطناعي مجانية بمفاتيحك، والمفاتيح تُحفظ في هذا المتصفح فقط. القرار النهائي للمدقق البشري.</p>
   </header>
 
   <section class="card" style="display:flex;flex-direction:column;gap:14px">
@@ -150,7 +150,7 @@ a{color:var(--accent)}
 
   <section class="card" style="display:flex;flex-direction:column;gap:10px">
     <div class="row" style="justify-content:space-between;align-items:center"><h2>خريطة التغطية</h2>
-      <div class="legend"><span class="chip c-n">لا شاهد</span><span class="chip c-e">وجود</span><span class="chip c-a">تطبيق</span><span class="chip c-f">فاعلية</span></div></div>
+      <div class="legend"><span class="chip c-n">لا شاهد</span><span class="chip c-e">موثّق</span><span class="chip c-a">مطبّق</span><span class="chip c-f">فعّال</span></div></div>
     <div class="cov" id="cov"></div>
     <p class="muted" style="font-size:16px" id="covNote"></p>
   </section>
@@ -406,6 +406,40 @@ const ROADMAP = [
  {p:"5", t:"الشهادة", d:"12–20 أسبوعاً", tasks:["اختيار جهة منح معتمدة (من المركز السعودي للاعتماد أو عضو في الاتفاقية الدولية)","المرحلة الأولى: مراجعة الجاهزية والتوثيق","إغلاق ملاحظات المرحلة الأولى","المرحلة الثانية: تدقيق التطبيق والفاعلية في الموقع","خطة تصحيحية للملاحظات وإصدار الشهادة"], out:"شهادة صالحة 3 سنوات مع تدقيق مراقبة سنوي",
   check:["جهة منح معتمدة ومتعاقد معها","لا ملاحظات رئيسية مفتوحة","خطة لتدقيقات المراقبة"]}
 ];
+
+/* Official audit outcome terms (EN source + clause). Arabic = the terms in common use; confirm against the official Arabic text. */
+const OFFICIAL = [
+ {k:"conformity", ar:"مطابقة", en:"Conformity", src:"ISO 9000:2015 بند 3.6.11", def:"استيفاء متطلب.", map:"يقابل في منهج الاعتماد: «متحقق»."},
+ {k:"major", ar:"عدم مطابقة رئيسية (كبرى/جسيمة)", en:"Major nonconformity", src:"ISO/IEC 17021-1:2015 بند 3.12", def:"عدم مطابقة تؤثر في قدرة نظام الإدارة على تحقيق نتائجه المقصودة. وتُصنَّف رئيسية عند وجود شك كبير في ضبط العمليات أو في تلبية المنتجات والخدمات لمتطلباتها، أو عند تعدد حالات ثانوية مرتبطة بالمتطلب نفسه تدل على إخفاق نظامي.", map:"أقرب ما يقابلها: غياب المتطلب أو تعطّله (لا وجود أو لا تطبيق)."},
+ {k:"minor", ar:"عدم مطابقة ثانوية (صغرى/طفيفة)", en:"Minor nonconformity", src:"ISO/IEC 17021-1:2015 بند 3.13", def:"عدم مطابقة لا تؤثر في قدرة النظام على تحقيق نتائجه المقصودة؛ خلل منفرد.", map:"أقرب ما يقابلها: «متحقق جزئياً»."},
+ {k:"ofi", ar:"فرصة للتحسين", en:"Opportunity for improvement (OFI)", src:"ISO 19011:2018 ملاحظة على 3.10؛ ISO/IEC 17021-1 بند 9.4.5.2", def:"المتطلب مستوفى ويمكن رفع أدائه. ليست مصطلحاً معرّفاً، ويجوز للمدقق تسجيلها، ولا يجوز تسجيل عدم مطابقة على أنها فرصة تحسين.", map:"متحقق مع مقترح للارتقاء."},
+ {k:"obs", ar:"ملاحظة / مجال اهتمام", en:"Observation / Area of concern", src:"لا تعرّفها أي مواصفة — تستخدمها جهات المنح", def:"أمر لم يبلغ عدم مطابقة لكنه قد يصبح كذلك (مثلاً في تقرير المرحلة الأولى أو عند غياب دليل واضح). تتعامل معه كل جهة منح بقواعدها.", map:"إنذار مبكر قبل عدم المطابقة."},
+ {k:"good", ar:"ممارسة جيدة / نقطة قوة", en:"Good practice", src:"ISO 19011:2018 ملاحظة على 3.10", def:"نتيجة تدقيق تسجّل ممارسة تستحق الإبقاء عليها أو تعميمها.", map:"يقابلها «الإشادة» في الاعتماد."}
+];
+const TERMS = [
+ ["الدليل الموضوعي","Objective evidence","ISO 9000:2015 بند 3.8.3","بيانات تؤيد وجود شيء أو صحته؛ وفي التدقيق: سجلات أو أقوال وقائع أو معلومات أخرى قابلة للتحقق."],
+ ["دليل التدقيق","Audit evidence","ISO 19011:2018 بند 3.9","سجلات أو أقوال وقائع أو معلومات أخرى ذات صلة بمعايير التدقيق وقابلة للتحقق."],
+ ["معايير التدقيق","Audit criteria","ISO 19011:2018 بند 3.7","مجموعة المتطلبات التي يُقارَن بها الدليل (المواصفة، والإجراءات، والأنظمة)."],
+ ["نتائج التدقيق","Audit findings","ISO 19011:2018 بند 3.10","حصيلة تقييم الدليل مقابل المعايير: مطابقة أو عدم مطابقة، وقد تكشف مخاطر أو فرصاً للتحسين أو ممارسات جيدة."],
+ ["استنتاج التدقيق","Audit conclusion","ISO 19011:2018 بند 3.11","خلاصة التدقيق بعد النظر في أهدافه وجميع نتائجه."],
+ ["التصحيح","Correction","ISO 9000:2015 بند 3.12.3","إجراء لإزالة عدم مطابقة مكتشفة (معالجة العَرَض)."],
+ ["الإجراء التصحيحي","Corrective action","ISO 9000:2015 بند 3.12.2","إجراء لإزالة سبب عدم المطابقة ومنع تكرارها."],
+ ["الفاعلية (الفعالية)","Effectiveness","ISO 9000:2015 بند 3.7.11","مدى تنفيذ الأنشطة المخططة وتحقيق النتائج المخططة."],
+ ["المعلومات الموثقة","Documented information","ISO 9000:2015 بند 3.8.6","معلومات يلزم ضبطها والحفاظ عليها مع الوسيط الذي يحملها."]
+];
+/* Real published findings (verified by opening the reports) */
+const REAL = [
+ {org:"جامعة قرطبة — الخدمات الإدارية (إسبانيا)", yr:"يوليو 2023 · AENOR · تدقيق مراقبة أول", g:"minor", cl:"5.2", t:"الفريق الإداري الجديد لم يعتمد سياسة الجودة منذ تعيينه.", url:"https://www.uco.es/organizacion/calidad/images/doc/Informe_AS1_UCO_2023.pdf"},
+ {org:"جامعة قرطبة (إسبانيا)", yr:"يوليو 2023 · AENOR", g:"minor", cl:"10.2", t:"عدم مطابقة من تدقيق 2020 عن إدارة الوثائق ما زالت مفتوحة دون إثبات فاعلية الإجراء التصحيحي.", url:"https://www.uco.es/organizacion/calidad/images/doc/Informe_AS1_UCO_2023.pdf"},
+ {org:"جامعة قرطبة (إسبانيا)", yr:"يوليو 2023 · AENOR", g:"obs", cl:"لم يُذكر رقم البند", t:"لم يُنفذ التدقيق الداخلي وفق الجدول، والإجراءات التصحيحية مخططة لأكتوبر.", url:"https://www.uco.es/organizacion/calidad/images/doc/Informe_AS1_UCO_2023.pdf"},
+ {org:"جامعة قرطبة (إسبانيا)", yr:"يوليو 2023 · AENOR", g:"ofi", cl:"لم يُذكر رقم البند", t:"تطوير استبيانات رضا موجّهة لكل فئة من المستفيدين.", url:"https://www.uco.es/organizacion/calidad/images/doc/Informe_AS1_UCO_2023.pdf"},
+ {org:"كلية الهندسة البحرية بجامعة قادس (إسبانيا)", yr:"مايو 2025 · LRQA · تدقيق مراقبة ثانٍ", g:"major", cl:"10.2 · 9.2 · 9.3", t:"سجل عدم المطابقة لم يُحدَّث منذ مايو 2024، ولم يُنفذ تدقيق داخلي ولا مراجعة إدارة في 2025.", url:"https://nauticas.uca.es/wp-content/uploads/2026/01/Auditoria-LRQA-Mayo-2025.pdf"},
+ {org:"كلية الهندسة البحرية بجامعة قادس (إسبانيا)", yr:"مايو 2025 · LRQA", g:"major", cl:"5.2 · 6.2 · 4.4", t:"سياسة 2022 لم تراجعها الإدارة الجديدة، ولا أهداف لعام 2024/25، ولا قياس للمؤشرات منذ مايو 2024.", url:"https://nauticas.uca.es/wp-content/uploads/2026/01/Auditoria-LRQA-Mayo-2025.pdf"},
+ {org:"مجلس مهن الرعاية والصحة HCPC (المملكة المتحدة)", yr:"أبريل 2019 · BSI · إعادة منح", g:"minor", cl:"7.3", t:"ضعف وعي العاملين بسياسة الجودة والأهداف ذات الصلة بعملهم.", url:"https://mrs.hcpc-uk.org/globalassets/meetings-attachments3/audit-committee/2019/02.-04.06.2019/enc-13---iso-audit-reports.pdf"},
+ {org:"مجلس HCPC (المملكة المتحدة)", yr:"أبريل 2019 · BSI", g:"minor", cl:"6.2.1", t:"لا توجد أهداف جودة قابلة للقياس في إدارة الموارد البشرية.", url:"https://mrs.hcpc-uk.org/globalassets/meetings-attachments3/audit-committee/2019/02.-04.06.2019/enc-13---iso-audit-reports.pdf"},
+ {org:"مجلس HCPC (المملكة المتحدة)", yr:"أبريل 2019 · BSI", g:"ofi", cl:"9.2.2", t:"فصل برنامج التدقيق الداخلي عن جداول تدقيق الجهات الخارجية لمزيد من الوضوح.", url:"https://mrs.hcpc-uk.org/globalassets/meetings-attachments3/audit-committee/2019/02.-04.06.2019/enc-13---iso-audit-reports.pdf"}
+];
+const GRADE = {conformity:["مطابقة","c-ok"], major:["عدم مطابقة رئيسية","c-bad"], minor:["عدم مطابقة ثانوية","c-new"], ofi:["فرصة للتحسين","c-e"], obs:["ملاحظة","c-n"], good:["ممارسة جيدة","c-f"]};
 
 </script>
 <script>
@@ -956,10 +990,11 @@ $("#diagBtn").onclick = () => diagEngines();
 
 </script>
 <script>
-const LV = {e:"وجود", a:"تطبيق", f:"فاعلية", none:"لا يثبت مستوى"};
-const VERD = {accepted:["مقبول","c-ok"], partial:["مقبول جزئياً","c-new"], rejected:["غير مقبول","c-bad"]};
-const FIND = {conformity:"مطابقة", ofi:"فرصة تحسين", minor:"عدم مطابقة ثانوية محتملة", major_risk:"مؤشر على عدم مطابقة رئيسية محتملة"};
-const CRIT = {documented:"موثّق", approved:"معتمد/موقّع", current:"حديث", dated:"مؤرَّخ", complete:"شامل للمتطلب", clear:"واضح ومقروء", relevant:"مرتبط بالبند", traceable:"قابل للتتبع (إصدار/مرجع)"};
+const LV = {e:"موثّق", a:"مطبّق", f:"فعّال", none:"لا يثبت شيئاً"};
+const VERD = {accepted:["دليل كافٍ","c-ok"], partial:["دليل كافٍ جزئياً","c-new"], rejected:["دليل غير كافٍ","c-bad"]};
+const FIND = {conformity:"مطابقة", ofi:"فرصة للتحسين", minor:"عدم مطابقة ثانوية (محتملة)", major_risk:"عدم مطابقة رئيسية (محتملة)"};
+const FCLS = {conformity:"c-ok", ofi:"c-e", minor:"c-new", major_risk:"c-bad"};
+const CRIT = {documented:"معلومة موثقة", approved:"مراجَعة ومعتمدة (7.5.2)", current:"إصدار ساري وحديث (7.5.3)", dated:"معرّفة: عنوان/تاريخ/مرجع (7.5.2)", complete:"تغطي عناصر المتطلب", clear:"مقروءة وواضحة", relevant:"ذات صلة بالمعايير (19011: 3.9)", traceable:"قابلة للتحقق (19011: 3.9)"};
 const clean = t => t.replace(/\u0000/g,"").replace(/[ \t]+/g," ").replace(/\n{3,}/g,"\n\n").trim();
 $("#target").innerHTML += CLAUSES.map(c => `<option value="${c.id}">${c.id} ${esc(c.t)}</option>`).join("");
 if (!ENG.ok) $("#engDet").open = true;
@@ -1063,12 +1098,12 @@ function judgePrompt(it, ev, c, sug, target, ctx){
 ${detail(c)}
 ${alts.length ? "بنود قريبة للمقارنة: " + alts.map(a => `${a.id} ${a.t}`).join("، ") + "\n" : ""}${target && sug.clause && sug.clause !== target ? `تنبيه: اختار المستخدم البند ${target}، بينما يبدو الشاهد أقرب إلى ${sug.clause}. اذكر ذلك في target_note دون رفض الشاهد لمجرد ذلك.\n` : ""}${ctx ? "سياق الجهة: " + ctx + "\n" : ""}
 قواعد إلزامية:
-1. المستوى level: e = وجود (سياسة/إجراء/خطة/مصفوفة معتمدة)، a = تطبيق (سجلات ومحاضر وتقارير منفذة مؤرخة)، f = فاعلية (نتائج بأرقام مقارنة بمستهدف أو اتجاه عبر فترات أو قرارات أُغلقت). اختر أعلى مستوى يثبته الشاهد فعلاً، وnone إن لم يثبت شيئاً.
-2. criteria لكل محدد yes أو no أو unclear، وما لا يظهر في النص فهو unclear: documented, approved (توقيع/اعتماد/ختم), current (السجلات الدورية خلال آخر 12 شهراً), dated, complete (يغطي عناصر المتطلب), clear, relevant, traceable (رقم إصدار أو مرجع أو هوية الجهة).
-3. verdict: accepted إن ثبت المستوى وكانت relevant وdocumented وcurrent متحققة؛ partial إن ثبت جزئياً أو غاب عنصر مهم؛ rejected إن لم يرتبط بالبند أو لم يثبت شيئاً أو كان مسودة/قديماً.
+1. level: e = موثّق (الجهة قررت ووثّقت: سياسة أو إجراء أو خطة أو مصفوفة معتمدة؛ ما تراجعه المرحلة الأولى وفق ISO/IEC 17021-1 بند 9.3.1.2)، a = مطبّق (سجلات ومحاضر وتقارير منفذة مؤرخة تثبت أن الجهة تفعل ما وثّقته؛ ISO 9001 بند 9.2.1 ب)، f = فعّال (نتائج بأرقام مقارنة بالمستهدف أو اتجاه عبر فترات أو قرارات أُغلقت؛ الفاعلية = مدى تحقيق النتائج المخططة وفق ISO 9000 بند 3.7.11)، none = لا يثبت شيئاً. اختر أعلى ما يثبته الشاهد فعلاً. هذه أسئلة عمل للمدقق لا مستويات رسمية في ISO.
+2. criteria لكل محدد yes أو no أو unclear، وما لا يظهر فهو unclear: documented (معلومة موثقة)، approved (مراجَعة ومعتمدة: توقيع أو اعتماد أو ختم؛ ISO 9001 بند 7.5.2 ج)، current (إصدار ساري وحديث؛ السجلات الدورية خلال آخر 12 شهراً؛ بند 7.5.3)، dated (معرّفة: عنوان أو تاريخ أو كاتب أو رقم مرجعي؛ بند 7.5.2 أ)، complete (تغطي عناصر المتطلب)، clear (مقروءة)، relevant (ذات صلة بمعايير التدقيق؛ ISO 19011 بند 3.9)، traceable (قابلة للتحقق؛ ISO 19011 بند 3.9).
+3. verdict = كفاية الدليل: accepted (كافٍ) إن أثبت ما يدّعيه وكانت relevant وdocumented وcurrent متحققة؛ partial (كافٍ جزئياً) إن غاب عنصر مهم؛ rejected (غير كافٍ) إن لم يرتبط بالمتطلب أو كان مسودة أو قديماً أو مجرد قول بلا ما يؤيده.
 4. quotes: من 1 إلى 4 اقتباسات قصيرة منسوخة حرفياً من نص الشاهد تؤيد حكمك (تاريخ، اعتماد، نتيجة). لا تنسخ ما ليس في النص.
-5. finding.type: conformity أو ofi أو minor أو major_risk (شاهد واحد لا يكفي لعدم مطابقة رئيسية؛ major_risk فقط عند غياب نظامي ظاهر). اكتب finding.text: الواقعة + المتطلب + الأثر.
-6. next_evidence: شواهد محددة تكمل الخيط نحو المستوى الأعلى. pii = true إن احتوى الشاهد هويات أو أرقام جوال لأفراد، ولا تنقلها.
+5. finding.type بالمسميات المعتمدة: conformity = مطابقة (استيفاء المتطلب؛ ISO 9000 بند 3.6.11)، ofi = فرصة للتحسين (المتطلب مستوفى ويمكن رفع أدائه؛ لا تُستخدم لما هو عدم مطابقة)، minor = عدم مطابقة ثانوية محتملة (لا تؤثر في قدرة النظام على تحقيق نتائجه؛ ISO/IEC 17021-1 بند 3.13)، major_risk = عدم مطابقة رئيسية محتملة (تؤثر في قدرة النظام على تحقيق نتائجه، أو شك كبير في ضبط العمليات، أو حالات متعددة تدل على إخفاق نظامي؛ بند 3.12). الحكم من شاهد واحد «محتمل» دائماً، فالمدقق يحكم بعد جمع كل الأدلة. اكتب finding.text: الواقعة + المتطلب + الأثر.
+6. next_evidence: شواهد محددة تكمل الإثبات من موثّق إلى مطبّق إلى فعّال. pii = true إن احتوى الشاهد هويات أو أرقام جوال لأفراد، ولا تنقلها.
 
 الشاهد «${it.name}»:
 """
@@ -1103,8 +1138,8 @@ async function auditOne(it, target, ctx, signal){
   const hay = normAr(full);
   r.verified = (r.quotes || []).filter(q => quoteOk(q, hay));
   r.checks = [];
-  if ($("#strictChk").checked && r.verdict === "accepted" && !r.verified.length) { r.verdict = "partial"; r.checks.push("خُفّض الحكم إلى «جزئي»: لم يُعثر في نص الشاهد على أي اقتباس يؤيده (صرامة الأدلة)."); }
-  if (r.level === "f" && !/[0-9٠-٩]/.test(full)) { r.level = "a"; r.checks.push("خُفّض المستوى إلى «تطبيق»: الفاعلية تتطلب أرقاماً أو نتائج، ولا توجد أرقام في الشاهد."); }
+  if ($("#strictChk").checked && r.verdict === "accepted" && !r.verified.length) { r.verdict = "partial"; r.checks.push("خُفّض تقييم كفاية الدليل إلى «كافٍ جزئياً»: لم يُعثر في نص الشاهد على أي اقتباس يؤيد الحكم (صرامة الأدلة)."); }
+  if (r.level === "f" && !/[0-9٠-٩]/.test(full)) { r.level = "a"; r.checks.push("خُفّض إلى «مطبّق»: إثبات الفاعلية يتطلب نتائج أو أرقاماً، ولا توجد أرقام في الشاهد."); }
   if (target && sug.clause && sug.clause !== target && !r.target_note) r.target_note = `الشاهد أقرب إلى البند ${sug.clause} ${CLAUSES.find(c=>c.id===sug.clause)?.t || ""}.`;
   r.engine = `${P().name}${LAST_MODEL ? " · " + LAST_MODEL : ""}`; r.trail = TRAIL.slice();
   return r;
@@ -1137,6 +1172,7 @@ function renderResults(){
     const crit = Object.entries(CRIT).map(([k,t]) => { const s = r.criteria?.[k]; return `<span>${t}</span><span class="${s==="yes"?"y":s==="no"?"n":"u"}">${s==="yes"?"متحقق":s==="no"?"غير متحقق":"غير ظاهر"}</span>`; }).join("");
     return `<article class="res"><div class="hd">
       <span class="fn" title="${esc(r.name)}">${esc(r.name)}</span>${r.sample?`<span class="sample-tag">مثال توضيحي</span>`:""}
+      ${r.finding ? `<span class="chip ${FCLS[r.finding.type]||"c-n"}">${FIND[r.finding.type]||""}</span>` : ""}
       <span class="chip c-${["e","a","f"].includes(r.level) ? r.level : "n"}">${LV[r.level] || "—"}</span>
       <span class="chip ${v[1]}">${v[0]}</span>
       ${r.confidence!=null?`<span class="chip c-n">ثقة ${AR(r.confidence)}٪</span>`:""}</div>
@@ -1148,10 +1184,10 @@ function renderResults(){
       <p class="muted" style="font-size:17px">${esc(r.doc_type || "")}${r.doc_date ? " · " + esc(r.doc_date) : ""}</p>
       ${r.strengths?.length ? `<div><b style="font-family:var(--display);font-size:15px;color:var(--ok)">ما يثبته</b><ul>${r.strengths.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
       ${r.gaps?.length ? `<div><b style="font-family:var(--display);font-size:15px;color:var(--bad)">ما ينقص</b><ul>${r.gaps.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
-      ${r.finding ? `<div class="finding"><b style="font-family:var(--display);font-size:15px">${FIND[r.finding.type] || "ملاحظة"}</b><p>${esc(r.finding.text)}</p></div>` : ""}
+      ${r.finding ? `<div class="finding"><b style="font-family:var(--display);font-size:15px">نص نتيجة التدقيق المقترح</b><p>${esc(r.finding.text)}</p></div>` : ""}
       ${r.checks?.length ? `<div class="note">${r.checks.map(esc).join("<br>")}</div>` : ""}
     </div><div style="display:flex;flex-direction:column;gap:10px;min-width:0">
-      <div><b style="font-family:var(--display);font-size:15px">محددات قبول الشاهد</b><div class="crit" style="margin-top:6px">${crit}</div></div>
+      <div><b style="font-family:var(--display);font-size:15px">صفات الدليل (ISO 9001 بند 7.5 وISO 19011)</b><div class="crit" style="margin-top:6px">${crit}</div></div>
       ${r.verified?.length ? `<div><b style="font-family:var(--display);font-size:15px">اقتباسات تحقّق المدقق من وجودها</b><ul>${r.verified.map(q=>`<li>«${esc(q)}»</li>`).join("")}</ul></div>` : ""}
       ${r.next_evidence?.length ? `<div><b style="font-family:var(--display);font-size:15px;color:var(--accent)">لإكمال الخيط</b><ul>${r.next_evidence.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
       ${r.pii ? `<p class="chip c-bad">يحتوي بيانات شخصية — احجبها</p>` : ""}
@@ -1163,7 +1199,7 @@ function renderCov(){
   const rank = {none:0, e:1, a:2, f:3}, best = {};
   results.filter(r => !r.error && r.verdict !== "rejected").forEach(r => { if ((rank[r.level]||0) > (rank[best[r.clause]]||0)) best[r.clause] = r.level; });
   $("#cov").innerHTML = CLAUSES.map(c => `<div class="${best[c.id] ? "L-"+best[c.id] : ""}" title="${esc(c.t)}"><b>${c.id}</b>${best[c.id] ? LV[best[c.id]] : "—"}</div>`).join("");
-  $("#covNote").textContent = `${AR(Object.keys(best).length)} من ${AR(CLAUSES.length)} بنداً عليها شاهد مقبول أو جزئي. الهدف لكل بند: الوصول إلى الفاعلية.${results.some(r=>r.sample)?" (تشمل المثال التوضيحي)":""}`;
+  $("#covNote").textContent = `${AR(Object.keys(best).length)} من ${AR(CLAUSES.length)} بنداً عليها دليل كافٍ أو كافٍ جزئياً. الهدف لكل بند: دليل يثبت أنه فعّال.${results.some(r=>r.sample)?" (تشمل المثال التوضيحي)":""}`;
 }
 function reportText(){
   return results.filter(r => !r.error).map(r => `${r.sample?"[مثال] ":""}${r.name}\nالبند: ${r.clause} ${r.clause_title||""} · المستوى: ${LV[r.level]||"—"} · الحكم: ${VERD[r.verdict]?.[0]||"—"}\n${r.summary||""}\nما ينقص: ${(r.gaps||[]).join("؛ ")}\nالملاحظة: ${FIND[r.finding?.type]||""} — ${r.finding?.text||""}\nلإكمال الخيط: ${(r.next_evidence||[]).join("؛ ")}`).join("\n\n");
