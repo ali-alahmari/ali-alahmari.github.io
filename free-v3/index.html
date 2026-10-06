@@ -274,7 +274,7 @@ label.opts2 input{margin-top:6px;flex:none}
     </div>
     <div class="field engine" id="engine">
       <label class="lbl" for="provSel">محرك التحليل المجاني</label>
-      <select id="provSel"><optgroup label="المحركات الأساسية (بالترتيب)"><option value="gemini">١. Gemini Flash — الأدق في العربي ويقرأ المستندات</option><option value="cohere">٢. Cohere Command A — قوي جداً في العربي</option><option value="nvidia">٣. NVIDIA — DeepSeek وKimi بلا حد يومي</option><option value="mistral">٤. Mistral Large — رصيد مجاني سخي</option><option value="cloudflare">٥. Cloudflare Workers AI — مجاني دائماً ويقرأ الصور (جديد)</option><option value="kilo">٦. Kilo Gateway — نماذج مجانية دون مفتاح (جديد)</option><option value="zai">٧. Z.ai GLM Flash — مجاني بالكامل</option><option value="groq">٨. Groq — الأسرع للشواهد القصيرة</option><option value="ovh">٩. OVHcloud — بلا مفتاح، طلبان في الدقيقة (جديد)</option></optgroup><optgroup label="احتياطي أخير (يُستخدم بعد نفاد الأساسية)"><option value="cerebras">Cerebras — رصيد تجريبي</option><option value="sambanova">SambaNova — ٢٠ طلباً يومياً</option><option value="llm7">LLM7 — حصة يومية صغيرة (جديد)</option><option value="openrouter">OpenRouter — نماذج مجانية محدودة</option><option value="hf">Hugging Face — رصيد شهري صغير (جديد)</option><option value="pollinations">Pollinations — وسيط غير رسمي</option><option value="puter">Claude عبر Puter — رصيد محدود</option><option value="github">GitHub Models — متوقف منذ يوليو 2026</option></optgroup></select>
+      <select id="provSel"><optgroup label="المحركات الأساسية (بالترتيب)"><option value="gemini">١. Gemini Flash — الأدق في العربي ويقرأ المستندات</option><option value="cohere">٢. Cohere Command A — قوي جداً في العربي</option><option value="nvidia">٣. NVIDIA — DeepSeek وKimi بلا حد يومي</option><option value="cloudflare">٤. Cloudflare Workers AI — مجاني دائماً ويقرأ الصور (جديد)</option><option value="kilo">٥. Kilo Gateway — نماذج مجانية دون مفتاح (جديد)</option><option value="zai">٦. Z.ai GLM Flash — مجاني بالكامل</option><option value="groq">٧. Groq — الأسرع للشواهد القصيرة</option><option value="ovh">٨. OVHcloud — بلا مفتاح، طلبان في الدقيقة (جديد)</option></optgroup><optgroup label="احتياطي أخير (يُستخدم بعد نفاد الأساسية)"><option value="cerebras">Cerebras — رصيد تجريبي</option><option value="sambanova">SambaNova — ٢٠ طلباً يومياً</option><option value="llm7">LLM7 — حصة يومية صغيرة (جديد)</option><option value="openrouter">OpenRouter — نماذج مجانية محدودة</option><option value="hf">Hugging Face — رصيد شهري صغير (جديد)</option><option value="mistral">Mistral Large — يحتاج اشتراكاً لمفاتيح API</option><option value="pollinations">Pollinations — وسيط غير رسمي</option><option value="puter">Claude عبر Puter — رصيد محدود</option><option value="github">GitHub Models — متوقف منذ يوليو 2026</option></optgroup></select>
       <div id="apiBox" style="display:grid;gap:6px;margin-top:4px">
         <div class="eng-st"><i class="dot" id="apiDot"></i><span id="apiTxt">أدخل المفتاح المجاني</span></div>
         <button type="button" class="btn sm pri" id="puterBtn" hidden>تسجيل الدخول في Puter (مجاني)</button>
@@ -370,7 +370,7 @@ const PROVS = {
   openrouter:{name:"OpenRouter", ph:"sk-or-…", url:"https://openrouter.ai/keys", base:"https://openrouter.ai/api/v1", howto:"سجّل في OpenRouter ثم اضغط Create Key وانسخ المفتاح والصقه هنا.",
            info:"يعرض النماذج المجانية أولاً (Nemotron 3 Ultra، Inkling، Qwen…) — الحد المجاني نحو 50 طلباً يومياً. إن كان في حسابك رصيد تظهر النماذج المدفوعة أيضاً (منها Claude)."},
   mistral:{name:"Mistral", ph:"…", url:"https://console.mistral.ai/api-keys", base:"https://api.mistral.ai/v1", howto:"سجّل في Mistral (الخطة المجانية)، ثم من API Keys اضغط Create new key وانسخه هنا.",
-           info:"Mistral Large 3 / Medium 3.5 برصيد مجاني شهري (نحو 10$)."},
+           info:"منذ 2026 تتطلب Mistral خطة مدفوعة لإنشاء مفاتيح API (الخطة المجانية للتجربة داخل Studio فقط) — احتياطي لمن لديه مفتاح."},
   gemini: {name:"Gemini", ph:"AIza…", url:"https://aistudio.google.com/apikey", howto:"افتح صفحة المفاتيح وسجّل بحساب Google، ثم اضغط Create API key وانسخ المفتاح والصقه هنا.",
            info:"نماذج Gemini Flash المجانية، وتقرأ الصور والمستندات الطويلة مباشرة."},
   cohere: {name:"Cohere", ph:"…", url:"https://dashboard.cohere.com/api-keys", direct:"https://api.cohere.ai/compatibility/v1", relay:true, models:["command-a-plus-05-2026","command-a-reasoning-08-2025","command-a-03-2025","c4ai-aya-expanse-32b","command-a-vision-07-2025"],
@@ -419,7 +419,7 @@ const pref = () => store.get("aud-free", {});
 const savePref = p => store.set("aud-free", Object.assign(pref(), p));
 const keyName = p => "aud-key-" + p;
 const getKey = p => { try { return localStorage.getItem(keyName(p)) || (p === "groq" ? localStorage.getItem("aud-groq-key") || "" : "") || (PROVS[p]?.anon ? "anon" : ""); } catch { return PROVS[p]?.anon ? "anon" : ""; } };
-const ENGINE_ORDER = ["gemini", "cohere", "nvidia", "mistral", "cloudflare", "kilo", "zai", "groq", "ovh", "cerebras", "sambanova", "llm7", "openrouter", "hf", "pollinations", "puter"];
+const ENGINE_ORDER = ["gemini", "cohere", "nvidia", "cloudflare", "kilo", "zai", "groq", "ovh", "cerebras", "sambanova", "llm7", "openrouter", "hf", "mistral", "pollinations", "puter"];
 const engineUsable = p => p === "puter" ? location.protocol !== "file:" : (!!getKey(p) && (!PROVS[p]?.relay || !!getRelay()));
 let PROV = PROVS[pref().prov2] ? pref().prov2 : (ENGINE_ORDER.find(p => p !== "puter" && engineUsable(p)) || "gemini");
 if (PROV === "puter" && location.protocol === "file:") PROV = "gemini";
@@ -472,6 +472,12 @@ async function listModels(){
   }
   if (PROVS[PROV].relay && !getRelay()) throw new Error("no_relay");
   if (["cohere", "github", "zai", "cloudflare", "kilo", "ovh", "llm7", "hf"].includes(PROV)) {
+    if (PROV === "cloudflare") {
+      if (!/^[0-9a-f]{32}:\S+$/i.test(String(apiKey).trim())) throw new Error("cf_format");
+      const r = await fetch(P().base + "/chat/completions", {method:"POST", headers:{Authorization:"Bearer " + String(apiKey).trim(), "Content-Type":"application/json"}, body:JSON.stringify({model:"@cf/meta/llama-3.1-8b-instruct", messages:[{role:"user", content:"ok"}], max_tokens:1}), signal:(AbortSignal.timeout ? AbortSignal.timeout(15000) : undefined)});
+      if ([401, 403].includes(r.status)) throw new Error(401);
+      return {all:P().models.slice(), judgePref:CF_JUDGE, vis:P().models.filter(i => /qwen3\.8|gemma-?4|llama-4|mistral-small/i.test(i)), visAll:false};
+    }
     let ids = [];
     try { const r = await fetch(P().base + "/models", {headers:{Authorization:"Bearer " + apiKey}, signal:(AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined)});
       if ([401, 403].includes(r.status)) throw new Error(401);
@@ -549,14 +555,14 @@ async function checkApi(){
     if (PROV === "puter") { let u = null; try { u = window.puter.auth.isSignedIn() ? await window.puter.auth.getUser() : null; } catch {}
       st.textContent = u ? `جاهز · مسجّل باسم ${u.username} · ${AR(all.length)} نموذج` : "جاهز · سجّل الدخول في Puter مرة واحدة (أو سيُطلب منك عند أول تدقيق)"; }
     else st.textContent = (apiKey === "anon" ? "جاهز دون مفتاح" : "المفتاح صالح") + ` · ${AR(all.length)} نموذج متاح في ${P().name}`;
-  } catch (e) { ENG.api.ok = false; $("#apiDot").style.background = "var(--bad)"; st.textContent = String(e.message) === "no_relay" ? `${P().name} يحتاج رابط الوسيط (Cloudflare) — الصقه في الخانة أدناه` : String(e.message) === "401" ? "المفتاح غير صحيح" : PROV === "puter" ? (location.protocol === "file:" ? "محرك Claude عبر Puter لا يعمل من ملف على الجهاز — افتح البرنامج من رابطه: ali-alahmari.github.io/free" : "تعذّر تحميل Puter. تحقق من الإنترنت ثم أعد المحاولة.") : `تعذّر الاتصال بخدمة ${P().name}. تحقق من الإنترنت.`; }
+  } catch (e) { ENG.api.ok = false; $("#apiDot").style.background = "var(--bad)"; st.textContent = String(e.message) === "no_relay" ? `${P().name} يحتاج رابط الوسيط (Cloudflare) — الصقه في الخانة أدناه` : String(e.message) === "cf_format" ? "صيغة مفتاح Cloudflare: رقم الحساب (32 حرفاً) ثم نقطتان ثم الـ Token، دون مسافات" : String(e.message) === "401" ? (PROV === "cloudflare" ? "رفضت Cloudflare المفتاح — تأكد أن الـ Token بقالب Workers AI وأن رقم الحساب صحيح" : "المفتاح غير صحيح") : PROV === "puter" ? (location.protocol === "file:" ? "محرك Claude عبر Puter لا يعمل من ملف على الجهاز — افتح البرنامج من رابطه: ali-alahmari.github.io/free" : "تعذّر تحميل Puter. تحقق من الإنترنت ثم أعد المحاولة.") : `تعذّر الاتصال بخدمة ${P().name}. تحقق من الإنترنت.`; }
   setEngine();
 }
 const savePP = o => { const all = pref(); all[PROV] = Object.assign(all[PROV] || {}, o); store.set("aud-free", all); };
 $("#relaySave").onclick = () => { const v = $("#relayUrl").value.trim(); try { v ? localStorage.setItem("aud-relay", v) : localStorage.removeItem("aud-relay"); } catch {} paintProv(); checkApi(); toast(v ? "حُفظ رابط الوسيط" : "حُذف رابط الوسيط"); };
 $("#provSel").addEventListener("change", () => { PROV = $("#provSel").value; savePref({prov2:PROV}); apiKey = getKey(PROV); $("#mApi").innerHTML = ""; $("#mVis").innerHTML = ""; paintProv(); checkApi(); });
 $("#puterBtn").onclick = async () => { try { const pt = await loadPuter(); await pt.auth.signIn(); toast("تم تسجيل الدخول في Puter"); } catch { toast("لم يكتمل تسجيل الدخول"); } checkApi(); };
-$("#apiSave").onclick = () => { const v = $("#apiKey").value.trim(); if (!v) return; apiKey = v; try { localStorage.setItem(keyName(PROV), apiKey); } catch {} paintProv(); checkApi(); };
+$("#apiSave").onclick = () => { const v = $("#apiKey").value.replace(/\s+/g, ""); if (!v) return; apiKey = v; try { localStorage.setItem(keyName(PROV), apiKey); } catch {} paintProv(); checkApi(); };
 $("#apiDel").onclick = () => { apiKey = ""; try { localStorage.removeItem(keyName(PROV)); if (PROV === "groq") localStorage.removeItem("aud-groq-key"); } catch {} paintProv(); checkApi(); toast("حُذف المفتاح من هذا المتصفح"); };
 $("#mApi").addEventListener("change", () => savePP({judge:$("#mApi").value}));
 $("#mVis").addEventListener("change", () => savePP({vis:$("#mVis").value}));
