@@ -102,6 +102,7 @@ body{margin:0;background:var(--bg);color:var(--ink)}
 @media (max-width:640px){.tm{grid-template-columns:42px minmax(0,1fr) auto}.tm .in.role{grid-column:2/3}}
 .tm-ob{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;margin:-2px 50px 8px 0;font-size:.95rem;color:var(--ink-2)}.tm-ob .in{width:auto;min-width:190px}
 .pv{margin-top:12px;border:2px solid var(--brand);background:var(--surface-2);border-radius:14px;padding:14px 16px}.pv h3{margin:0 0 6px}.pv p{margin:4px 0 10px;color:var(--ink-2)}.pv table{width:100%;border-collapse:collapse;margin:8px 0}.pv th,.pv td{border:1px solid var(--line);padding:6px 10px;text-align:right}.pv th{background:var(--surface)}.pv .ok{color:var(--ok);font-weight:800}.pv .wn{color:var(--bad);font-weight:800}
+.rq-row{display:grid;grid-template-columns:34px minmax(240px,1.8fr) minmax(260px,2.2fr) 120px minmax(0,2.4fr) auto;gap:8px;align-items:start;margin:8px 0;padding:10px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px}.rq-row textarea{min-height:2.6rem;width:100%;border:1.5px solid var(--line);border-radius:10px;padding:.5rem .7rem;background:var(--surface)}.rq-row .rn{width:30px;height:30px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-weight:800}@media (max-width:900px){.rq-row{grid-template-columns:minmax(0,1fr)}}
 .quick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
 @media (max-width:1100px){.quick{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:560px){.quick{grid-template-columns:minmax(0,1fr)}}
@@ -374,6 +375,7 @@ table.o.sum td{font-size:.97rem}
 
 <div class="tabs"><div class="tabs-in" role="tablist" aria-label="أقسام النموذج">
   <button class="tab" role="tab" data-tab="form" aria-selected="true" type="button">نموذج تقويم المعايير 22م</button>
+  <button class="tab" role="tab" data-tab="req" aria-selected="false" type="button">طلب الشواهد من المنشأة</button>
   <button class="tab" role="tab" data-tab="dist" aria-selected="false" type="button">توزيع المعايير على أعضاء الفريق</button>
   <button class="tab" role="tab" data-tab="groups" aria-selected="false" type="button">مجموعات المعايير وترابطها</button>
   <button class="tab" role="tab" data-tab="guide" aria-selected="false" type="button">دليل المستويات والشواهد</button>
@@ -396,6 +398,20 @@ table.o.sum td{font-size:.97rem}
 </section>
 
 <!-- DIST -->
+<section class="panel" id="p-req" role="tabpanel" hidden>
+  <div class="card">
+    <h2 class="doc-t">طلب الأدلة والشواهد من المنشأة</h2>
+    <p style="color:var(--ink-2)">اختر المعيار ثم المعيار الفرعي ثم المستوى (الوجود أو الممارسة أو الفاعلية)، واكتب الشاهد المطلوب. يُصدَّر الطلب وحده ملف Word جاهزًا لإرساله للمنشأة، وفيه خانات «متوفر / غير متوفر» و«تم الإرفاق / لم يتم الإرفاق» تملؤها المنشأة.</p>
+    <div class="grid g3" style="margin:10px 0">
+      <div><label class="lbl" for="reqBranch">الفرع (اختياري)</label><input class="in" id="reqBranch" data-rq="meta.branch" placeholder="مثال: فرع الخبر"></div>
+      <div><label class="lbl" for="reqDate">آخر موعد لإرفاق الشواهد (التاريخ)</label><input class="in" type="date" id="reqDate" data-rq="meta.date"></div>
+      <div><label class="lbl" for="reqTime">الساعة</label><input class="in" id="reqTime" data-rq="meta.time" placeholder="الخامسة مساءً"></div>
+    </div>
+    <div id="reqRows"></div>
+    <div class="presets"><button class="btn pri" id="reqAdd" type="button">+ إضافة شاهد مطلوب</button><button class="btn" id="reqWord" type="button">تصدير نموذج الشواهد (Word)</button><span class="note" id="reqCount"></span></div>
+  </div>
+</section>
+
 <section class="panel" id="p-dist" role="tabpanel" hidden>
   <div class="card">
     <h2 class="doc-t">توزيع المعايير على أعضاء الفريق – للاعتماد المؤسسي</h2>
@@ -20947,12 +20963,12 @@ function renderSummary(){var tot=0,ans=0,gaps=0,critAns=0,critTot=0,avgs=[],done
   $('#wl').innerHTML=wl}
 var SUBS_ALL=[];STDS.forEach(function(s){s.subs.forEach(function(b){SUBS_ALL.push(b)})});
 
-function updAll(){updOwners();updStd();updFilterSel();applyFilter();SUBS_ALL.forEach(updSubChips);$$('select[data-f]').forEach(updHint);renderQuick();renderDist();renderSetupSum();renderSummary();renderMe();applyRole()}
+function updAll(){updOwners();updStd();updFilterSel();applyFilter();SUBS_ALL.forEach(updSubChips);$$('select[data-f]').forEach(updHint);renderQuick();renderDist();renderSetupSum();renderSummary();renderMe();renderReq(false);applyRole()}
 function light(code){if(code)updSubChips(SUB[code]);updStd();renderSummary()}
 
 /* ---------- tabs ---------- */
 function showTab(t){S.ui.tab=t;$$('.tab').forEach(function(b){b.setAttribute('aria-selected',b.getAttribute('data-tab')===t?'true':'false')});$$('.panel').forEach(function(p){p.hidden=p.id!=='p-'+t});
-  if(t==='form')$$('textarea[data-f]').forEach(autosize);if(t==='sum')renderSummary();save()}
+  if(t==='form')$$('textarea[data-f]').forEach(autosize);if(t==='sum')renderSummary();if(t==='req')renderReq(true);save()}
 
 /* ---------- export ---------- */
 function exportObj(){return {app:'etec22m',version:1,exported:new Date().toISOString(),state:S}}
@@ -20974,6 +20990,69 @@ function mergeImport(txt){try{var I=parseImp(txt),n=0;
   var a=I.setup,b=S.setup;if(!b.facility&&a.facility)b.facility=a.facility;if(!b.date&&a.date)b.date=a.date;
   a.team.forEach(function(m,i){if(m.name&&m.name.trim()&&b.team[i]&&!b.team[i].name.trim())b.team[i].name=m.name});
   saveNow();bootAll();pushAll();msg('تم الدمج: '+n+' خانة محدّثة.');toast('تم دمج '+n+' خانة')}catch(e){msg('تعذّر قراءة البيانات: تأكد من أنها نص JSON صالح.')}}
+
+
+/* ---------- evidence request (طلب الشواهد من المنشأة) ---------- */
+var LVN={e:'الوجود',p:'الممارسة',f:'الفاعلية'},LVO=['e','p','f'];
+function rqGet(id,f){return S.f['rq.'+id+'.'+f]||''}
+function rqSet(id,f,v){var k='rq.'+id+'.'+f;S.f[k]=v;queueEntry(k,v)}
+function rqIds(){var ids={};Object.keys(S.f).forEach(function(k){var m=/^rq\.(r[a-z0-9]+)\.(std|sub|lv|txt|n|del)$/.exec(k);if(m)ids[m[1]]=1});return Object.keys(ids).filter(function(id){return rqGet(id,'del')!=='1'}).sort(function(a,b){return (+rqGet(a,'n')||0)-(+rqGet(b,'n')||0)})}
+function rqRowHTML(id,i){var sd=rqGet(id,'std'),sb=rqGet(id,'sub'),lv=rqGet(id,'lv');
+  var h='<div class="rq-row" data-rid="'+id+'"><span class="rn">'+(i+1)+'</span><select class="in" data-rq="'+id+'.std" aria-label="المعيار"><option value="">— المعيار —</option>'+STDS.map(function(s){return '<option value="'+s.n+'"'+(String(s.n)===sd?' selected':'')+'>'+s.n+' · '+esc(s.title)+'</option>'}).join('')+'</select>';
+  h+='<select class="in" data-rq="'+id+'.sub" aria-label="المعيار الفرعي"><option value="">— المعيار الفرعي —</option>'+(STD[sd]?STD[sd].subs.map(function(b){var tx=b.text.length>46?b.text.slice(0,46)+'…':b.text;return '<option value="'+b.code+'"'+(b.code===sb?' selected':'')+'>'+b.code+' · '+esc(tx)+'</option>'}).join(''):'')+'</select>';
+  h+='<select class="in" data-rq="'+id+'.lv" aria-label="المستوى"><option value="">— المستوى —</option>'+LVO.map(function(k){return '<option value="'+k+'"'+(k===lv?' selected':'')+'>'+LVN[k]+'</option>'}).join('')+'</select>';
+  h+='<textarea data-rq="'+id+'.txt" rows="2" placeholder="اكتب الشاهد المطلوب من المنشأة…">'+esc(rqGet(id,'txt'))+'</textarea><button class="btn sm danger" data-rqdel="'+id+'" type="button">حذف</button></div>';return h}
+function renderReq(force){var box=$('#reqRows');if(!box)return;var ae=document.activeElement;
+  [['reqBranch','branch'],['reqDate','date'],['reqTime','time']].forEach(function(x){var el=$('#'+x[0]);if(el&&el!==ae)el.value=S.f['rq.meta.'+x[1]]||''});
+  var ids=rqIds();$('#reqCount').textContent=ids.length?ids.length+' شاهد مطلوب':'';
+  if(!force&&ae&&box.contains(ae))return;
+  box.innerHTML=ids.length?ids.map(rqRowHTML).join(''):'<div class="empty">لم تُضف شواهد بعد. اضغط «+ إضافة شاهد مطلوب».</div>';
+  try{var ob=myRole()==='obs';$$('#p-req [data-rq],#p-req [data-rqdel],#reqAdd').forEach(function(x){x.disabled=ob})}catch(e){}}
+function rqAdd(){var ids=rqIds(),last=ids.length?ids[ids.length-1]:null,id='r'+Math.random().toString(36).slice(2,7);
+  rqSet(id,'n',String(Date.now()));if(last){rqSet(id,'std',rqGet(last,'std'));rqSet(id,'sub',rqGet(last,'sub'))}rqSet(id,'txt','');save();renderReq(true)}
+function rqRows(){var o=[];rqIds().forEach(function(id){var sub=rqGet(id,'sub'),sd=+rqGet(id,'std')||(SUB[sub]?SUB[sub].std:0);if(!sd&&!rqGet(id,'txt').trim())return;o.push({std:sd,sub:sub,lv:rqGet(id,'lv'),txt:rqGet(id,'txt').trim()})});
+  o.sort(function(a,b){var ai=a.sub?SUBS_ALL.findIndex(function(x){return x.code===a.sub}):-1,bi=b.sub?SUBS_ALL.findIndex(function(x){return x.code===b.sub}):-1;return (a.std-b.std)||(ai-bi)||(LVO.indexOf(a.lv)-LVO.indexOf(b.lv))});return o}
+function buildReqDocx(){var D=window.docx;if(!D)throw new Error('docx');
+  var FONT={ascii:'Sakkal Majalla',hAnsi:'Sakkal Majalla',cs:'Sakkal Majalla',eastAsia:'Sakkal Majalla'};
+  var AL=D.AlignmentType,DX=D.WidthType.DXA;
+  function run(t,o){o=o||{};return new D.TextRun({text:String(t),font:FONT,size:o.size||26,bold:!!o.bold,color:o.color,rightToLeft:true})}
+  function P(t,o){o=o||{};return new D.Paragraph({bidirectional:true,alignment:o.al||AL.START,spacing:{before:o.sb||0,after:o.sa==null?40:o.sa},keepNext:!!o.keep,pageBreakBefore:!!o.pb,children:[run(t,o)]})}
+  function Ps(t,o){var L=String(t==null?'':t).split(/\r?\n/);return L.map(function(x){return P(x,o)})}
+  var bd={style:D.BorderStyle.SINGLE,size:4,color:'7F8C8D'},borders={top:bd,bottom:bd,left:bd,right:bd};
+  function C(t,o){o=o||{};return new D.TableCell({children:Ps(t,{size:o.size||24,bold:o.bold,al:o.al,sa:20}),width:{size:o.w,type:DX},columnSpan:o.span,rowSpan:o.rs,verticalAlign:D.VerticalAlign.CENTER,shading:o.fill?{type:D.ShadingType.CLEAR,fill:o.fill,color:'auto'}:undefined,borders:borders,margins:{top:60,bottom:60,left:90,right:90}})}
+  function T(cw,rows){var w=cw.reduce(function(a,b){return a+b},0);return new D.Table({visuallyRightToLeft:true,width:{size:w,type:DX},columnWidths:cw,rows:rows.map(function(r){return new D.TableRow({children:r,cantSplit:false})})})}
+  var RED='C00000',HEAD2='D9E2F3',rows=rqRows(),s=S.setup,fac=(s.facility||'').trim()||'المعهد',kids=[];
+  var branch=(S.f['rq.meta.branch']||'').trim(),tm=(S.f['rq.meta.time']||'').trim()||'الخامسة مساءً',dd=pd(S.f['rq.meta.date']),dtxt='......';
+  if(dd){try{dtxt=fW.format(dd)+' '+fG.format(dd)+' م'}catch(e){dtxt=S.f['rq.meta.date']}}
+  kids.push(P(fac,{size:40,bold:true,al:AL.CENTER,sa:60}));
+  kids.push(P('أدلة وشواهد مطلوب توفيرها قبل نهاية',{size:34,al:AL.CENTER,sa:40}));
+  kids.push(P('يوم '+dtxt+' (الساعة '+tm+')',{size:34,al:AL.CENTER,sa:120}));
+  kids.push(P('يجب على المعهد مراعاة ما يلي قبل إرفاق الشواهد وذلك من أجل تسهيل العمل:',{size:24,bold:true,color:RED,sa:60}));
+  ['يجب أن تكون جميع الشواهد التي سوف يتم إرفاقها خاصة '+(branch?'بـ'+branch:'بالفرع المزار')+' وعدم إرفاق أي شاهد لا يخص الفرع.',
+   'ترتيب الشواهد في ملف خاص وبحسب الترقيم لكل معيار (سوف يتم إرسال رابط من أجل رفع الشواهد عليه).',
+   'في حال تم رفع الشاهد من قبل على منصة المرقب نرجو عدم رفعه مرة أخرى، وتأشير «متوفر» و«لم يتم الإرفاق» في النموذج.',
+   'رفع المطلوب فقط حسب الوصف في النموذج وعدم إرفاق أي شواهد إضافية ليس لها علاقة.',
+   'ضع علامة (✓) في خانة «متوفر» أو «غير متوفر»، ثم في خانة «تم الإرفاق» أو «لم يتم الإرفاق» أمام كل شاهد.'].forEach(function(x,i){kids.push(P((i+1)+'. '+x,{size:22,color:RED,sa:30}))});
+  var W=[1000,1100,4806,900,900,900,900];
+  STDS.forEach(function(st){var rs=rows.filter(function(r){return r.std===st.n});if(!rs.length)return;
+    kids.push(P('',{size:12,sa:60}));
+    var tr=[[C('المعيار '+st.ord+': '+st.title,{w:W[0]+W[1]+W[2],span:3,bold:true,fill:HEAD2,size:26}),C('هل الشاهد متوفر؟',{w:W[3]+W[4],span:2,bold:true,fill:HEAD2,al:AL.CENTER}),C('هل تم الإرفاق؟',{w:W[5]+W[6],span:2,bold:true,fill:HEAD2,al:AL.CENTER})],
+      [C('رقم المعيار الفرعي',{w:W[0],bold:true,fill:HEAD2,al:AL.CENTER}),C('المستوى',{w:W[1],bold:true,fill:HEAD2,al:AL.CENTER}),C('الأدلة والشواهد المطلوبة',{w:W[2],bold:true,fill:HEAD2}),C('متوفر',{w:W[3],bold:true,fill:HEAD2,al:AL.CENTER}),C('غير متوفر',{w:W[4],bold:true,fill:HEAD2,al:AL.CENTER}),C('تم الإرفاق',{w:W[5],bold:true,fill:HEAD2,al:AL.CENTER}),C('لم يتم الإرفاق',{w:W[6],bold:true,fill:HEAD2,al:AL.CENTER})]];
+    var i=0;while(i<rs.length){var j=i;while(j<rs.length&&rs[j].sub===rs[i].sub)j++;
+      for(var k=i;k<j;k++){var r=rs[k],row=[];if(k===i)row.push(C(r.sub||'—',{w:W[0],rs:j-i,bold:true,al:AL.CENTER}));
+        row.push(C(LVN[r.lv]||'—',{w:W[1],al:AL.CENTER}),C(r.txt||'—',{w:W[2]}),C('',{w:W[3]}),C('',{w:W[4]}),C('',{w:W[5]}),C('',{w:W[6]}));tr.push(row)}
+      i=j}
+    kids.push(T(W,tr))});
+  var footer=new D.Footer({children:[new D.Paragraph({alignment:AL.CENTER,bidirectional:true,children:[run('إعداد/ علي الأحمري     |     صفحة ',{size:20,color:'555555'}),new D.TextRun({children:[D.PageNumber.CURRENT],font:FONT,size:20,color:'555555'})]})]});
+  return new D.Document({creator:'علي الأحمري',lastModifiedBy:'علي الأحمري',title:'طلب أدلة وشواهد'+(s.facility?' — '+s.facility:''),description:'طلب أدلة وشواهد من المنشأة',
+    styles:{default:{document:{run:{font:FONT,size:26}}}},
+    sections:[{properties:{page:{size:{width:11906,height:16838,orientation:D.PageOrientation.PORTRAIT},margin:{top:700,bottom:700,left:700,right:700}}},footers:{default:footer},children:kids}]})}
+async function exportReq(){if(!window.docx){toast('تعذّر تحميل مكتبة Word؛ تحقق من الاتصال بالإنترنت');return}
+  if(!rqRows().length){toast('أضف شاهدًا مطلوبًا واحدًا على الأقل');return}
+  var b=$('#reqWord');b.disabled=true;var old=b.textContent;b.textContent='جارٍ الإنشاء…';
+  try{var blob=await window.docx.Packer.toBlob(buildReqDocx());var r=await saveFile('طلب شواهد'+(S.setup.facility?' - '+safeName(S.setup.facility):'')+'.docx',blob);reportSaved(r,'نموذج الشواهد')}
+  catch(e){toast('تعذّر إنشاء ملف Word');if(window.console)console.error(e)}
+  b.disabled=false;b.textContent=old}
 
 /* ---------- Word report (.docx) ---------- */
 function b64bytes(src){var m=/base64,(.*)$/.exec(src||'');if(!m)return null;var s=atob(m[1]),u=new Uint8Array(s.length);for(var i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u}
@@ -21050,7 +21129,7 @@ function applyRO(){SY.can=false;$('#app').classList.add('ro');$('#roBanner').hid
 function handleDbErr(e){var c=e&&e.code;if(c==='invalid_argument'||c==='revoked'){applyRO()}else if(c==='quota_exceeded'){toast('امتلأت سعة التخزين المشترك')}else setShare('err')}
 function parseKey(k){var p=k.split('.');return {code:p[0],lv:p[1],f:p[2]}}
 function fullEntry(code){var o={};LV.forEach(function(l){['org','ev','desc','rev','notes','q'].forEach(function(f){var v=S.f[code+'.'+l.k+'.'+f];if(v!=null&&String(v)!=='')o[l.k+'_'+f]=v})});return o}
-function queueEntry(k,v){if(SH.on){shQ('f|'+k,v);return}if(!SY.on||!SY.can)return;var p=parseKey(k),c=p.code;(SY.pend[c]=SY.pend[c]||{})[p.lv+'_'+p.f]=v;clearTimeout(SY.timers[c]);SY.timers[c]=setTimeout(function(){flushEntry(c)},700);setShare('saving')}
+function queueEntry(k,v){if(SH.on){shQ('f|'+k,v);return}if(k.slice(0,3)==='rq.')return;if(!SY.on||!SY.can)return;var p=parseKey(k),c=p.code;(SY.pend[c]=SY.pend[c]||{})[p.lv+'_'+p.f]=v;clearTimeout(SY.timers[c]);SY.timers[c]=setTimeout(function(){flushEntry(c)},700);setShare('saving')}
 async function flushEntry(c){if(SY.busy[c]){SY.timers[c]=setTimeout(function(){flushEntry(c)},400);return}
   var data=SY.pend[c];if(!data||!Object.keys(data).length)return;SY.pend[c]={};SY.busy[c]=true;
   var meta={by:SY.uid||'',at:new Date().toISOString()},ref=DB.collection('entries').doc('e'+c),ok=false;
@@ -21123,8 +21202,10 @@ async function shPull(){if(!SH.on||SH.busy)return;SH.busy=true;
   try{var r=await fetch(shUrl('action=pull&since='+SH.since));var j=await r.json();if(!j||j.error)throw new Error(j&&j.error||'bad');var chg={};
     (j.rows||[]).forEach(function(row){var k=String(row[0]),v=String(row[1]==null?'':row[1]),t=+row[2],b=String(row[3]||'');SH.known[k]=1;
       if(k==='m|setup'){if(SH.q[k]===undefined&&!SH.flushing){try{applyMain(JSON.parse(v))}catch(e){}}}
+      else if(k.slice(0,5)==='f|rq.'){if(SH.q[k]!==undefined)return;var rk3=k.slice(2);if((S.f[rk3]||'')!==v){S.f[rk3]=v;chg.rq=1}}
       else if(k.slice(0,2)==='f|'){if(SH.q[k]!==undefined)return;var p=parseKey(k.slice(2));if(!SUB[p.code])return;if(applyField(p.code,p.lv,p.f,v))chg[p.code]=1;SY.meta[p.code]={by:b,at:new Date(t).toISOString()}}});
     SH.since=Math.max(SH.since,+j.t||0);
+    if(chg.rq){delete chg.rq;renderReq(false);saveNow()}
     Object.keys(chg).forEach(function(c){updSubChips(SUB[c])});if(Object.keys(chg).length){lazySummary();saveNow()}renderEditors();
     if(!SH.seeded){SH.seeded=true;if(SH.seed){if(!SH.known['m|setup'])shQ('m|setup',null);Object.keys(S.f).forEach(function(k){var v=S.f[k];if(v!=null&&String(v)!==''&&!SH.known['f|'+k])shQ('f|'+k,v)})}}
     SH.err=0;if(!Object.keys(SH.q).length)setShare('ok')}
@@ -21167,6 +21248,7 @@ async function newVisit(){var rotated=0;var go=$('#nvGo');go.disabled=true;var m
 
 /* ---------- events ---------- */
 document.addEventListener('input',function(ev){var e=ev.target;
+  if(e.hasAttribute&&e.hasAttribute('data-rq')&&e.tagName!=='SELECT'){var rk=e.getAttribute('data-rq'),pp=rk.split('.');rqSet(pp[0],pp[1],e.value);save();var rc=$('#reqCount');return}
   if(e.id==='shCode'){shFillGs();return}
   if(e.hasAttribute&&e.hasAttribute('data-f')){var k=e.getAttribute('data-f');S.f[k]=e.value;if(e.tagName==='TEXTAREA')autosize(e);else updHint(e);light(k.split('.')[0]);queueEntry(k,e.value);if(/\.why$/.test(k)){var wb=e.closest('.why');if(wb)wb.classList.toggle('miss',!e.value.trim())}obsTouch(k.split('.')[0]);save();return}
   if(e.id==='facility'){S.setup.facility=e.value;renderSetupSum();queueMain();save();return}
@@ -21175,6 +21257,8 @@ document.addEventListener('input',function(ev){var e=ev.target;
   if(e.hasAttribute('data-day')){S.setup.dayNotes[+e.getAttribute('data-day')]=e.value;queueMain();save()}
 });
 document.addEventListener('change',function(ev){var e=ev.target;
+  if(e.hasAttribute&&e.hasAttribute('data-rq')&&e.tagName==='SELECT'){var rk2=e.getAttribute('data-rq'),p2=rk2.split('.');rqSet(p2[0],p2[1],e.value);if(p2[1]==='std'){rqSet(p2[0],'sub','');renderReq(true)}save();return}
+  if(e.hasAttribute&&e.hasAttribute('data-rq')&&e.type==='date'){var p3=e.getAttribute('data-rq').split('.');rqSet(p3[0],p3[1],e.value);save();return}
   if(e.id==='meSel'){SH.me=e.value;cfgSave();var mo=mem(e.value);if(e.value&&mo&&!isObs(mo)){S.ui.filter=e.value;updFilterSel();applyFilter()}else if(mo&&isObs(mo)){S.ui.filter='all';updFilterSel();applyFilter();if(mo.tr){S.ui.collapsed[mo.tr]=0;updStd()}}applyRole();save();return}
   if(e.id==='vdate'){S.setup.date=e.value;renderDays();updAll();queueMain();save();return}
   if(e.id==='vdays'){S.setup.days=+e.value;renderDays();updAll();queueMain();save();return}
@@ -21194,12 +21278,15 @@ document.addEventListener('click',function(ev){var t=ev.target,e=t.closest?t.clo
   if(e.hasAttribute('data-preset')){showPreview(e.getAttribute('data-preset'));return}
   if(e.hasAttribute('data-pvok')){applyMode(e.getAttribute('data-pvok'));return}
   if(e.hasAttribute('data-pvno')){$('#pvBox').style.display='none';return}
+  if(e.hasAttribute('data-rqdel')){rqSet(e.getAttribute('data-rqdel'),'del','1');save();renderReq(true);return}
   if(e.hasAttribute('data-rvw')){var rn=+e.getAttribute('data-rvw');if(!canReview(rn)){toast('اعتماد المراجعة للعضو المسؤول عن المعيار');return}var rk=chkKey(rn),rv=S.f[rk]==='1'?'0':'1';S.f[rk]=rv;queueEntry(rk,rv);updTrainee();renderSummary();save();toast(rv==='1'?'اعتُمدت مراجعتك للمعيار':'أُلغي اعتماد المراجعة');return}
   if(e.hasAttribute('data-rm')){if(team().length>1){var id=e.getAttribute('data-rm');S.setup.team=team().filter(function(m){return m.id!==id});Object.keys(S.subAssign).forEach(function(k){if(S.subAssign[k]===id)delete S.subAssign[k]});renderTeam();updAll();queueMain();save()}return}
   if(e.hasAttribute('data-tg')){var n=e.getAttribute('data-tg');S.ui.collapsed[n]=S.ui.collapsed[n]?0:1;updStd();if(!S.ui.collapsed[n])$$('textarea[data-f]',$('#std-'+n)).forEach(autosize);save();return}
   if(e.hasAttribute('data-rail')){ev.preventDefault();var n2=e.getAttribute('data-rail');S.ui.collapsed[n2]=0;updStd();$$('textarea[data-f]',$('#std-'+n2)).forEach(autosize);var el=$('#std-'+n2);var rm=window.matchMedia('(prefers-reduced-motion: reduce)').matches;el.scrollIntoView({behavior:rm?'auto':'smooth',block:'start'});return}
   switch(e.id){
     case 'setupToggle':var o=$('#setup').classList.toggle('closed');e.textContent=o?'فتح':'طيّ';e.setAttribute('aria-expanded',o?'false':'true');S.ui.setupOpen=!o;save();break;
+    case 'reqAdd':rqAdd();break;
+    case 'reqWord':exportReq();break;
     case 'addObs':if(team().length<8){team().push({id:uid(),name:'',role:OBS,with:'',tr:0});renderTeam();updAll();queueMain();save()}break;
     case 'addMember':if(team().length<8){team().push({id:uid(),name:'',role:'مقيّم'});renderTeam();updAll();queueMain();save()}break;
     case 'expAll':STDS.forEach(function(s){S.ui.collapsed[s.n]=0});updStd();$$('textarea[data-f]').forEach(autosize);save();break;
@@ -21240,7 +21327,7 @@ function bootAll(){
   renderDays();renderTeam();
   var closed=!S.ui.setupOpen;$('#setup').classList.toggle('closed',closed);$('#setupToggle').textContent=closed?'فتح':'طيّ';$('#setupToggle').setAttribute('aria-expanded',closed?'false':'true');
   fillValues();$('#fCrit').checked=!!S.ui.crit;
-  updAll();showTab(S.ui.tab||'form')}
+  updAll();renderReq(true);showTab(S.ui.tab||'form')}
 shInit();
 buildForm();buildGuide();bootAll();
 if(!storeOK)setSave(false);else setSave(true);
