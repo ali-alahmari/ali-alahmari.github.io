@@ -21212,7 +21212,7 @@ function setShare(st){applyRole();var el=$('#shareSt');if(!el)return;el.classLis
   if(!SH.on&&!SY.can){el.classList.add('off');tx.textContent='مشترك — قراءة فقط';return}
   var lab=SH.on?'مشترك (Google Sheet)':'مشترك مع الفريق';
   if(st==='saving'){el.classList.add('busy');tx.textContent=lab+' — جارٍ المزامنة…';return}
-  if(st==='err'){el.classList.add('off');tx.textContent=lab+' — تعذّر الاتصال، سنعيد المحاولة';return}
+  if(st==='err'){el.classList.add('off');tx.textContent=SH.on&&SH.ek==='code'?lab+' — الرمز السري تغيّر: اطلب من الرئيس رابطًا جديدًا':lab+' — تعذّر الاتصال بالـSheet (تحقق من النشر «أي شخص» ومن الرابط)، سنعيد المحاولة';return}
   tx.textContent=lab+' — متصل'}
 function applyRO(){SY.can=false;$('#app').classList.add('ro');$('#roBanner').hidden=false;setShare()}
 function handleDbErr(e){var c=e&&e.code;if(c==='invalid_argument'||c==='revoked'){applyRO()}else if(c==='quota_exceeded'){toast('امتلأت سعة التخزين المشترك')}else setShare('err')}
@@ -21286,7 +21286,7 @@ async function shFlush(){if(SH.flushing){SH.tm=setTimeout(shFlush,500);return}va
   var snap={},ops=keys.map(function(k){var v=SH.q[k];snap[k]=v;if(v===null)v=JSON.stringify(mainPayload());return {k:'v2:'+k,v:v,b:shMeName()}});
   try{var r=await fetch(SH.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({code:SH.code,ops:ops})});var j=await r.json();if(!j||!j.ok)throw new Error(j&&j.error||'bad');
     keys.forEach(function(k){if(SH.q[k]===snap[k])delete SH.q[k]});SH.err=0;SH.flushing=false;if(Object.keys(SH.q).length)shFlush();else setShare('ok')}
-  catch(e){SH.flushing=false;SH.err++;setShare('err');clearTimeout(SH.tm);SH.tm=setTimeout(shFlush,Math.min(30000,3000*SH.err))}}
+  catch(e){SH.flushing=false;SH.err++;SH.ek=(e&&e.message==='code')?'code':'net';setShare('err');clearTimeout(SH.tm);SH.tm=setTimeout(shFlush,Math.min(30000,3000*SH.err))}}
 async function shPull(){if(!SH.on||SH.busy)return;SH.busy=true;
   try{var r=await fetch(shUrl('action=pull&since='+SH.since));var j=await r.json();if(!j||j.error)throw new Error(j&&j.error||'bad');var chg={};
     (j.rows||[]).forEach(function(row){var k=String(row[0]);if(k.indexOf('v2:')!==0)return;k=k.slice(3);var v=String(row[1]==null?'':row[1]),t=+row[2],b=String(row[3]||'');SH.known[k]=1;
@@ -21298,7 +21298,7 @@ async function shPull(){if(!SH.on||SH.busy)return;SH.busy=true;
     Object.keys(chg).forEach(function(c){updSubChips(SUB[c])});if(Object.keys(chg).length){lazySummary();saveNow()}renderEditors();
     if(!SH.seeded){SH.seeded=true;if(SH.seed){if(!SH.known['m|setup'])shQ('m|setup',null);Object.keys(S.f).forEach(function(k){var v=S.f[k];if(v!=null&&String(v)!==''&&!SH.known['f|'+k])shQ('f|'+k,v)})}}
     SH.err=0;if(!Object.keys(SH.q).length)setShare('ok')}
-  catch(e){SH.err++;setShare('err')}
+  catch(e){SH.err++;SH.ek=(e&&e.message==='code')?'code':'net';setShare('err')}
   SH.busy=false}
 function shStart(){if(!SH.on)return;clearInterval(SH.poll);SH.poll=setInterval(function(){if(!document.hidden)shPull()},8000);setShare('ok');shPull()}
 document.addEventListener('visibilitychange',function(){if(!document.hidden&&SH.on)shPull()});window.addEventListener('hashchange',function(){if(/[#&]s=/.test(location.hash))location.reload()});
