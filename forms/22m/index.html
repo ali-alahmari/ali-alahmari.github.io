@@ -543,7 +543,7 @@ table.o.sum td{font-size:.97rem}
   </div>
 </section>
 
-<footer class="foot">إعداد <b>علي الأحمري</b></footer>
+<footer class="foot">إعداد المهندس/ <b>علي الأحمري</b></footer>
 
 <div class="ov" id="ov" hidden>
   <div class="modal" role="dialog" aria-modal="true" aria-label="حفظ واستيراد البيانات">
@@ -21095,10 +21095,11 @@ function buildReqDocx(){var D=window.docx;if(!D)throw new Error('docx');
         row.push(C(LVN[r.lv]||'—',{w:W[1],al:AL.CENTER}),C(r.txt||'—',{w:W[2]}),C('',{w:W[3]}),C('',{w:W[4]}),C('',{w:W[5]}),C('',{w:W[6]}));tr.push(row)}
       i=j}
     kids.push(T(W,tr))});
-  var footer=new D.Footer({children:[new D.Paragraph({alignment:AL.CENTER,bidirectional:true,children:[run('إعداد/ علي الأحمري     |     صفحة ',{size:20,color:'555555'}),new D.TextRun({children:[D.PageNumber.CURRENT],font:FONT,size:20,color:'555555'})]})]});
+  var header=new D.Header({children:[new D.Paragraph({alignment:AL.CENTER,bidirectional:true,children:[run('معدّ التقرير: المهندس/ علي الأحمري',{size:22,bold:true,color:'0D6B63'})]})]});
+  var footer=new D.Footer({children:[new D.Paragraph({alignment:AL.CENTER,bidirectional:true,children:[run('إعداد التقرير: المهندس/ علي الأحمري     |     صفحة ',{size:20,color:'555555'}),new D.TextRun({children:[D.PageNumber.CURRENT],font:FONT,size:20,color:'555555'})]})]});
   return new D.Document({creator:'علي الأحمري',lastModifiedBy:'علي الأحمري',title:'طلب أدلة وشواهد'+(s.facility?' — '+s.facility:''),description:'طلب أدلة وشواهد من المنشأة',
     styles:{default:{document:{run:{font:FONT,size:26}}}},
-    sections:[{properties:{page:{size:{width:11906,height:16838,orientation:D.PageOrientation.PORTRAIT},margin:{top:700,bottom:700,left:700,right:700}}},footers:{default:footer},children:kids}]})}
+    sections:[{properties:{page:{size:{width:11906,height:16838,orientation:D.PageOrientation.PORTRAIT},margin:{top:700,bottom:700,left:700,right:700}}},headers:{default:header},footers:{default:footer},children:kids}]})}
 async function exportReq(){if(!window.docx){toast('تعذّر تحميل مكتبة Word؛ تحقق من الاتصال بالإنترنت');return}
   if(!rqRows().length){toast('أضف شاهدًا مطلوبًا واحدًا على الأقل');return}
   var b=$('#reqWord');b.disabled=true;var old=b.textContent;b.textContent='جارٍ الإنشاء…';
@@ -21156,10 +21157,11 @@ function buildDocx(){var D=window.docx;if(!D)throw new Error('docx');
     RL.forEach(function(x){rr.push([C(x.code,{w:1600,al:AL.CENTER,bold:true}),C(x.type,{w:1500,al:AL.CENTER,bold:true,fill:x.type==='إشادة'?'E2EFDA':'FFF2CC'}),C(x.text||'—',{w:12300})])});
     kids.push(T([1600,1500,12300],rr))}
   kids.push(P('الحالة مؤشر استرشادي يُحسب من متوسط درجات «رأي المراجع» للمعايير الفرعية المنطبقة، والقرار النهائي للفريق وفق مقاييس التقويم المعتمدة.',{size:22,sb:100}));
-  var footer=new D.Footer({children:[new D.Paragraph({alignment:AL.CENTER,bidirectional:true,children:[run('إعداد/ علي الأحمري     |     صفحة ',{size:20,color:'555555'}),new D.TextRun({children:[D.PageNumber.CURRENT],font:FONT,size:20,color:'555555'})]})]});
+  var header=new D.Header({children:[new D.Paragraph({alignment:AL.CENTER,bidirectional:true,children:[run('معدّ التقرير: المهندس/ علي الأحمري',{size:22,bold:true,color:'0D6B63'})]})]});
+  var footer=new D.Footer({children:[new D.Paragraph({alignment:AL.CENTER,bidirectional:true,children:[run('إعداد التقرير: المهندس/ علي الأحمري     |     صفحة ',{size:20,color:'555555'}),new D.TextRun({children:[D.PageNumber.CURRENT],font:FONT,size:20,color:'555555'})]})]});
   return new D.Document({creator:'علي الأحمري',lastModifiedBy:'علي الأحمري',title:'نموذج تقويم المعايير للمراجعة'+(s.facility?' — '+s.facility:''),description:'تقرير مراجعة الاعتماد المؤسسي',
     styles:{default:{document:{run:{font:FONT,size:26}}}},
-    sections:[{properties:{page:{size:{width:11906,height:16838,orientation:D.PageOrientation.LANDSCAPE},margin:{top:700,bottom:700,left:700,right:700}}},footers:{default:footer},children:kids}]})}
+    sections:[{properties:{page:{size:{width:11906,height:16838,orientation:D.PageOrientation.LANDSCAPE},margin:{top:700,bottom:700,left:700,right:700}}},headers:{default:header},footers:{default:footer},children:kids}]})}
 async function exportWord(){var b=$('#btnWord');if(!window.docx){toast('تعذّر تحميل مكتبة Word؛ تحقق من الاتصال بالإنترنت');return}
   b.disabled=true;var old=b.textContent;b.textContent='جارٍ الإنشاء…';
   try{var blob=await window.docx.Packer.toBlob(buildDocx());var r=await saveFile('تقرير تقويم المعايير'+(S.setup.facility?' - '+safeName(S.setup.facility):'')+'.docx',blob);reportSaved(r,'تقرير Word')}
