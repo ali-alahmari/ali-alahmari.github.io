@@ -562,6 +562,8 @@ table.o.sum td{font-size:.97rem}
       <b>ثانياً: إرسال الدعوة للأعضاء</b>
       <label class="lbl" for="shLink">رابط المشاركة (يعمل إذا رُفعت الصفحة على موقع)</label>
       <div class="row"><input class="in" id="shLink" readonly dir="ltr" style="flex:1"><button class="btn" id="shCopyLink" type="button">نسخ الرابط</button></div>
+      <div id="shLeadBox" hidden><label class="lbl" style="margin-top:10px">رابط الرئيس (احتفظ به لنفسك ولا ترسله لأحد: يتيح بدء زيارة جديدة)</label>
+      <div class="row"><input class="in" id="shLead" readonly dir="ltr" style="flex:1"><button class="btn" id="shCopyLead" type="button">نسخ رابط الرئيس</button></div></div>
       <label class="lbl" for="shTok">رمز المشاركة (إن وزّعت ملف HTML بالبريد بدل رفعه على موقع)</label>
       <div class="row"><input class="in" id="shTok" readonly dir="ltr" style="flex:1"><button class="btn" id="shCopyTok" type="button">نسخ الرمز</button></div>
     </div>
@@ -21054,13 +21056,13 @@ async function shPull(){if(!SH.on||SH.busy)return;SH.busy=true;
   catch(e){SH.err++;setShare('err')}
   SH.busy=false}
 function shStart(){if(!SH.on)return;clearInterval(SH.poll);SH.poll=setInterval(function(){if(!document.hidden)shPull()},8000);setShare('ok');shPull()}
-document.addEventListener('visibilitychange',function(){if(!document.hidden&&SH.on)shPull()});
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&SH.on)shPull()});window.addEventListener('hashchange',function(){if(/[#&]s=/.test(location.hash))location.reload()});
 function shBackupReset(){try{localStorage.setItem('etec22m.backup.'+Date.now(),JSON.stringify(S))}catch(e){}var ui=S.ui;S=fresh();S.ui=ui;saveNow()}
 function shInit(){var c=cfgLoad(),o=decShare(location.hash);
   if(o){if(!c||c.u!==o.u)shBackupReset();SH.url=o.u;SH.code=o.c||'';SH.me=(c&&c.u===o.u)?(c.me||''):'';SH.seed=!!o.l;SH.on=true;cfgSave();try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}}
   else if(c&&c.u){SH.url=c.u;SH.code=c.c||'';SH.me=c.me||'';SH.seed=!!c.seed;SH.on=true}}
 function shMsg(t,bad){var e=$('#shMsg');e.textContent=t;e.style.color=bad?'var(--bad)':'var(--ok)'}
-function shLinks(){if(!SH.on){$('#shLink').value='';$('#shTok').value='';return}var base=location.href.split('#')[0];$('#shTok').value=encShare();$('#shLink').value=base+'#s='+encodeURIComponent(encShare());}
+function shLinks(){if(!SH.on){$('#shLink').value='';$('#shTok').value='';$('#shLeadBox').hidden=true;return}var base=location.href.split('#')[0];$('#shTok').value=encShare();$('#shLink').value=base+'#s='+encodeURIComponent(encShare());$('#shLeadBox').hidden=!SH.seed;if(SH.seed){var tl=btoa(unescape(encodeURIComponent(JSON.stringify({u:SH.url,c:SH.code,l:1}))));$('#shLead').value=base+'#s='+encodeURIComponent(tl)}}
 function shFillGs(){var c=($('#shCode').value||'').replace(/[\\'"\s]/g,'');$('#gsCode').value=GS_TPL.replace('__CODE__',c)}
 function renderMe(){var b=$('#meBox');b.hidden=!SH.on;if(!SH.on)return;var h='<option value="">— اختر اسمك —</option>';team().forEach(function(m,i){h+='<option value="'+m.id+'"'+(m.id===SH.me?' selected':'')+'>'+esc(lbl(i))+'</option>'});$('#meSel').innerHTML=h}
 async function shConnect(url,code,seed){SH.url=url.trim();SH.code=code||'';
@@ -21134,7 +21136,7 @@ document.addEventListener('click',function(ev){var t=ev.target,e=t.closest?t.clo
     case 'btnShare':shFillGs();if(SH.on){$('#shUrl').value=SH.url;$('#shCode').value=SH.code;shFillGs()}shLinks();shMsg('');$('#ov2').hidden=false;break;
     case 'shClose':$('#ov2').hidden=true;break;
     case 'shCopyCode':copyText($('#gsCode'),'تم نسخ الكود');break;
-    case 'shCopyLink':copyText($('#shLink'),'تم نسخ الرابط');break;
+    case 'shCopyLink':copyText($('#shLink'),'تم نسخ الرابط');break;case 'shCopyLead':copyText($('#shLead'),'تم نسخ رابط الرئيس');break;
     case 'shCopyTok':copyText($('#shTok'),'تم نسخ الرمز');break;
     case 'shTest':shMsg('جارٍ الاختبار…');shConnect($('#shUrl').value,($('#shCode').value||'').replace(/[\\'"\s]/g,''),true).then(function(ok){if(ok)shMsg('تم الربط. انسخ رابط المشاركة أدناه وأرسله للفريق.')});break;
     case 'shJoin':var o=decShare($('#shJoinIn').value);if(!o){shMsg('الرمز أو الرابط غير صالح.',true);break}shBackupReset();shConnect(o.u,o.c||'',false).then(function(ok){if(ok){bootAll();shMsg('تم الانضمام. ستظهر بيانات الفريق خلال ثوانٍ.');toast('تم الانضمام إلى الفريق')}});break;
