@@ -322,7 +322,7 @@ table.o.sum td{font-size:.97rem}
 </header>
 
 <div class="card" id="roBanner" hidden style="margin-top:14px;border:2px solid var(--crit);background:var(--crit-soft)"><b>وضع القراءة فقط:</b> صلاحيتك لا تسمح بالتعديل. اطلب من صاحب الصفحة منحك صلاحية «مساهم» لتتمكن من التعبئة.</div>
-<div class="card" id="memBanner" hidden style="margin-top:14px;border:2px solid var(--brand);background:var(--surface-2)"><b>أنت عضو في الفريق:</b> تعبّئ المعايير وتختار اسمك من «أنا». أما بيانات الزيارة وأسماء الفريق وتوزيع المعايير فيعدّلها رئيس الفريق وحده.</div>
+<div class="card" id="memBanner" hidden style="margin-top:14px;border:2px solid var(--brand);background:var(--surface-2)"><b>أنت عضو في الفريق:</b> تعبّئ المعايير وتختار اسمك من «أنا». أما بيانات الزيارة وأسماء الفريق وتوزيع المعايير فيعدّلها رئيس الفريق وحده. <button class="btn ghost" id="memOff" type="button" style="margin-inline-start:8px">فصل المزامنة</button></div>
 
 <section class="card" id="setup" aria-label="بيانات الزيارة">
   <div class="card-h">
@@ -21064,7 +21064,7 @@ function shInit(){var c=cfgLoad(),o=decShare(location.hash);
   else if(c&&c.u){SH.url=c.u;SH.code=c.c||'';SH.me=c.me||'';SH.seed=!!c.seed;SH.on=true}}
 function shMsg(t,bad){var e=$('#shMsg');e.textContent=t;e.style.color=bad?'var(--bad)':'var(--ok)'}
 var LEAD_SEL=['#setup .grid.g3','#daysBox','#teamBox','#addMember','#quickBox','#presetBox','#distGrid'];
-function applyRole(){var mem=!!(SH.on&&!SH.seed);try{document.querySelector('#app').classList.toggle('mem',mem);var b=document.querySelector('#memBanner');if(b)b.hidden=!mem;LEAD_SEL.forEach(function(q){document.querySelectorAll(q).forEach(function(e){e.inert=mem;e.style.opacity=mem?'.7':''})})}catch(e){}}
+function applyRole(){var mem=!!(SH.on&&!SH.seed);try{document.querySelector('#app').classList.toggle('mem',mem);var b=document.querySelector('#memBanner');if(b)b.hidden=!mem;var sb=document.querySelector('#btnShare');if(sb)sb.style.display=mem?'none':'';LEAD_SEL.forEach(function(q){document.querySelectorAll(q).forEach(function(e){e.inert=mem;e.style.opacity=mem?'.7':''})})}catch(e){}}
 function shLinks(){applyRole();if(!SH.on){$('#shLink').value='';$('#shTok').value='';$('#shLeadBox').hidden=true;return}var base=location.href.split('#')[0];$('#shTok').value=encShare();$('#shLink').value=base+'#s='+encodeURIComponent(encShare());$('#shLeadBox').hidden=!SH.seed;if(SH.seed){var tl=btoa(unescape(encodeURIComponent(JSON.stringify({u:SH.url,c:SH.code,l:1}))));$('#shLead').value=base+'#s='+encodeURIComponent(tl)}}
 function shFillGs(){var c=($('#shCode').value||'').replace(/[\\'"\s]/g,'');$('#gsCode').value=GS_TPL.replace('__CODE__',c)}
 function renderMe(){var b=$('#meBox');b.hidden=!SH.on;if(!SH.on)return;var h='<option value="">— اختر اسمك —</option>';team().forEach(function(m,i){h+='<option value="'+m.id+'"'+(m.id===SH.me?' selected':'')+'>'+esc(lbl(i))+'</option>'});$('#meSel').innerHTML=h}
@@ -21143,7 +21143,7 @@ document.addEventListener('click',function(ev){var t=ev.target,e=t.closest?t.clo
     case 'shCopyTok':copyText($('#shTok'),'تم نسخ الرمز');break;
     case 'shTest':shMsg('جارٍ الاختبار…');shConnect($('#shUrl').value,($('#shCode').value||'').replace(/[\\'"\s]/g,''),true).then(function(ok){if(ok)shMsg('تم الربط. انسخ رابط المشاركة أدناه وأرسله للفريق.')});break;
     case 'shJoin':var o=decShare($('#shJoinIn').value);if(!o){shMsg('الرمز أو الرابط غير صالح.',true);break}shBackupReset();shConnect(o.u,o.c||'',false).then(function(ok){if(ok){bootAll();shMsg('تم الانضمام. ستظهر بيانات الفريق خلال ثوانٍ.');toast('تم الانضمام إلى الفريق')}});break;
-    case 'shOff':SH.on=false;clearInterval(SH.poll);cfgClear();SH.q={};renderMe();shLinks();setShare();shMsg('تم فصل المزامنة عن هذا الجهاز. بقيت نسخة التعبئة على جهازك.');break;
+    case 'memOff':case 'shOff':SH.on=false;clearInterval(SH.poll);cfgClear();SH.q={};renderMe();shLinks();setShare();shMsg('تم فصل المزامنة عن هذا الجهاز. بقيت نسخة التعبئة على جهازك.');break;
     case 'dReset':if(e.getAttribute('data-sure')){wipeShared();$('#ov').hidden=true;toast('تم مسح البيانات');e.removeAttribute('data-sure');e.textContent='مسح كل البيانات'}else{e.setAttribute('data-sure','1');e.textContent='اضغط مرة أخرى للتأكيد'}break;
   }
 });
