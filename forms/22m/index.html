@@ -162,6 +162,7 @@ body{margin:0;background:var(--bg);color:var(--ink)}
 .std-side button{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:8px;padding:.2rem .7rem;cursor:pointer}
 @media (max-width:700px){.std-h{grid-template-columns:auto minmax(0,1fr)}.std-side{grid-column:1/-1;grid-auto-flow:column;justify-content:space-between;justify-items:start}}
 .std.collapsed .subs{display:none}
+.std.ro-std .sub{opacity:.8}
 .subs{display:grid;gap:16px;margin-top:14px}
 .sub{background:var(--surface);border-radius:16px;box-shadow:var(--shadow);border:1px solid var(--line);min-width:0;overflow:hidden}
 .sub[hidden]{display:none}
@@ -20855,7 +20856,7 @@ function updOwners(){STDS.forEach(function(s){var id=effStd(s.n),ov={};
     Object.keys(ov).forEach(function(k){h+='<span class="own-l">ويشاركه في '+esc(ov[k].join('، '))+'</span>'+chip(k,true)});
     var el=$('[data-so-std="'+s.n+'"]');if(el)el.innerHTML=h;
     s.subs.forEach(function(sb){var sid=effSub(sb.code),e=$('[data-so="'+sb.code+'"]');if(e)e.innerHTML=(sid&&sid!==id)?'<div class="own-row" style="margin:0"><span class="own-l">المراجع</span>'+chip(sid,true)+'</div>':''});
-    var ro=$('[data-ro="'+s.n+'"]');if(ro){var m=mem(id);ro.textContent=m&&m.name.trim()?m.name.trim():(m?'بانتظار الاسم':'غير مسند')}});updObsRows();updTrainee()}
+    var ro=$('[data-ro="'+s.n+'"]');if(ro){var m=mem(id);ro.textContent=m&&m.name.trim()?m.name.trim():(m?'بانتظار الاسم':'غير مسند')}});updObsRows();updTrainee();try{applyRole()}catch(e){}}
 
 /* ---------- observers (تحت المعايشة) ---------- */
 function myRole(){if(!SH.on||SH.seed)return 'lead';var m=mem(SH.me);return m&&isObs(m)?'obs':'mem'}
@@ -20864,6 +20865,8 @@ function chkKey(n){return STD[n].subs[0].code+'.e.chk'}
 function obsRecent(n,o){var nm=o.name.trim();if(!nm)return false;return STD[n].subs.some(function(sb){var m=SY.meta[sb.code];return m&&m.by===nm&&(Date.now()-new Date(m.at).getTime())<120000})}
 function trState(n){var o=obsOf(n);if(!o)return null;if(S.f[chkKey(n)]==='1')return ['مُراجَع من العضو','p-ok'];if(obsRecent(n,o))return ['المعايش يكتب الآن','p-warn'];var st=stdStats(STD[n]);return (st.ans||st.txt)?['بانتظار مراجعة العضو','p-mid']:['لم يبدأ المعايش','p-na']}
 function canReview(n){if(!SH.on||SH.seed)return true;var m=mem(SH.me);return !!m&&!isObs(m)&&m.id===effStd(n)}
+function canSub(code){var r=myRole();if(r==='lead')return true;var m=mem(SH.me),sb=SUB[code];if(!m||!sb)return false;if(r==='obs'){var o=obsOf(sb.std);return +m.tr===sb.std&&!!o&&o.id===m.id}return effSub(code)===m.id}
+function canStd(n){return STD[n]&&STD[n].subs.some(function(sb){return canSub(sb.code)})}
 function updTrainee(){STDS.forEach(function(s){var el=$('[data-tw="'+s.n+'"]');if(!el)return;var o=obsOf(s.n);if(!o){el.innerHTML='';el.style.display='none';return}
   el.style.display='';var st=trState(s.n),own=mem(effStd(s.n)),done=S.f[chkKey(s.n)]==='1';
   var h='<span class="own-l">معيار تدريب للمعايش</span>'+chip(o.id,true)+'<span class="pill '+st[1]+'">'+st[0]+'</span>';
@@ -20902,11 +20905,11 @@ function applyRole(){var role=myRole(),lim=role!=='lead';
     var sb=document.querySelector('#btnShare');if(sb)sb.style.display=lim?'none':'';var nb=document.querySelector('#btnNew');if(nb)nb.style.display=lim?'none':'';
     LEAD_SEL.forEach(function(q){document.querySelectorAll(q).forEach(function(e){e.inert=lim;e.style.opacity=lim?'.7':''})});
     var me=role==='obs'?mem(SH.me):null,n=0;if(me&&me.tr&&obsOf(me.tr)&&obsOf(me.tr).id===me.id)n=+me.tr;if(n&&!obsOpened){obsOpened=1;S.ui.collapsed[n]=0;updStd()}
-    $$('#stds .std').forEach(function(e){var k=+e.getAttribute('data-n'),ro=role==='obs'&&k!==n;e.inert=false;e.style.opacity='';$$('[data-f]',e).forEach(function(f){f.disabled=ro});$$('[data-rvw]',e).forEach(function(f){f.disabled=role==='obs'})});
+    $$('#stds .std').forEach(function(e){var k=+e.getAttribute('data-n'),ro=role==='obs'&&k!==n;e.inert=false;e.style.opacity='';$$('[data-f]',e).forEach(function(f){if(role==='mem'){var sbE=f.closest?f.closest('.sub'):null,c=sbE?sbE.getAttribute('data-code'):null;f.disabled=c?!canSub(c):!canStd(k)}else f.disabled=ro});$$('[data-rvw]',e).forEach(function(f){f.disabled=role==='obs'||(role==='mem'&&!canReview(k))});e.classList.toggle('ro-std',role==='mem'&&!canStd(k))});try{renderReq(false)}catch(e2){}
     $$('[data-sd]').forEach(function(e){e.disabled=role==='obs'});
     var ttl=document.querySelector('#memTtl'),tx=document.querySelector('#memTxt');
     if(ttl&&tx){if(role==='obs'){var w=me&&mem(me.with);ttl.textContent='أنت معايش (تحت المعايشة)'+(w&&w.name.trim()?' مع '+w.name.trim():'')+':';tx.textContent=n?'تكتب وترصد الدرجة في «المعيار '+n+'» فقط، ويراجعه العضو المسؤول بعد انتهائك. بقية الصفحة للاطلاع.':'الصفحة للاطلاع فقط حتى يحدد لك رئيس الفريق معيار التدريب.'}
-      else{ttl.textContent='أنت عضو في الفريق:';tx.textContent='تعبّئ المعايير وتختار اسمك من «أنا». أما بيانات الزيارة وأسماء الفريق وتوزيع المعايير فيعدّلها رئيس الفريق وحده.'}}}catch(e){}}
+      else{ttl.textContent='أنت عضو في الفريق:';tx.textContent=mem(SH.me)?'تعدّل معاييرك أنت فقط، وتطّلع على بقية المعايير للقراءة. أما بيانات الزيارة وأسماء الفريق وتوزيع المعايير فيعدّلها رئيس الفريق وحده.':'اختر اسمك من «أنا» في الأعلى ليفتح لك تعديل معاييرك. إلى ذلك الحين الصفحة للاطلاع فقط.'}}}catch(e){}}
 
 function updStd(){STDS.forEach(function(s){var st=stdStats(s);var pc=$('[data-pc="'+s.n+'"]');if(pc)pc.textContent=st.pct+'%';var rb=$('[data-rb="'+s.n+'"]');if(rb)rb.style.width=st.pct+'%';
     var sd=$('[data-sd="'+s.n+'"]');if(sd){var cur=S.stdDay[s.n]||'',h='<option value="">يوم المراجعة</option>';for(var i=0;i<(+S.setup.days||1);i++)h+='<option value="'+i+'"'+(String(i)===String(cur)?' selected':'')+'>'+dayLabel(i)+'</option>';sd.innerHTML=h}
@@ -20996,21 +20999,27 @@ function mergeImport(txt){try{var I=parseImp(txt),n=0;
 var LVN={e:'الوجود',p:'الممارسة',f:'الفاعلية'},LVO=['e','p','f'];
 function rqGet(id,f){return S.f['rq.'+id+'.'+f]||''}
 function rqSet(id,f,v){var k='rq.'+id+'.'+f;S.f[k]=v;queueEntry(k,v)}
-function rqIds(){var ids={};Object.keys(S.f).forEach(function(k){var m=/^rq\.(r[a-z0-9]+)\.(std|sub|lv|txt|n|del)$/.exec(k);if(m)ids[m[1]]=1});return Object.keys(ids).filter(function(id){return rqGet(id,'del')!=='1'}).sort(function(a,b){return (+rqGet(a,'n')||0)-(+rqGet(b,'n')||0)})}
+function rqVis(id){if(myRole()==='lead')return true;var sub=rqGet(id,'sub'),sd=+rqGet(id,'std')||0;if(sub&&SUB[sub])return canSub(sub);if(sd)return canStd(sd);return !!SH.me&&rqGet(id,'by')===SH.me}
+function rqVisIds(){return rqIds().filter(rqVis)}
+function rqIds(){var ids={};Object.keys(S.f).forEach(function(k){var m=/^rq\.(r[a-z0-9]+)\.(std|sub|lv|txt|n|del|by)$/.exec(k);if(m)ids[m[1]]=1});return Object.keys(ids).filter(function(id){return rqGet(id,'del')!=='1'}).sort(function(a,b){return (+rqGet(a,'n')||0)-(+rqGet(b,'n')||0)})}
 function rqRowHTML(id,i){var sd=rqGet(id,'std'),sb=rqGet(id,'sub'),lv=rqGet(id,'lv');
-  var h='<div class="rq-row" data-rid="'+id+'"><span class="rn">'+(i+1)+'</span><select class="in" data-rq="'+id+'.std" aria-label="المعيار"><option value="">— المعيار —</option>'+STDS.map(function(s){return '<option value="'+s.n+'"'+(String(s.n)===sd?' selected':'')+'>'+s.n+' · '+esc(s.title)+'</option>'}).join('')+'</select>';
-  h+='<select class="in" data-rq="'+id+'.sub" aria-label="المعيار الفرعي"><option value="">— المعيار الفرعي —</option>'+(STD[sd]?STD[sd].subs.map(function(b){var tx=b.text.length>46?b.text.slice(0,46)+'…':b.text;return '<option value="'+b.code+'"'+(b.code===sb?' selected':'')+'>'+b.code+' · '+esc(tx)+'</option>'}).join(''):'')+'</select>';
+  var h='<div class="rq-row" data-rid="'+id+'"><span class="rn">'+(i+1)+'</span><select class="in" data-rq="'+id+'.std" aria-label="المعيار"><option value="">— المعيار —</option>'+STDS.filter(function(s){return canStd(s.n)}).map(function(s){return '<option value="'+s.n+'"'+(String(s.n)===sd?' selected':'')+'>'+s.n+' · '+esc(s.title)+'</option>'}).join('')+'</select>';
+  h+='<select class="in" data-rq="'+id+'.sub" aria-label="المعيار الفرعي"><option value="">— المعيار الفرعي —</option>'+(STD[sd]?STD[sd].subs.filter(function(b){return canSub(b.code)}).map(function(b){var tx=b.text.length>46?b.text.slice(0,46)+'…':b.text;return '<option value="'+b.code+'"'+(b.code===sb?' selected':'')+'>'+b.code+' · '+esc(tx)+'</option>'}).join(''):'')+'</select>';
   h+='<select class="in" data-rq="'+id+'.lv" aria-label="المستوى"><option value="">— المستوى —</option>'+LVO.map(function(k){return '<option value="'+k+'"'+(k===lv?' selected':'')+'>'+LVN[k]+'</option>'}).join('')+'</select>';
   h+='<textarea data-rq="'+id+'.txt" rows="2" placeholder="اكتب الشاهد المطلوب من المنشأة…">'+esc(rqGet(id,'txt'))+'</textarea><button class="btn sm danger" data-rqdel="'+id+'" type="button">حذف</button></div>';return h}
 function renderReq(force){var box=$('#reqRows');if(!box)return;var ae=document.activeElement;
   [['reqBranch','branch'],['reqDate','date'],['reqTime','time']].forEach(function(x){var el=$('#'+x[0]);if(el&&el!==ae)el.value=S.f['rq.meta.'+x[1]]||''});
-  var ids=rqIds();$('#reqCount').textContent=ids.length?ids.length+' شاهد مطلوب':'';
+  var role=myRole(),noName=role!=='lead'&&!mem(SH.me),ids=rqVisIds();$('#reqCount').textContent=ids.length?ids.length+' شاهد مطلوب'+(role==='lead'?'':' (معاييرك فقط)'):'';
+  ['reqBranch','reqDate','reqTime'].forEach(function(i){var el=$('#'+i);if(el)el.disabled=role!=='lead'});
+  var ex=$('#reqWord');if(ex){ex.disabled=role==='obs'||noName;ex.title=role==='obs'?'يراجع العضو المسؤول طلبك ثم يصدّره':''}
+  var ad=$('#reqAdd');if(ad)ad.disabled=noName;
   if(!force&&ae&&box.contains(ae))return;
-  box.innerHTML=ids.length?ids.map(rqRowHTML).join(''):'<div class="empty">لم تُضف شواهد بعد. اضغط «+ إضافة شاهد مطلوب».</div>';
-  try{var ob=myRole()==='obs';$$('#p-req [data-rq],#p-req [data-rqdel],#reqAdd').forEach(function(x){x.disabled=ob})}catch(e){}}
-function rqAdd(){var ids=rqIds(),last=ids.length?ids[ids.length-1]:null,id='r'+Math.random().toString(36).slice(2,7);
-  rqSet(id,'n',String(Date.now()));if(last){rqSet(id,'std',rqGet(last,'std'));rqSet(id,'sub',rqGet(last,'sub'))}rqSet(id,'txt','');save();renderReq(true)}
-function rqRows(){var o=[];rqIds().forEach(function(id){var sub=rqGet(id,'sub'),sd=+rqGet(id,'std')||(SUB[sub]?SUB[sub].std:0);if(!sd&&!rqGet(id,'txt').trim())return;o.push({std:sd,sub:sub,lv:rqGet(id,'lv'),txt:rqGet(id,'txt').trim()})});
+  box.innerHTML=noName?'<div class="empty">اختر اسمك من «أنا» في الأعلى لتظهر لك شواهد معاييرك.</div>':(ids.length?ids.map(rqRowHTML).join(''):'<div class="empty">لم تُضف شواهد بعد. اضغط «+ إضافة شاهد مطلوب».</div>');
+  if(noName)return;$$('#reqRows [data-rq],#reqRows [data-rqdel]').forEach(function(x){x.disabled=false})}
+function rqAdd(){if(myRole()!=='lead'&&!mem(SH.me)){toast('اختر اسمك من «أنا» أولاً');return}
+  var ids=rqVisIds(),last=ids.length?ids[ids.length-1]:null,id='r'+Math.random().toString(36).slice(2,7);
+  rqSet(id,'n',String(Date.now()));rqSet(id,'by',SH.me||'');if(last){rqSet(id,'std',rqGet(last,'std'));rqSet(id,'sub',rqGet(last,'sub'))}else{var al=STDS.filter(function(x){return canStd(x.n)});if(al.length===1)rqSet(id,'std',String(al[0].n))}rqSet(id,'txt','');save();renderReq(true)}
+function rqRows(){var o=[];rqVisIds().forEach(function(id){var sub=rqGet(id,'sub'),sd=+rqGet(id,'std')||(SUB[sub]?SUB[sub].std:0);if(!sd&&!rqGet(id,'txt').trim())return;o.push({std:sd,sub:sub,lv:rqGet(id,'lv'),txt:rqGet(id,'txt').trim()})});
   o.sort(function(a,b){var ai=a.sub?SUBS_ALL.findIndex(function(x){return x.code===a.sub}):-1,bi=b.sub?SUBS_ALL.findIndex(function(x){return x.code===b.sub}):-1;return (a.std-b.std)||(ai-bi)||(LVO.indexOf(a.lv)-LVO.indexOf(b.lv))});return o}
 function buildReqDocx(){var D=window.docx;if(!D)throw new Error('docx');
   var FONT={ascii:'Sakkal Majalla',hAnsi:'Sakkal Majalla',cs:'Sakkal Majalla',eastAsia:'Sakkal Majalla'};
