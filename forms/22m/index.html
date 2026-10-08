@@ -322,6 +322,7 @@ table.o.sum td{font-size:.97rem}
 </header>
 
 <div class="card" id="roBanner" hidden style="margin-top:14px;border:2px solid var(--crit);background:var(--crit-soft)"><b>وضع القراءة فقط:</b> صلاحيتك لا تسمح بالتعديل. اطلب من صاحب الصفحة منحك صلاحية «مساهم» لتتمكن من التعبئة.</div>
+<div class="card" id="memBanner" hidden style="margin-top:14px;border:2px solid var(--brand);background:var(--surface-2)"><b>أنت عضو في الفريق:</b> تعبّئ المعايير وتختار اسمك من «أنا». أما بيانات الزيارة وأسماء الفريق وتوزيع المعايير فيعدّلها رئيس الفريق وحده.</div>
 
 <section class="card" id="setup" aria-label="بيانات الزيارة">
   <div class="card-h">
@@ -20964,7 +20965,7 @@ async function exportWord(){var b=$('#btnWord');if(!window.docx){toast('تعذّ
 var SH={on:false,url:'',code:'',since:0,q:{},tm:null,busy:false,flushing:false,seeded:false,seed:false,me:'',err:0,poll:null,known:{}};
 var DEF={};
 var DB=null,SY={on:false,can:true,uid:null,user:null,known:{},pend:{},busy:{},timers:{},mainT:null,mainBusy:false,mainDirty:false,mainPending:false,firstEnt:false,remoteMain:false,meta:{},admin:false};
-function setShare(st){var el=$('#shareSt');if(!el)return;el.classList.remove('off','busy');var tx=el.lastChild;
+function setShare(st){applyRole();var el=$('#shareSt');if(!el)return;el.classList.remove('off','busy');var tx=el.lastChild;
   if(!SH.on&&!SY.on){el.classList.add('off');tx.textContent='تعبئة محلية (غير مشتركة)';return}
   if(!SH.on&&!SY.can){el.classList.add('off');tx.textContent='مشترك — قراءة فقط';return}
   var lab=SH.on?'مشترك (Google Sheet)':'مشترك مع الفريق';
@@ -21062,7 +21063,9 @@ function shInit(){var c=cfgLoad(),o=decShare(location.hash);
   if(o){if(!c||c.u!==o.u)shBackupReset();SH.url=o.u;SH.code=o.c||'';SH.me=(c&&c.u===o.u)?(c.me||''):'';SH.seed=!!o.l;SH.on=true;cfgSave();try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}}
   else if(c&&c.u){SH.url=c.u;SH.code=c.c||'';SH.me=c.me||'';SH.seed=!!c.seed;SH.on=true}}
 function shMsg(t,bad){var e=$('#shMsg');e.textContent=t;e.style.color=bad?'var(--bad)':'var(--ok)'}
-function shLinks(){if(!SH.on){$('#shLink').value='';$('#shTok').value='';$('#shLeadBox').hidden=true;return}var base=location.href.split('#')[0];$('#shTok').value=encShare();$('#shLink').value=base+'#s='+encodeURIComponent(encShare());$('#shLeadBox').hidden=!SH.seed;if(SH.seed){var tl=btoa(unescape(encodeURIComponent(JSON.stringify({u:SH.url,c:SH.code,l:1}))));$('#shLead').value=base+'#s='+encodeURIComponent(tl)}}
+var LEAD_SEL=['#setup .grid.g3','#daysBox','#teamBox','#addMember','#quickBox','#presetBox','#distGrid'];
+function applyRole(){var mem=!!(SH.on&&!SH.seed);try{document.querySelector('#app').classList.toggle('mem',mem);var b=document.querySelector('#memBanner');if(b)b.hidden=!mem;LEAD_SEL.forEach(function(q){document.querySelectorAll(q).forEach(function(e){e.inert=mem;e.style.opacity=mem?'.7':''})})}catch(e){}}
+function shLinks(){applyRole();if(!SH.on){$('#shLink').value='';$('#shTok').value='';$('#shLeadBox').hidden=true;return}var base=location.href.split('#')[0];$('#shTok').value=encShare();$('#shLink').value=base+'#s='+encodeURIComponent(encShare());$('#shLeadBox').hidden=!SH.seed;if(SH.seed){var tl=btoa(unescape(encodeURIComponent(JSON.stringify({u:SH.url,c:SH.code,l:1}))));$('#shLead').value=base+'#s='+encodeURIComponent(tl)}}
 function shFillGs(){var c=($('#shCode').value||'').replace(/[\\'"\s]/g,'');$('#gsCode').value=GS_TPL.replace('__CODE__',c)}
 function renderMe(){var b=$('#meBox');b.hidden=!SH.on;if(!SH.on)return;var h='<option value="">— اختر اسمك —</option>';team().forEach(function(m,i){h+='<option value="'+m.id+'"'+(m.id===SH.me?' selected':'')+'>'+esc(lbl(i))+'</option>'});$('#meSel').innerHTML=h}
 async function shConnect(url,code,seed){SH.url=url.trim();SH.code=code||'';
