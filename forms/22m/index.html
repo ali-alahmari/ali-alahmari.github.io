@@ -203,6 +203,7 @@ body{margin:0;background:var(--bg);color:var(--ink)}
 .hint:empty{display:none}
 .why{margin-top:6px}.why label{color:var(--crit);font-weight:700;font-size:.9rem}.why.miss textarea{border-color:var(--crit);background:var(--crit-soft)}
 .radv{grid-column:1/-1;font-size:.9rem;display:flex;flex-direction:column;gap:5px}.radv:empty{display:none}.radv div{padding:7px 11px;border-radius:9px;line-height:1.6}.radv .w{background:var(--crit-soft);color:var(--crit);font-weight:700;border:1px solid var(--crit)}.radv .i{background:rgba(214,158,0,.14);color:#7a5a00;border:1px solid rgba(214,158,0,.45)}.radv .o{background:rgba(31,140,80,.12);color:#1f6b3a;border:1px solid rgba(31,140,80,.35)}
+.gapx{margin:0 0 10px;padding:10px 14px;border-radius:12px;border:1px solid var(--crit);background:var(--crit-soft)}.gapx label{display:block;margin:6px 0 3px;font-weight:700;font-size:.9rem}.gapx textarea{width:100%}.gapx:not(.miss){border-color:var(--line);background:var(--surface-2)}
 .dec{margin:0 0 12px;padding:12px 14px;border-radius:12px;border:2px solid var(--line);background:var(--surface-2)}.dec b{font-size:1.05rem}.dec.ok{border-color:#1f8c50}.dec.mid{border-color:#d69e00}.dec.bad{border-color:var(--crit)}
 .rec{margin:0 14px 12px;display:grid;grid-template-columns:200px minmax(0,1fr);gap:10px;align-items:start;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:10px 12px}.rec label{font-weight:700;display:block;margin-bottom:4px}@media (max-width:760px){.rec{grid-template-columns:minmax(0,1fr)}}
 .gap{margin-top:6px;background:var(--crit-soft);color:var(--crit);border:1px dashed var(--crit);border-radius:8px;padding:.15rem .6rem;font-size:.88rem;font-weight:700}
@@ -528,6 +529,7 @@ table.o.sum td{font-size:.97rem}
   <div class="card">
     <h2 class="doc-t">نتائج المعايير الرئيسة</h2>
     <div class="dec" id="decBox"></div>
+    <div id="gapBox"></div>
     <div class="tbl-wrap"><table class="o sum" id="sumTable"></table></div>
     <p class="disc">الحالة مؤشر استرشادي يُحسب من متوسط درجات «رأي المراجع» للمعايير الفرعية المنطبقة: أقل من 1.5 عدم الامتثال، أقل من 2.5 الحد الأدنى، أقل من 3 الامتثال الجوهري، 3 فأكثر الامتثال الكامل. القرار النهائي للفريق وفق مقاييس التقويم المعتمدة.</p>
   </div>
@@ -20854,6 +20856,10 @@ function stdComp(s){var st=stdStats(s),b=status(st.avg,st),rec=0,recE=0;s.subs.f
   var lab=b[0],cls=b[1];if(lab==='الامتثال الكامل'&&rec>0){lab='الامتثال الجوهري';cls='p-warn'}
   var why=[];if(st.avg==null)why.push('لم يُقيَّم بعد');else{if(lab!=='الامتثال الكامل')why.push('حالة الامتثال «'+lab+'»');if(rec)why.push(rec+' موضع توصية');if(recE)why.push('منها '+recE+' مرتبط بالوجود')}
   return {lab:lab,cls:cls,rec:rec,recE:recE,ev:st.avg!=null,ok:st.avg!=null&&lab==='الامتثال الكامل'&&recE===0,why:why}}
+function stdOrg(s){var a=[];s.subs.forEach(function(sb){var x=subStats(sb);LV.forEach(function(l){var n=num(x.org[l.k]);if(n!=null)a.push(n)})});return a.length?a.reduce(function(p,q){return p+q},0)/a.length:null}
+function stdGap(s){var o=stdOrg(s),r=stdStats(s).avg;if(o==null||r==null)return {t:'',w:false};var d=Math.abs(r-o),f=d.toFixed(2);
+  return d===0?{t:'القيم متطابقة',w:false,d:d}:d>=2?{t:'تنبيه: فرق درجتين أو أكبر ('+f+')',w:true,d:d}:{t:'فرق أقل من درجتين ('+f+')',w:false,d:d}}
+function xpGet(n){return S.f['rq.rxp'+n+'.exp']||''}
 function decision(){var cs=STDS.map(stdComp),ev=cs.filter(function(c){return c.ev}),nN=ev.filter(function(c){return c.lab==='عدم الامتثال'}).length,nM=ev.filter(function(c){return c.lab==='الحد الأدنى من الامتثال'||c.lab==='الحد الأدنى'}).length;
   var all=ev.length===STDS.length,t,k,w;
   if(!ev.length)return {t:'لم يبدأ التقييم',k:'',w:'تظهر التوصية بعد تقييم المعايير.'};
@@ -20979,12 +20985,13 @@ function buildGuide(){var cols=['var(--r-na)','var(--r1)','var(--r2)','var(--r3)
 
 /* ---------- summary ---------- */
 function renderSummary(){var tot=0,ans=0,gaps=0,critAns=0,critTot=0,avgs=[],done=0;
-  var rows='<thead><tr><th>المعيار</th><th>المسؤول</th><th>يوم المراجعة</th><th>الفرعية</th><th>إنجاز التقييم</th><th>متوسط المنشأة</th><th>متوسط المراجع</th><th>فروق ≥ 2</th><th>الحالة (استرشادي)</th><th>مواضع التوصية</th><th>الإشادة</th><th>المعايش والمراجعة</th></tr></thead><tbody>';
+  var rows='<thead><tr><th>المعيار</th><th>المسؤول</th><th>يوم المراجعة</th><th>الفرعية</th><th>إنجاز التقييم</th><th>متوسط المنشأة</th><th>متوسط المراجع</th><th>فروق ≥ 2</th><th>الحالة (استرشادي)</th><th>الفارق عن التقييم الذاتي</th><th>مواضع التوصية</th><th>الإشادة</th><th>المعايش والمراجعة</th></tr></thead><tbody>';
   STDS.forEach(function(s){var st=stdStats(s);tot+=st.tot;ans+=st.ans;gaps+=st.gaps;if(st.pct===100)done++;if(st.avg!=null)avgs.push(st.avg);
     var oa=[];s.subs.forEach(function(sb){var x=subStats(sb);LV.forEach(function(l){var n=num(x.org[l.k]);if(n!=null)oa.push(n)})});var oavg=oa.length?(oa.reduce(function(a,b){return a+b},0)/oa.length):null;
     var cp=stdComp(s),sv=[cp.lab,cp.cls];var id=effStd(s.n),m=mem(id),dy=S.stdDay[s.n];
-    rows+='<tr><td><b class="num">'+s.n+'</b> · '+esc(s.title)+'</td><td class="c">'+(m&&m.name.trim()?esc(m.name.trim()):'—')+'</td><td class="c">'+(dy!==undefined&&dy!==''?dayLabel(+dy):'—')+'</td><td class="c num">'+s.subs.length+'</td><td><div class="bar"><i style="width:'+st.pct+'%"></i></div><span class="num">'+st.pct+'%</span></td><td class="c num">'+(oavg==null?'—':oavg.toFixed(1))+'</td><td class="c num">'+(st.avg==null?'—':st.avg.toFixed(1))+'</td><td class="c num">'+st.gaps+'</td><td class="c"><span class="pill '+sv[1]+'">'+sv[0]+'</span></td><td class="c num">'+(cp.ev?cp.rec:'—')+'</td><td class="c">'+(cp.ev?(cp.ok?'<span class="pill p-ok">مؤهل</span>':'<span class="pill p-na" title="'+esc(cp.why.join('، '))+'">غير مؤهل</span>'):'—')+'</td><td class="c">'+(function(){var o=obsOf(s.n);if(!o)return '—';var ts=trState(s.n);return esc(o.name.trim()||'معايش')+' · '+ts[0]})()+'</td></tr>'});
+    rows+='<tr><td><b class="num">'+s.n+'</b> · '+esc(s.title)+'</td><td class="c">'+(m&&m.name.trim()?esc(m.name.trim()):'—')+'</td><td class="c">'+(dy!==undefined&&dy!==''?dayLabel(+dy):'—')+'</td><td class="c num">'+s.subs.length+'</td><td><div class="bar"><i style="width:'+st.pct+'%"></i></div><span class="num">'+st.pct+'%</span></td><td class="c num">'+(oavg==null?'—':oavg.toFixed(1))+'</td><td class="c num">'+(st.avg==null?'—':st.avg.toFixed(1))+'</td><td class="c num">'+st.gaps+'</td><td class="c"><span class="pill '+sv[1]+'">'+sv[0]+'</span></td><td class="c">'+(function(){var g=stdGap(s);return g.t?'<span class="pill '+(g.w?'p-bad':'p-ok')+'">'+g.t+'</span>':'—'})()+'</td><td class="c num">'+(cp.ev?cp.rec:'—')+'</td><td class="c">'+(cp.ev?(cp.ok?'<span class="pill p-ok">مؤهل</span>':'<span class="pill p-na" title="'+esc(cp.why.join('، '))+'">غير مؤهل</span>'):'—')+'</td><td class="c">'+(function(){var o=obsOf(s.n);if(!o)return '—';var ts=trState(s.n);return esc(o.name.trim()||'معايش')+' · '+ts[0]})()+'</td></tr>'});
   $('#sumTable').innerHTML=rows+'</tbody>';
+  var gb=$('#gapBox');if(gb&&!(document.activeElement&&gb.contains(document.activeElement))){var gh='';STDS.forEach(function(s){var g=stdGap(s);if(g.w)gh+='<div class="gapx'+(xpGet(s.n).trim()?'':' miss')+'"><b>المعيار '+s.n+' · '+esc(s.title)+'</b> — '+g.t+'<label>تفسير فريق المراجعة (إن وجد)</label><textarea data-xp="'+s.n+'" rows="2" placeholder="اكتب تفسير الفرق بين التقييم الذاتي وتقييم المراجعة…">'+esc(xpGet(s.n))+'</textarea></div>'});gb.innerHTML=gh}
   var dc=decision(),db=$('#decBox');if(db){db.className='dec '+dc.k;db.innerHTML='<b>توصية قرار الاعتماد (آلية): '+esc(dc.t)+'</b><div>'+esc(dc.w)+'</div>'}
   var cr='<thead><tr><th>المعيار الفرعي</th><th>النص</th><th>المسؤول</th><th>الوجود</th><th>الممارسة</th><th>الفاعلية</th></tr></thead><tbody>';
   STDS.forEach(function(s){s.subs.forEach(function(sb){if(!sb.crit)return;critTot++;var x=subStats(sb);if(x.ans===3)critAns++;var m=mem(effSub(sb.code));
@@ -21143,7 +21150,7 @@ function buildDocx(){var D=window.docx;if(!D)throw new Error('docx');
   kids.push(P('ملخص النتائج',{size:36,bold:true,pb:true,color:'0D6B63',sa:80}));
   var sr=[[C('المعيار',{w:5000,bold:true,fill:HEAD}),C('المسؤول',{w:2300,bold:true,fill:HEAD}),C('إنجاز التقييم',{w:1500,bold:true,fill:HEAD,al:AL.CENTER}),C('متوسط المراجع',{w:1500,bold:true,fill:HEAD,al:AL.CENTER}),C('الحالة (مؤشر استرشادي)',{w:3000,bold:true,fill:HEAD}),C('المعايش ومراجعة العضو',{w:2100,bold:true,fill:HEAD})]];
   STDS.forEach(function(st){var x=stdStats(st),m=mem(effStd(st.n)),sv=(function(c){return [c.lab+(c.ev?(c.ok?' · مؤهل للإشادة':' · غير مؤهل للإشادة'):'')]})(stdComp(st));sr.push([C('المعيار '+st.ord+': '+st.title,{w:5000}),C(m&&m.name.trim()?m.name.trim():'—',{w:2300}),C(x.pct+'%',{w:1500,al:AL.CENTER}),C(x.avg==null?'—':x.avg.toFixed(1),{w:1500,al:AL.CENTER}),C(sv[0],{w:3000,bold:true}),C((function(){var o=obsOf(st.n);return o?((o.name.trim()||'معايش')+' · '+trState(st.n)[0]):'—'})(),{w:2100})])});
-  kids.push(T([5000,2300,1500,1500,3000,2100],sr));var DC=decision();kids.push(P('توصية قرار الاعتماد (آلية): '+DC.t+(DC.w?' — '+DC.w:''),{size:26,bold:true,sb:120,sa:80}));
+  kids.push(T([5000,2300,1500,1500,3000,2100],sr));var GP=STDS.filter(function(x){return stdGap(x).w}).map(function(x){return 'المعيار '+x.ord+': '+stdGap(x).t+(xpGet(x.n).trim()?' — التفسير: '+xpGet(x.n).trim():' — (لم يُكتب تفسير)')});if(GP.length){kids.push(P('الفروق بين التقييم الذاتي وتقييم المراجعة',{size:30,bold:true,sb:160,sa:60,keep:true,color:'0D6B63'}));GP.forEach(function(t){kids.push(P(t,{size:24,sa:40}))})}var DC=decision();kids.push(P('توصية قرار الاعتماد (آلية): '+DC.t+(DC.w?' — '+DC.w:''),{size:26,bold:true,sb:120,sa:80}));
   var RL=recList();if(RL.length){kids.push(P('التوصيات والإشادات',{size:32,bold:true,sb:240,sa:80,keep:true,color:'0D6B63'}));
     var rr=[[C('المعيار الفرعي',{w:1600,bold:true,fill:HEAD,al:AL.CENTER}),C('النوع',{w:1500,bold:true,fill:HEAD,al:AL.CENTER}),C('النص',{w:12300,bold:true,fill:HEAD})]];
     RL.forEach(function(x){rr.push([C(x.code,{w:1600,al:AL.CENTER,bold:true}),C(x.type,{w:1500,al:AL.CENTER,bold:true,fill:x.type==='إشادة'?'E2EFDA':'FFF2CC'}),C(x.text||'—',{w:12300})])});
@@ -21247,10 +21254,10 @@ async function shPull(){if(!SH.on||SH.busy)return;SH.busy=true;
   try{var r=await fetch(shUrl('action=pull&since='+SH.since));var j=await r.json();if(!j||j.error)throw new Error(j&&j.error||'bad');var chg={};
     (j.rows||[]).forEach(function(row){var k=String(row[0]),v=String(row[1]==null?'':row[1]),t=+row[2],b=String(row[3]||'');SH.known[k]=1;
       if(k==='m|setup'){if(SH.q[k]===undefined&&!SH.flushing){try{applyMain(JSON.parse(v))}catch(e){}}}
-      else if(k.slice(0,5)==='f|rq.'){if(SH.q[k]!==undefined)return;var rk3=k.slice(2);if((S.f[rk3]||'')!==v){S.f[rk3]=v;chg.rq=1}}
+      else if(k.slice(0,5)==='f|rq.'){if(SH.q[k]!==undefined)return;var rk3=k.slice(2);if((S.f[rk3]||'')!==v){S.f[rk3]=v;chg.rq=1;chg.xp=1}}
       else if(k.slice(0,2)==='f|'){if(SH.q[k]!==undefined)return;var p=parseKey(k.slice(2));if(!SUB[p.code])return;if(applyField(p.code,p.lv,p.f,v))chg[p.code]=1;SY.meta[p.code]={by:b,at:new Date(t).toISOString()}}});
     SH.since=Math.max(SH.since,+j.t||0);
-    if(chg.rq){delete chg.rq;renderReq(false);saveNow()}
+    if(chg.rq){delete chg.rq;renderReq(false);if(chg.xp){delete chg.xp;try{renderSummary()}catch(e){}}saveNow()}
     Object.keys(chg).forEach(function(c){updSubChips(SUB[c])});if(Object.keys(chg).length){lazySummary();saveNow()}renderEditors();
     if(!SH.seeded){SH.seeded=true;if(SH.seed){if(!SH.known['m|setup'])shQ('m|setup',null);Object.keys(S.f).forEach(function(k){var v=S.f[k];if(v!=null&&String(v)!==''&&!SH.known['f|'+k])shQ('f|'+k,v)})}}
     SH.err=0;if(!Object.keys(SH.q).length)setShare('ok')}
@@ -21293,6 +21300,7 @@ async function newVisit(){var rotated=0;var go=$('#nvGo');go.disabled=true;var m
 
 /* ---------- events ---------- */
 document.addEventListener('input',function(ev){var e=ev.target;
+  if(e.hasAttribute&&e.hasAttribute('data-xp')){var xk='rq.rxp'+e.getAttribute('data-xp')+'.exp';S.f[xk]=e.value;queueEntry(xk,e.value);save();return}
   if(e.hasAttribute&&e.hasAttribute('data-rq')&&e.tagName!=='SELECT'){var rk=e.getAttribute('data-rq'),pp=rk.split('.');rqSet(pp[0],pp[1],e.value);save();var rc=$('#reqCount');return}
   if(e.id==='shCode'){shFillGs();return}
   if(e.hasAttribute&&e.hasAttribute('data-f')){var k=e.getAttribute('data-f');S.f[k]=e.value;if(e.tagName==='TEXTAREA')autosize(e);else updHint(e);light(k.split('.')[0]);queueEntry(k,e.value);if(/\.why$/.test(k)){var wb=e.closest('.why');if(wb)wb.classList.toggle('miss',!e.value.trim())}obsTouch(k.split('.')[0]);save();return}
