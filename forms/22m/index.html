@@ -281,6 +281,11 @@ table.o.sum td{font-size:.97rem}
 .disc{color:var(--ink-2);font-size:.9rem;margin-top:8px}
 
 /* modal */
+.gd-ov{position:fixed;inset:0;background:rgba(8,20,19,.62);z-index:90;display:grid;place-items:center;padding:16px}.gd-ov[hidden]{display:none}
+.gd{background:var(--surface);border-radius:20px;max-width:620px;width:100%;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.45);display:grid;gap:14px;border-top:6px solid #0D6B63}
+.gd h2{margin:0;font-size:1.5rem;font-weight:800}.gd p{margin:0;font-size:1.12rem;line-height:1.9}.gd .gd-p{color:var(--ink-2);font-size:.95rem}
+.gd-d{display:flex;gap:6px}.gd-d i{width:22px;height:6px;border-radius:4px;background:var(--line)}.gd-d i.on{background:#0D6B63}
+.gd-a{display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap;align-items:center}
 .ov{position:fixed;inset:0;background:rgba(8,20,19,.55);z-index:50;display:grid;place-items:center;padding:16px}
 .ov[hidden]{display:none}
 .modal{background:var(--surface);border-radius:18px;max-width:760px;width:100%;max-height:88vh;overflow:auto;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.4);display:grid;gap:12px}
@@ -327,6 +332,7 @@ table.o.sum td{font-size:.97rem}
     <button class="btn" id="btnShare" type="button">مشاركة الفريق</button>
     <button class="btn pri" id="btnWord" type="button">تصدير تقرير Word</button>
     <button class="btn" id="btnData" type="button">حفظ ودمج البيانات</button>
+    <button class="btn" id="btnGuide" type="button" title="خطوات الاستخدام حسب دورك">دليل الاستخدام</button>
   </div>
 </header>
 
@@ -554,6 +560,7 @@ table.o.sum td{font-size:.97rem}
 
 <footer class="foot">إعداد المهندس/ <b>علي الأحمري</b></footer>
 
+<div class="gd-ov" id="gdOv" hidden><div class="gd" role="dialog" aria-modal="true" aria-labelledby="gdT"><div class="gd-p" id="gdP"></div><div class="gd-d" id="gdD"></div><h2 id="gdT"></h2><p id="gdB"></p><div class="gd-a"><button class="btn ghost" id="gdPrev" type="button">السابق</button><span style="display:flex;gap:10px"><button class="btn ghost" id="gdSkip" type="button" title="لمن يعرف النموذج">تخطي</button><button class="btn" id="gdClose" type="button">إغلاق</button><button class="btn pri" id="gdNext" type="button" style="color:#fff!important;background:#0D6B63!important">التالي</button><button class="btn pri" id="gdDone" type="button" style="color:#fff!important;background:#0D6B63!important">ابدأ التعبئة</button></span></div></div></div>
 <div class="ov" id="ov" hidden>
   <div class="modal" role="dialog" aria-modal="true" aria-label="حفظ واستيراد البيانات">
     <h2 class="doc-t" style="margin:0">حفظ ودمج البيانات</h2>
@@ -20935,6 +20942,44 @@ function obsTouch(code){var sb=SUB[code];if(!sb)return;var n=sb.std,r=myRole();
   if(r==='obs'){var ob=mem(SH.me);if(ob&&+ob.tr===n&&S.f[chkKey(n)]==='1'){S.f[chkKey(n)]='0';queueEntry(chkKey(n),'0')}updTrainee();return}
   var o=obsOf(n);if(o&&obsRecent(n,o)&&Date.now()-warnT>8000){warnT=Date.now();toast('تنبيه: المعايش '+o.name.trim()+' يكتب في هذا المعيار الآن. تجنّب التعديل حتى ينتهي.',5000)}}
 setInterval(function(){try{updTrainee()}catch(e){}},15000);
+var GDV='v1';
+function gdRole(){var r=myRole();return r==='lead'?'lead':(r==='obs'?'obs':'mem')}
+function gdSteps(){var r=gdRole(),V2=GDV==='v2',o=[];
+  if(r==='lead'){
+    o.push(['مرحبًا بك رئيسًا للفريق','النموذج يحفظ كل ما تكتبه تلقائيًا على جهازك ويزامنه مع ملف Google Sheet الخاص بفريقك. لا يوجد زر «حفظ». يمكنك العودة إلى هذا الدليل في أي وقت من زر «دليل الاستخدام» في أعلى الصفحة.']);
+    o.push(['١ · جهّز بيانات الزيارة','أدخل اسم المنشأة وتاريخ بداية الزيارة وعدد الأيام، ثم أسماء أعضاء الفريق وأدوارهم (رئيس الفريق أو مقيّم أو تحت المعايشة). بعدها اختر اسمك من خانة «أنا».']);
+    o.push(['٢ · وزّع المعايير على الفريق','في «توزيع المعايير على الفريق» خمسة أزرار: نموذج الفريق، والمجموعات المترابطة، ومتوازن، وحسب رحلة المتدرب، وحسب الجهة في المنشأة. اضغط أحدها لتظهر معاينة، ثم «اعتماد هذا التوزيع». في كل خيار يأخذ الرئيس الأقل حملًا. وشرح كل تقسيم في تبويب «مجموعات المعايير وترابطها».']);
+    o.push(['٣ · شارك الفريق','اضغط «مشاركة الفريق» وانسخ رابط الأعضاء وأرسله لهم بالواتساب أو البريد. رابط الرئيس خاص بك وحدك ولا ترسله لأحد.']);
+    if(V2){
+      o.push(['٤ · المرحلة المكتبية ثم الميدانية','يعبّئ الفريق التقييم المكتبي بحرية قبل الزيارة. عند بدء الزيارة اضغط «تجميد التقييم المكتبي وبدء المرحلة الميدانية». بعدها يتطلب أي تغيير في درجة المراجع سببًا يُكتب، وتبقى الدرجة المكتبية ظاهرة بجانبها. ويمكن تسجيل حالة كل شاهد (وصل / لم يصل).']);
+      o.push(['٥ · اعتمد كل معيار','تحت عنوان كل معيار زر «اعتماد نهائي وقفل المعيار». ينبّهك إن بقيت درجات ناقصة أو تغييرات بلا سبب أو توصيات غير مكتوبة، ثم يقفل المعيار فلا يعدّله أحد غيرك.']);
+      o.push(['٦ · أنهِ الزيارة','اضغط «إنهاء الزيارة» ليحفظ لك تقرير Word وملف البيانات (JSON) وجدول CSV دفعة واحدة. احفظها في مجلد باسم المنشأة وتاريخ الزيارة.']);
+    }else{
+      o.push(['٤ · التعبئة والتنبيهات','لكل معيار فرعي ثلاثة مستويات: الوجود والممارسة والفاعلية. يظهر إنذار عند وجود موضع توصية أو إمكانية إشادة، وتنبيه عند فرق درجتين أو أكثر عن رأي المنشأة. راجع تبويب «ملخص الزيارة» قبل التصدير.']);
+      o.push(['٥ · أنهِ الزيارة','اضغط «تصدير تقرير Word» ثم «حفظ ودمج البيانات» واحفظ ملف JSON، وضعهما في مجلد الزيارة.']);
+    }
+    o.push(['زيارة جديدة','في الزيارة القادمة اضغط «زيارة جديدة»: تُؤرشف الزيارة الحالية في ورقة جديدة داخل الشيت ويُفرَّغ النموذج. الصفحة والرابط والشيت هي نفسها، ولا حاجة لملف جديد.'])
+  }else{
+    o.push([r==='obs'?'مرحبًا بك معايشًا':'مرحبًا بك عضوًا في الفريق','يحفظ النموذج كل ما تكتبه تلقائيًا ويشاركه مع الفريق خلال ثوانٍ. لا حساب ولا زر «حفظ». يمكنك العودة إلى هذا الدليل في أي وقت من زر «دليل الاستخدام» في أعلى الصفحة.']);
+    o.push(['١ · اختر اسمك','من قائمة «أنا» في أعلى الصفحة اختر اسمك. '+(r==='obs'?'سيظهر لك معيار تدريبك أولًا لتكتب فيه وترصد الدرجة، وبقية المعايير للاطلاع فقط.':'ستظهر لك معاييرك أولًا وتبقى مفتوحة للتعبئة.')]);
+    o.push(['٢ · اطّلع على بقية المعايير','من قائمة «عرض» اختر عضوًا آخر أو «كل المعايير» لتطّلع على عمل الفريق. تظهر هذه المعايير للقراءة فقط ولا تقبل التعديل.']);
+    o.push(['٣ · عبّئ معاييرك','لكل معيار فرعي ثلاثة مستويات: الوجود والممارسة والفاعلية. اختر رأي المنشأة ورأي المراجع من القائمة، واكتب الأدلة والشواهد والملحوظات. يظهر إنذار عند موضع توصية أو إمكانية إشادة، وتنبيه عند فرق درجتين أو أكثر عن رأي المنشأة.']);
+    if(V2)o.push(['٤ · المرحلة الميدانية','يعمل الفريق مكتبيًا أولًا. بعد أن يجمّد الرئيس التقييم المكتبي يتطلب أي تغيير في درجتك سببًا يُكتب، وتبقى الدرجة المكتبية ظاهرة بجانبها. وإذا اعتمد الرئيس المعيار نهائيًا يُقفل ولا يُعدَّل.']);
+    o.push([(V2?'٥':'٤')+' · طلب الشواهد من المنشأة','من تبويب «طلب الشواهد من المنشأة» أضف الشاهد المطلوب لمعاييرك فقط، واختر المعيار الفرعي والمستوى. يصدّر الرئيس النموذج للمنشأة'+(V2?'، وتسجّل حالة وصول كل شاهد.':'.')]);
+    o.push([(V2?'٦':'٥')+' · الحفظ والاتصال','إذا ظهرت «تعذّر الاتصال» فلا تقلق: تعبئتك محفوظة عندك وتُرسل تلقائيًا عند عودة الاتصال. وإذا عدّل زميل الخانة نفسها فيُعتمد آخر تعديل.'])
+  }
+  return o}
+var gdI=0,gdFirst=false;
+function gdKey(){return 'etec22m.gd.'+GDV+'.'+(gdRole()==='lead'?'lead':'mem')}
+function gdRender(){var st=gdSteps(),n=st.length;if(gdI>=n)gdI=n-1;var s=st[gdI],last=gdI===n-1;
+  $('#gdT').textContent=s[0];$('#gdB').textContent=s[1];$('#gdP').textContent='الخطوة '+(gdI+1)+' من '+n;
+  var dots='';for(var i=0;i<n;i++)dots+='<i'+(i===gdI?' class="on"':'')+'></i>';$('#gdD').innerHTML=dots;
+  $('#gdPrev').style.visibility=gdI?'visible':'hidden';$('#gdNext').style.display=last?'none':'';$('#gdDone').style.display=last?'':'none';
+  $('#gdSkip').style.display=gdFirst?'':'none';$('#gdClose').style.display=gdFirst?'none':''}
+function gdOpen(first){gdFirst=!!first;gdI=0;gdRender();$('#gdOv').hidden=false}
+function gdEnd(){try{localStorage.setItem(gdKey(),'1')}catch(e){}$('#gdOv').hidden=true}
+function gdAuto(){var seen=false;try{seen=localStorage.getItem(gdKey())==='1'}catch(e){}if(!seen&&$('#gdOv')&&$('#gdOv').hidden)gdOpen(true)}
+setTimeout(function(){try{gdAuto()}catch(e){}},1500);
 function planAttach(map){var o=team().filter(isObs),c=crewOrd(),load={};c.forEach(function(x){load[x.id]=0});STDS.forEach(function(s){if(map[s.n])load[map[s.n]]+=s.subs.length});
   var l=leaderId(),pool=c.filter(function(x){return x.id!==l});if(!pool.length)pool=c;pool=pool.slice().sort(function(a,b){return load[b.id]-load[a.id]});
   var used={},plan={},k=0;o.forEach(function(x){if(x.with&&mem(x.with)&&!isObs(mem(x.with))){plan[x.id]=x.with;used[x.with]=(used[x.with]||0)+1}});
@@ -21362,6 +21407,10 @@ document.addEventListener('click',function(ev){var t=ev.target,e=t.closest?t.clo
     case 'addMember':if(team().length<8){team().push({id:uid(),name:'',role:'مقيّم'});renderTeam();updAll();queueMain();save()}break;
     case 'expAll':STDS.forEach(function(s){S.ui.collapsed[s.n]=0});updStd();$$('textarea[data-f]').forEach(autosize);save();break;
     case 'colAll':STDS.forEach(function(s){S.ui.collapsed[s.n]=1});updStd();save();break;
+    case 'btnGuide':gdOpen(false);break;
+    case 'gdNext':gdI++;gdRender();break;
+    case 'gdPrev':if(gdI>0)gdI--;gdRender();break;
+    case 'gdSkip':case 'gdDone':case 'gdClose':gdEnd();break;
     case 'btnData':$('#dataTxt').value=JSON.stringify(exportObj(),null,1);msg('');$('#ov').hidden=false;break;
     case 'dClose':$('#ov').hidden=true;break;
     case 'dCopy':var ta=$('#dataTxt');ta.value=JSON.stringify(exportObj(),null,1);try{navigator.clipboard.writeText(ta.value).then(function(){msg('تم نسخ البيانات.')},function(){ta.select();msg('حدّد النص وانسخه يدوياً (Ctrl+C).')})}catch(x){ta.select();msg('حدّد النص وانسخه يدوياً (Ctrl+C).')}break;
