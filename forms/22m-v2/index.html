@@ -329,6 +329,7 @@ table.o.sum td{font-size:.97rem}
     <button class="btn" id="btnShare" type="button">مشاركة الفريق</button>
     <button class="btn pri" id="btnWord" type="button">تصدير تقرير Word</button>
     <button class="btn" id="btnData" type="button">حفظ ودمج البيانات</button>
+    <button class="btn" id="btnEnd" type="button" title="يحفظ تقرير Word وملف البيانات وجدول CSV دفعة واحدة، ويذكّرك بما يجب فعله قبل الزيارة التالية">إنهاء الزيارة</button>
   </div>
 </header>
 
@@ -20872,6 +20873,13 @@ function finIssues(n){var s=STD[n],m=0,c=0,r=0;s.subs.forEach(function(sb){LV.fo
   var o=[];if(m)o.push(m+' خانة بلا درجة مراجع');if(c)o.push(c+' تغيير بلا سبب');if(r)o.push(r+' موضع توصية بلا توصية مكتوبة');return o}
 function renderFin(){var lead=myRole()==='lead';STDS.forEach(function(s){var el=$('[data-fin="'+s.n+'"]');if(!el)return;var f=finalOf(s.n);
   el.innerHTML=f?'<span class="pill p-ok">معتمد نهائيًا من الرئيس · المعيار مقفل</span>'+(lead?'<button class="btn sm" data-finb="'+s.n+'" type="button">إلغاء الاعتماد وفتح المعيار</button>':'<span class="note">لا يُعدَّل إلا بعد أن يفتحه الرئيس.</span>'):(lead?'<span class="own-l">اعتماد الرئيس</span><button class="btn sm pri" data-finb="'+s.n+'" type="button">اعتماد نهائي وقفل المعيار</button>':'')})}
+async function endVisit(){if(myRole()!=='lead')return;var open=[];STDS.forEach(function(x){if(!finalOf(x.n))open.push(x.n)});
+  if(open.length&&!confirm('المعايير التالية لم تُعتمد نهائيًا: '+open.join('، ')+'\nيُفضّل اعتمادها قبل إنهاء الزيارة. هل تريد المتابعة بحفظ النسخ الآن؟'))return;
+  var fac=S.setup.facility||'بيانات';
+  try{dl('نموذج-22م-'+fac+'.json',JSON.stringify(exportObj(),null,1),'application/json');dl('نموذج-22م-'+fac+'.csv',csv(),'text/csv;charset=utf-8')}catch(e){}
+  try{await exportWord()}catch(e){}
+  try{if(rqRows().length)await exportReq()}catch(e){}
+  $('#nvNote').textContent='';alert('تم حفظ: تقرير Word، وملف البيانات (JSON)، وجدول CSV.\n\nقبل أن تغلق:\n١) انقل الملفات إلى مجلد باسم المنشأة وتاريخ الزيارة.\n٢) لا تحذف Google Sheet ولا رابط الرئيس.\n٣) عند الزيارة القادمة اضغط «زيارة جديدة» لتُؤرشف هذه الزيارة في ورقة جديدة.\nلاسترجاعها لاحقًا: افتح ورقة الأرشيف في الشيت، أو استورد ملف JSON من «حفظ ودمج البيانات».')}
 function doFinal(n){if(myRole()!=='lead')return;
   if(finalOf(n)){rqSet('meta','final'+n,'');save();updAll();toast('فُتح المعيار '+n);return}
   var is=finIssues(n);if(is.length&&!confirm('ملاحظات على المعيار '+n+': '+is.join('، ')+'.\nهل تعتمده وتقفله رغم ذلك؟'))return;
@@ -20977,7 +20985,7 @@ function applyMode(mode){var map=computeMap(mode),plan=planAttach(map);S.mode=mo
 var obsOpened=0;
 function applyRole(){var role=myRole(),lim=role!=='lead';
   try{document.querySelector('#app').classList.toggle('mem',lim);var b=document.querySelector('#memBanner');if(b)b.hidden=!lim;
-    var sb=document.querySelector('#btnShare');if(sb)sb.style.display=lim?'none':'';var nb=document.querySelector('#btnNew');if(nb)nb.style.display=lim?'none':'';
+    var sb=document.querySelector('#btnShare');if(sb)sb.style.display=lim?'none':'';var nb=document.querySelector('#btnNew');if(nb)nb.style.display=lim?'none':'';var eb=document.querySelector('#btnEnd');if(eb)eb.style.display=lim?'none':'';var pb=document.querySelector('#presetBox');if(pb)pb.style.display=lim?'none':'';
     LEAD_SEL.forEach(function(q){document.querySelectorAll(q).forEach(function(e){e.inert=lim;e.style.opacity=lim?'.7':''})});
     var me=role==='obs'?mem(SH.me):null,n=0;if(me&&me.tr&&obsOf(me.tr)&&obsOf(me.tr).id===me.id)n=+me.tr;if(n&&!obsOpened){obsOpened=1;S.ui.collapsed[n]=0;updStd()}
     $$('#stds .std').forEach(function(e){var k=+e.getAttribute('data-n'),ro=role==='obs'&&k!==n;e.inert=false;e.style.opacity='';$$('[data-f]',e).forEach(function(f){if(role==='mem'){var sbE=f.closest?f.closest('.sub'):null,c=sbE?sbE.getAttribute('data-code'):null;f.disabled=c?!canSub(c):!canStd(k)}else f.disabled=ro});$$('[data-rvw]',e).forEach(function(f){f.disabled=role==='obs'||(role==='mem'&&!canReview(k))});if(role!=='lead'&&finalOf(k)){$$('[data-f]',e).forEach(function(f){f.disabled=true});$$('[data-rvw]',e).forEach(function(f){f.disabled=true})}e.classList.toggle('ro-std',(role==='mem'&&!canStd(k))||(role!=='lead'&&finalOf(k)))});try{renderReq(false)}catch(e2){}
@@ -21383,6 +21391,7 @@ document.addEventListener('click',function(ev){var t=ev.target,e=t.closest?t.clo
     case 'addMember':if(team().length<8){team().push({id:uid(),name:'',role:'مقيّم'});renderTeam();updAll();queueMain();save()}break;
     case 'expAll':STDS.forEach(function(s){S.ui.collapsed[s.n]=0});updStd();$$('textarea[data-f]').forEach(autosize);save();break;
     case 'colAll':STDS.forEach(function(s){S.ui.collapsed[s.n]=1});updStd();save();break;
+    case 'btnEnd':endVisit();break;
     case 'btnData':$('#dataTxt').value=JSON.stringify(exportObj(),null,1);msg('');$('#ov').hidden=false;break;
     case 'dClose':$('#ov').hidden=true;break;
     case 'dCopy':var ta=$('#dataTxt');ta.value=JSON.stringify(exportObj(),null,1);try{navigator.clipboard.writeText(ta.value).then(function(){msg('تم نسخ البيانات.')},function(){ta.select();msg('حدّد النص وانسخه يدوياً (Ctrl+C).')})}catch(x){ta.select();msg('حدّد النص وانسخه يدوياً (Ctrl+C).')}break;
