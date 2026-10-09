@@ -100,6 +100,8 @@ body{margin:0;background:var(--bg);color:var(--ink)}
 .tm{display:grid;grid-template-columns:42px minmax(0,1.6fr) minmax(0,1fr) auto;gap:10px;align-items:center}
 .tm .av{width:38px;height:38px;border-radius:50%;background:var(--mc);color:#fff;display:grid;place-items:center;font-weight:800}
 @media (max-width:640px){.tm{grid-template-columns:42px minmax(0,1fr) auto}.tm .in.role{grid-column:2/3}}
+@media (max-width:640px){.tm{grid-template-columns:38px minmax(0,1fr) auto}.tm>*{min-width:0}.tm-ob{margin:0 0 8px!important}.tm-ob .in{min-width:0;flex:1 1 150px}}
+.mebar .num,.tk-r .num,.tk-c .num{direction:ltr;unicode-bidi:isolate}
 .tm-ob{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;margin:-2px 50px 8px 0;font-size:.95rem;color:var(--ink-2)}.tm-ob .in{width:auto;min-width:190px}
 .pv{margin-top:12px;border:2px solid var(--brand);background:var(--surface-2);border-radius:14px;padding:14px 16px}.pv h3{margin:0 0 6px}.pv p{margin:4px 0 10px;color:var(--ink-2)}.pv table{width:100%;border-collapse:collapse;margin:8px 0}.pv th,.pv td{border:1px solid var(--line);padding:6px 10px;text-align:right}.pv th{background:var(--surface)}.pv .ok{color:var(--ok);font-weight:800}.pv .wn{color:var(--bad);font-weight:800}
 .rq-row{display:grid;grid-template-columns:34px minmax(240px,1.8fr) minmax(260px,2.2fr) 120px minmax(0,2.4fr) 118px auto;gap:8px;align-items:start;margin:8px 0;padding:10px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px}.rq-row textarea{min-height:2.6rem;width:100%;border:1.5px solid var(--line);border-radius:10px;padding:.5rem .7rem;background:var(--surface)}.rq-row .rn{width:30px;height:30px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-weight:800}@media (max-width:900px){.rq-row{grid-template-columns:minmax(0,1fr)}}
@@ -289,6 +291,55 @@ table.o.sum td{font-size:.97rem}
 .gd h2{margin:0;font-size:1.5rem;font-weight:800}.gd p{margin:0;font-size:1.12rem;line-height:1.9}.gd .gd-p{color:var(--ink-2);font-size:.95rem}
 .gd-d{display:flex;gap:6px}.gd-d i{width:22px;height:6px;border-radius:4px;background:var(--line)}.gd-d i.on{background:#0D6B63}
 .gd-a{display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap;align-items:center}
+
+/* ui: identity bar, status colours, my-task panel, simple view */
+#app{font-size:18px}
+.btn{min-height:40px}.btn.sm{min-height:34px}
+.mebar{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;padding:6px 16px;background:var(--surface);border-radius:12px;margin-bottom:6px;box-shadow:var(--shadow);font-size:.98rem}
+.mebar:empty{display:none}
+.mb-n{font-weight:800;color:var(--brand)}.mb-r{background:var(--brand-soft);border-radius:999px;padding:0 .7rem;font-weight:700;font-size:.9rem}.mb-l{color:var(--ink-2)}
+.mb-bar{flex:0 1 200px;min-width:90px;height:8px;background:var(--line);border-radius:5px;overflow:hidden}.mb-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--lv-f),var(--brand));transition:width .3s}
+@media (max-width:700px){.mb-l{display:none}}
+[data-st="new"]{--stc:var(--r-na)}[data-st="prog"]{--stc:var(--warn)}[data-st="done"]{--stc:var(--ok)}[data-st="fin"]{--stc:var(--brand-2)}
+.std-h{border-inline-start:8px solid var(--stc,transparent)}
+.stp{font-size:.85rem;line-height:1.7;font-weight:800;border-radius:999px;padding:0 .75rem;background:#fff;color:var(--stc,#444)}
+.rail a[data-st]{border-inline-start:4px solid var(--stc)}
+.std{scroll-margin-top:150px}.sub{scroll-margin-top:150px}
+.rail{top:calc(env(safe-area-inset-top,0px) + 118px);max-height:calc(100vh - 140px)}
+.mytask{background:var(--surface);border-radius:16px;box-shadow:var(--shadow);border:1px solid var(--line);margin:0 0 16px;padding:0 16px}
+.mytask>summary{cursor:pointer;font-weight:800;font-size:1.15rem;color:var(--brand);padding:10px 0}
+#myTask{padding:0 0 14px;display:grid;gap:10px}
+.tk-p{color:var(--ink-2)}.tk-a{font-weight:700;background:var(--brand-soft);border-radius:10px;padding:.45rem .9rem}
+.tk-k{display:flex;flex-wrap:wrap;gap:10px}.tk-k>div{flex:1 1 120px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:6px 14px;display:grid}
+.tk-k b{font-size:1.5rem;font-family:'Tajawal',var(--font)}.tk-k span{color:var(--ink-2);font-size:.92rem}.tk-k .warn{border-color:var(--warn);background:var(--crit-soft)}
+.tk-l{display:flex;flex-wrap:wrap;gap:8px}
+.tk-c{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:2px 10px;align-items:center;text-align:start;min-width:240px;flex:1 1 260px;max-width:420px;border:1.5px solid var(--line);border-inline-start:6px solid var(--stc,var(--line));background:var(--surface-2);border-radius:12px;padding:6px 12px;cursor:pointer}
+.tk-c:hover{background:var(--brand-soft)}.tk-c b{font-family:'Tajawal',var(--font);font-weight:800;color:var(--brand)}.tk-c .tk-t{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-weight:700}.tk-c small{grid-column:2/4;color:var(--ink-2)}.tk-c em{font-style:normal;font-weight:800}
+.tk-r{display:grid;grid-template-columns:minmax(120px,200px) minmax(0,1fr) 150px auto;gap:6px 12px;align-items:center;border-bottom:1px dashed var(--line);padding:4px 0}
+@media (max-width:700px){.tk-r{grid-template-columns:minmax(0,1fr) auto}.tk-r .tk-s{grid-column:1/-1}}
+.tk-nm{font-weight:700}.tk-s{color:var(--ink-2);font-size:.92rem}
+.tk-b{height:8px;background:var(--line);border-radius:5px;overflow:hidden}.tk-b i{display:block;height:100%;background:linear-gradient(90deg,var(--lv-f),var(--brand))}
+.tk-d{display:grid;gap:6px}.tk-d>div{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:4px 12px}
+.tk-n{min-width:34px;border:1.5px solid var(--brand);background:transparent;border-radius:8px;font-weight:800;font-family:'Tajawal',var(--font);cursor:pointer;color:var(--brand)}.tk-n:hover{background:var(--brand-soft)}
+.seg{display:none}
+.simbar{position:sticky;bottom:0;z-index:25;display:flex;gap:10px;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:8px 12px;margin-top:12px}
+.simbar[hidden]{display:none}.sim-l{font-weight:800;text-align:center}.simbar .btn{min-width:110px;min-height:48px;font-size:1.05rem;justify-content:center}.simbar .btn:disabled{opacity:.4;cursor:default}
+#app.simple .rail,#app.simple .mytask,#app.simple .tools>*:not(#btnSimple):not(#fMember),#app.simple .std-h p,#app.simple .std-side button,#app.simple .std-side select{display:none}
+#app.simple .formwrap{grid-template-columns:minmax(0,1fr)}
+#app.simple .std,#app.simple .sub{display:none}
+#app.simple .std.cur-std,#app.simple .sub.cur{display:block}
+#app.simple .std.cur-std .subs{display:grid!important}
+#app.simple .cols{grid-template-columns:minmax(0,1fr)!important}
+#app.simple .fld select,#app.simple .fld textarea{font-size:1.1rem;min-height:3rem}
+#app.simple .fld textarea{min-height:7rem}
+#app.simple .seg{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+#app.simple .seg button{flex:1 1 52px;min-height:50px;border:2px solid var(--line);background:var(--surface);border-radius:12px;font-weight:800;font-size:1.2rem;cursor:pointer;font-family:'Tajawal',var(--font)}
+#app.simple .seg button[data-segv="NA"]{flex:2 1 90px;font-size:.95rem}
+#app.simple .seg button:disabled{opacity:.45;cursor:default}
+#app.simple .seg button.on{color:#fff;border-color:transparent}
+#app.simple .seg button.on[data-segv="1"]{background:var(--r1)}#app.simple .seg button.on[data-segv="2"]{background:var(--r2)}#app.simple .seg button.on[data-segv="3"]{background:var(--r3)}#app.simple .seg button.on[data-segv="4"]{background:var(--r4)}#app.simple .seg button.on[data-segv="5"]{background:var(--r5)}#app.simple .seg button.on[data-segv="NA"]{background:var(--r-na)}
+@media print{.mebar,.simbar,.mytask,.seg{display:none!important}}
+
 .ov{position:fixed;inset:0;background:rgba(8,20,19,.55);z-index:50;display:grid;place-items:center;padding:16px}
 .ov[hidden]{display:none}
 .modal{background:var(--surface);border-radius:18px;max-width:760px;width:100%;max-height:88vh;overflow:auto;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.4);display:grid;gap:12px}
@@ -391,7 +442,7 @@ table.o.sum td{font-size:.97rem}
   </div>
 </section>
 
-<div class="tabs"><div class="tabs-in" role="tablist" aria-label="أقسام النموذج">
+<div class="tabs"><div class="mebar" id="meBar"></div><div class="tabs-in" role="tablist" aria-label="أقسام النموذج">
   <button class="tab" role="tab" data-tab="form" aria-selected="true" type="button">نموذج تقويم المعايير 22م</button>
   <button class="tab" role="tab" data-tab="req" aria-selected="false" type="button">طلب الشواهد من المنشأة</button>
   <button class="tab" role="tab" data-tab="dist" aria-selected="false" type="button">توزيع المعايير على أعضاء الفريق</button>
@@ -408,12 +459,15 @@ table.o.sum td{font-size:.97rem}
     <label class="chk"><input type="checkbox" id="fCrit"> المعايير الحرجة فقط</label>
     <button class="btn sm" id="expAll" type="button">فتح كل المعايير</button>
     <button class="btn sm" id="colAll" type="button">طيّ الكل</button>
+    <button class="btn sm" id="btnSimple" type="button" aria-pressed="false" title="معيار فرعي واحد في كل شاشة، مناسب للجوال">عرض مبسّط</button>
   </div>
   <div class="phase" id="phaseBar"></div>
+  <details class="mytask" id="myTaskD" open><summary id="tkSum">مهمتي</summary><div id="myTask"></div></details>
   <div class="formwrap">
     <nav class="rail" id="rail" aria-label="المعايير"></nav>
     <div class="stds" id="stds"></div>
   </div>
+  <div class="simbar" id="simBar" hidden><button class="btn" id="simPrev" type="button">السابق</button><span class="sim-l" id="simLab"></span><button class="btn pri" id="simNext" type="button">التالي</button></div>
 </section>
 
 <!-- DIST -->
@@ -20849,7 +20903,7 @@ function fieldHTML(sb,l,f){var id='f-'+sb.code+'-'+l.k+'-'+f[0],key=sb.code+'.'+
 function lvHTML(sb,l){return '<section class="lv lv-'+l.k+'"><div class="lv-h"><span class="ch">'+l.ch+'</span><h4>'+l.name+'</h4></div><div class="cols"><div class="col"><span class="col-t">جانب المنشأة</span>'+F_ORG.map(function(f){return fieldHTML(sb,l,f)}).join('')+'</div><div class="col rev"><span class="col-t">جانب المراجع</span>'+F_REV.map(function(f){return fieldHTML(sb,l,f)}).join('')+'</div></div></section>'}
 function recHTML(sb){var c=sb.code;return '<div class="rec"><div><label for="f-'+c+'-x-rec">توصية أو إشادة</label><select id="f-'+c+'-x-rec" data-f="'+c+'.x.rec"><option value="">— لا توجد —</option><option value="توصية">توصية</option><option value="إشادة">إشادة</option></select></div><div><label for="f-'+c+'-x-rect">نص التوصية أو الإشادة</label><textarea id="f-'+c+'-x-rect" data-f="'+c+'.x.rect" placeholder="اكتب نص التوصية أو الإشادة لهذا المعيار الفرعي…"></textarea></div><div class="radv" data-rw="'+c+'"></div></div>'}
 function subHTML(sb){return '<article class="sub'+(sb.crit?' is-crit':'')+'" id="sub-'+sb.code+'" data-code="'+sb.code+'"><div class="sub-own" data-so="'+sb.code+'"></div><header class="sub-h"><span class="code">'+sb.code+'</span><p class="sub-text">'+esc(sb.text)+'</p>'+(sb.crit?'<span class="crit-tag" title="اللون البرتقالي معيار حرج (أساسي)">معيار حرج</span>':'')+'<div class="sub-chips" data-sc="'+sb.code+'"></div><div class="ed" data-ed="'+sb.code+'"></div></header><div class="lvls">'+LV.map(function(l){return lvHTML(sb,l)}).join('')+'</div>'+recHTML(sb)+'</article>'}
-function stdHTML(s){return '<section class="std" id="std-'+s.n+'" data-n="'+s.n+'"><div class="own-row" data-so-std="'+s.n+'"></div><div class="own-row" data-tw="'+s.n+'" style="display:none"></div><div class="own-row" data-fin="'+s.n+'"></div><header class="std-h"><div class="std-num num">'+s.n+'</div><div><h2>المعيار '+esc(s.ord)+' ('+s.n+'): '+esc(s.title)+'</h2><p>'+esc(s.desc)+'</p></div><div class="std-side"><span class="pc num" data-pc="'+s.n+'">0%</span><select data-sd="'+s.n+'" aria-label="يوم المراجعة للمعيار '+s.n+'"></select><button type="button" data-tg="'+s.n+'">فتح / طيّ</button></div></header><div class="subs">'+s.subs.map(subHTML).join('')+'</div></section>'}
+function stdHTML(s){return '<section class="std" id="std-'+s.n+'" data-n="'+s.n+'"><div class="own-row" data-so-std="'+s.n+'"></div><div class="own-row" data-tw="'+s.n+'" style="display:none"></div><div class="own-row" data-fin="'+s.n+'"></div><header class="std-h"><div class="std-num num">'+s.n+'</div><div><h2>المعيار '+esc(s.ord)+' ('+s.n+'): '+esc(s.title)+'</h2><p>'+esc(s.desc)+'</p></div><div class="std-side"><span class="stp" data-stp="'+s.n+'"></span><span class="pc num" data-pc="'+s.n+'">0%</span><select data-sd="'+s.n+'" aria-label="يوم المراجعة للمعيار '+s.n+'"></select><button type="button" data-tg="'+s.n+'">فتح / طيّ</button></div></header><div class="subs">'+s.subs.map(subHTML).join('')+'</div></section>'}
 function buildForm(){$('#stds').innerHTML=STDS.map(stdHTML).join('')+'<div class="empty" id="noRes" hidden>لا توجد معايير مطابقة للتصفية الحالية.</div>';
   $('#rail').innerHTML=STDS.map(function(s){return '<a href="#std-'+s.n+'" data-rail="'+s.n+'"><span class="rn num">'+s.n+'</span><span class="rt">'+esc(s.title)+'</span><span class="rbar"><i data-rb="'+s.n+'"></i></span><span class="ro" data-ro="'+s.n+'"></span></a>'}).join('')}
 function fillValues(){$$('[data-f]').forEach(function(e){var v=S.f[e.getAttribute('data-f')];e.value=v==null?'':v});$$('textarea[data-f]').forEach(autosize)}
@@ -20983,6 +21037,72 @@ function obsTouch(code){var sb=SUB[code];if(!sb)return;var n=sb.std,r=myRole();
   if(r==='obs'){var ob=mem(SH.me);if(ob&&+ob.tr===n&&S.f[chkKey(n)]==='1'){S.f[chkKey(n)]='0';queueEntry(chkKey(n),'0')}updTrainee();return}
   var o=obsOf(n);if(o&&obsRecent(n,o)&&Date.now()-warnT>8000){warnT=Date.now();toast('تنبيه: المعايش '+o.name.trim()+' يكتب في هذا المعيار الآن. تجنّب التعديل حتى ينتهي.',5000)}}
 setInterval(function(){try{updTrainee()}catch(e){}},15000);
+
+/* ---------- شريط الهوية · لوحة مهمتي · العرض المبسّط ---------- */
+function pctOf(subs){var a=0;subs.forEach(function(sb){a+=subStats(sb).ans});return subs.length?Math.round(a*100/(subs.length*3)):0}
+function subsOfMem(m){return SUBS_ALL.filter(function(sb){return effSub(sb.code)===m.id})}
+function stdsOfSubs(subs){var o={},r=[];subs.forEach(function(sb){if(!o[sb.std]){o[sb.std]=1;r.push(sb.std)}});return r.sort(function(a,b){return a-b})}
+function trainStd(m){var n=+m.tr;return n&&obsOf(n)&&obsOf(n).id===m.id?n:0}
+function myScope(){var r=myRole(),m=mem(SH.me);
+  if(r==='lead')return {r:r,name:(m&&m.name.trim())||'رئيس الفريق',role:(m&&m.name.trim())?'رئيس الفريق':'',lab:'إنجاز الفريق',subs:SUBS_ALL,m:m};
+  if(!m)return {r:r,name:'لم تختر اسمك بعد',role:'',lab:'اختر اسمك من خانة «أنا»',subs:[],m:null};
+  if(r==='obs'){var n=trainStd(m);return {r:r,name:m.name.trim()||'معايش',role:'تحت المعايشة',lab:n?'إنجاز معيار تدريبك':'للاطلاع فقط',subs:n?STD[n].subs:[],m:m,n:n}}
+  return {r:r,name:m.name.trim()||'عضو',role:m.role||'مقيّم',lab:'إنجاز معاييرك',subs:subsOfMem(m),m:m}}
+function updMeBar(){var el=$('#meBar');if(!el)return;var sc=myScope(),p=sc.subs.length?pctOf(sc.subs):null;
+  el.innerHTML='<b class="mb-n">'+esc(sc.name)+'</b>'+(sc.role?'<span class="mb-r">'+esc(sc.role)+'</span>':'')+'<span class="mb-l">'+esc(sc.lab)+'</span>'+(p==null?'':'<span class="mb-bar"><i style="width:'+p+'%"></i></span><b class="num">'+p+'%</b>')}
+function stOf(n){return (typeof finalOf==='function'&&finalOf(n))?'fin':(stdStats(STD[n]).pct>=100?'done':'prog')}
+function tkChip(n,p,note){return '<button type="button" class="tk-c" data-st="'+(p>=100?'done':(p>0?'prog':'new'))+'" data-goto="'+n+'"><b>'+n+'</b><span class="tk-t">'+esc(STD[n].title)+'</span><em class="num">'+p+'%</em>'+(note?'<small>'+note+'</small>':'')+'</button>'}
+function tkNums(a){return a.map(function(n){return '<button type="button" class="tk-n" data-goto="'+n+'">'+n+'</button>'}).join('')}
+function tkMem(sc){var m=sc.m;
+  if(!m)return '<p class="tk-p">اختر اسمك من خانة «أنا» في أعلى الصفحة لتظهر لك معاييرك وما ينتظرك.</p>';
+  var ns=stdsOfSubs(sc.subs);if(!ns.length)return '<p class="tk-p">لم تُسند لك معايير بعد. سيحدّدها رئيس الفريق من «توزيع المعايير».</p>';
+  var done=0,rev=[],next=0,chips='';
+  ns.forEach(function(n){var p=pctOf(sc.subs.filter(function(sb){return sb.std===n})),o=obsOf(n),note='';if(p>=100)done++;else if(!next)next=n;
+    if(o){var t=trState(n);note='المعايش '+esc(o.name.trim()||'')+' · '+t[0];if(t[1]==='p-mid')rev.push(n)}
+    chips+=tkChip(n,p,note)});
+  var act=rev.length?'<p class="tk-a">المعايش أنهى عمله في المعيار '+rev.join('، ')+'. افتحه وراجع الدرجات والملاحظات ثم اضغط «اعتماد مراجعتي».</p>':(next?'<p class="tk-a">تابع من المعيار '+next+'.</p>':'<p class="tk-a">اكتملت معاييرك. راجع الإنذارات في تبويب «ملخص الزيارة».</p>');
+  return '<div class="tk-k"><div><b>'+ns.length+'</b><span>معاييري</span></div><div><b>'+done+'</b><span>مكتملة</span></div><div class="'+(rev.length?'warn':'')+'"><b>'+rev.length+'</b><span>بانتظار مراجعتك</span></div></div><div class="tk-l">'+chips+'</div>'+act}
+function tkObs(sc){var n=sc.n;if(!sc.m)return '<p class="tk-p">اختر اسمك من خانة «أنا» في أعلى الصفحة.</p>';
+  if(!n)return '<p class="tk-p">الصفحة للاطلاع فقط حتى يحدد لك رئيس الفريق معيار التدريب.</p>';
+  var own=mem(effStd(n)),t=trState(n),p=pctOf(STD[n].subs);
+  return '<div class="tk-l">'+tkChip(n,p,t[0])+'</div><p class="tk-a">اكتب الأدلة وارصد الدرجة في هذا المعيار فقط. يراجعه العضو'+(own&&own.name.trim()?' ('+esc(own.name.trim())+')':'')+' ويعتمده.</p>'}
+function tkLead(){var rows='',pend=[],ready=[],unas=[],fin=typeof finalOf==='function';
+  team().forEach(function(m,i){if(isObs(m))return;var subs=subsOfMem(m),p=pctOf(subs),ns=stdsOfSubs(subs),ob=team().filter(function(x){return isObs(x)&&x.with===m.id}).map(function(x){return x.name.trim()||'معايش'});
+    rows+='<div class="tk-r"><span class="tk-nm">'+esc(m.name.trim()||lbl(i))+'</span><span class="tk-s">'+(ns.length?'المعايير: '+ns.join('، '):'بلا معايير')+(ob.length?' · معه: '+esc(ob.join('، ')):'')+'</span><span class="tk-b"><i style="width:'+p+'%"></i></span><b class="num">'+p+'%</b></div>'});
+  STDS.forEach(function(s){var n=s.n;if(!effStd(n))unas.push(n);var o=obsOf(n);if(o&&trState(n)[1]==='p-mid')pend.push(n);if(fin&&!finalOf(n)&&stdStats(s).pct>=100)ready.push(n)});
+  var gm=gapMiss().miss,d='';
+  if(unas.length)d+='<div><b>معايير بلا مسؤول:</b>'+tkNums(unas)+'<button type="button" class="btn sm" data-tab="dist">توزيع المعايير</button></div>';
+  if(pend.length)d+='<div><b>بانتظار مراجعة العضو (عمل معايش):</b>'+tkNums(pend)+'</div>';
+  if(ready.length)d+='<div><b>جاهزة للاعتماد النهائي:</b>'+tkNums(ready)+'</div>';
+  if(gm)d+='<div><b>فروق درجتين فأكثر بلا تعليل: '+gm+'</b><button type="button" class="btn sm" data-tab="sum">ملخص الزيارة</button></div>';
+  return '<div class="tk-p"><b>تقدّم الفريق</b></div>'+rows+'<div class="tk-p"><b>ينتظر قرارك</b></div><div class="tk-d">'+(d||'<div>لا شيء ينتظر قرارك الآن.</div>')+'</div>'}
+function updTask(){var el=$('#myTask');if(!el)return;var sc=myScope();$('#tkSum').textContent=sc.r==='lead'?'لوحة الرئيس':(sc.r==='obs'?'مهمتي · معايش':'مهمتي');
+  el.innerHTML=sc.r==='lead'?tkLead():(sc.r==='obs'?tkObs(sc):tkMem(sc))}
+var tkT=0;function schedTask(){clearTimeout(tkT);tkT=setTimeout(function(){try{updMeBar();updTask()}catch(e){}},350)}
+setInterval(function(){try{updMeBar();updTask()}catch(e){}},4000);
+var simOn=false,simCur='';try{simOn=localStorage.getItem('etec22m.simple')==='1'}catch(e){}
+function simList(){return SUBS_ALL.filter(function(sb){var e=$('#sub-'+sb.code),g=$('#std-'+sb.std);return e&&g&&!e.hidden&&!g.hidden})}
+function simSeg(){if(!simOn)return;$$('.sub.cur select[data-f$=".rev"]').forEach(function(sel){var f=sel.parentNode,g=f.querySelector('.seg');
+  if(!g){g=document.createElement('div');g.className='seg';g.setAttribute('role','group');g.setAttribute('aria-label','اختر الدرجة');g.innerHTML=['1','2','3','4','5','NA'].map(function(v){return '<button type="button" data-segv="'+v+'">'+(v==='NA'?'لا ينطبق':v)+'</button>'}).join('');sel.parentNode.insertBefore(g,sel.nextSibling)}
+  [].forEach.call(g.children,function(b){var on=sel.value===b.getAttribute('data-segv');b.classList.toggle('on',on);b.setAttribute('aria-pressed',on?'true':'false');b.disabled=sel.disabled})})}
+function simApply(){var app=$('#app'),btn=$('#btnSimple'),bar=$('#simBar');if(!app||!btn||!bar)return;app.classList.toggle('simple',simOn);btn.setAttribute('aria-pressed',simOn?'true':'false');btn.textContent=simOn?'الخروج من العرض المبسّط':'عرض مبسّط';bar.hidden=!simOn;
+  $$('.sub.cur').forEach(function(e){e.classList.remove('cur')});$$('.std.cur-std').forEach(function(e){e.classList.remove('cur-std')});if(!simOn)return;
+  var L=simList(),lab=$('#simLab'),i=-1,k;if(!L.length){simCur='';lab.textContent='لا توجد معايير مطابقة للعرض';$('#simPrev').disabled=true;$('#simNext').disabled=true;return}
+  for(k=0;k<L.length;k++)if(L[k].code===simCur){i=k;break}
+  if(i<0){i=0;for(k=0;k<L.length;k++)if(subStats(L[k]).ans<3){i=k;break}}
+  simCur=L[i].code;$('#sub-'+simCur).classList.add('cur');$('#std-'+L[i].std).classList.add('cur-std');
+  lab.textContent='المعيار '+L[i].std+' · الفرعي '+simCur+'  ('+(i+1)+' من '+L.length+')';$('#simPrev').disabled=i===0;$('#simNext').disabled=i===L.length-1;simSeg()}
+function simMove(d){var L=simList(),i=-1,k;for(k=0;k<L.length;k++)if(L[k].code===simCur){i=k;break}i+=d;if(i<0||i>=L.length)return;simCur=L[i].code;simApply();var e=$('#sub-'+simCur);if(e&&e.scrollIntoView)e.scrollIntoView({block:'start'})}
+function goStd(n){showTab('form');var s=$('#std-'+n);if(!s)return;if(s.hidden){S.ui.filter='all';updFilterSel();applyFilter()}S.ui.collapsed[n]=0;updStd();
+  if(simOn){var L=simList(),k,pick='';for(k=0;k<L.length;k++)if(L[k].std===n){if(!pick)pick=L[k].code;if(subStats(L[k]).ans<3){pick=L[k].code;break}}if(pick){simCur=pick;simApply()}}
+  else if(s.scrollIntoView)s.scrollIntoView({behavior:'smooth',block:'start'})}
+document.addEventListener('click',function(ev){var t=ev.target;if(!t.closest)return;
+  var g=t.closest('[data-goto]');if(g){goStd(+g.getAttribute('data-goto'));return}
+  var sg=t.closest('[data-segv]');if(sg){var sel=sg.parentNode.parentNode.querySelector('select[data-f]');if(!sel||sel.disabled)return;var v=sg.getAttribute('data-segv');sel.value=sel.value===v?'':v;sel.dispatchEvent(new Event('input',{bubbles:true}));simSeg();return}
+  if(t.closest('#simPrev')){simMove(-1);return}if(t.closest('#simNext')){simMove(1);return}
+  if(t.closest('#btnSimple')){simOn=!simOn;try{localStorage.setItem('etec22m.simple',simOn?'1':'0')}catch(e){}simApply();if(simOn){showTab('form');toast('العرض المبسّط: معيار فرعي واحد في كل شاشة. اختر الدرجة بالأزرار ثم «التالي».',3500)}else{var c=$('#sub-'+simCur);if(c&&c.scrollIntoView)c.scrollIntoView({block:'center'})}}});
+document.addEventListener('change',function(ev){if(ev.target&&ev.target.id==='meSel')schedTask()});
+document.addEventListener('input',function(ev){var e=ev.target;if(e&&e.hasAttribute&&e.hasAttribute('data-f')){if(e.tagName==='SELECT')setTimeout(simSeg,0);schedTask()}});
 var GDV='v2';
 function gdRole(){var r=myRole();return r==='lead'?'lead':(r==='obs'?'obs':'mem')}
 function gdSteps(){var r=gdRole(),V2=GDV==='v2',o=[];
@@ -20990,6 +21110,7 @@ function gdSteps(){var r=gdRole(),V2=GDV==='v2',o=[];
     o.push(['مرحبًا بك رئيسًا للفريق','النموذج يحفظ كل ما تكتبه تلقائيًا على جهازك ويزامنه مع ملف Google Sheet الخاص بفريقك. لا يوجد زر «حفظ». يمكنك العودة إلى هذا الدليل في أي وقت من زر «دليل الاستخدام» في أعلى الصفحة.']);
     o.push(['١ · جهّز بيانات الزيارة','أدخل اسم المنشأة وتاريخ بداية الزيارة وعدد الأيام، ثم أسماء أعضاء الفريق وأدوارهم (رئيس الفريق أو مقيّم أو تحت المعايشة). بعدها اختر اسمك من خانة «أنا».']);
     o.push(['٢ · وزّع المعايير على الفريق','في «توزيع المعايير على الفريق» خمسة أزرار: نموذج الفريق، والمجموعات المترابطة، ومتوازن، وحسب رحلة المتدرب، وحسب الجهة في المنشأة. اضغط أحدها لتظهر معاينة، ثم «اعتماد هذا التوزيع». في كل خيار يأخذ الرئيس الأقل حملًا. وشرح كل تقسيم في تبويب «مجموعات المعايير وترابطها».']);
+    o.push(['٠ · عيّن المعايشين','لكل معايش (تحت المعايشة) اختر العضو الذي سيكون معه، ثم معيار التدريب من معاييره. يكتب المعايش ويرصد الدرجة في ذلك المعيار فقط، ثم يراجعه العضو المسؤول ويعتمده بزر «اعتماد مراجعتي». تتابع حالة كل معيار (لم يبدأ، يكتب الآن، بانتظار مراجعة العضو، مُراجَع من العضو) في بطاقة المعيار وفي «ملخص الزيارة».']);
     o.push(['٣ · شارك الفريق','اضغط «مشاركة الفريق» وانسخ رابط الأعضاء وأرسله لهم بالواتساب أو البريد. رابط الرئيس خاص بك وحدك ولا ترسله لأحد.']);
     if(V2){
       o.push(['٤ · المرحلة المكتبية ثم الميدانية','يعبّئ الفريق التقييم المكتبي بحرية قبل الزيارة. عند بدء الزيارة اضغط «تجميد التقييم المكتبي وبدء المرحلة الميدانية». بعدها يتطلب أي تغيير في درجة المراجع سببًا يُكتب، وتبقى الدرجة المكتبية ظاهرة بجانبها. ويمكن تسجيل حالة كل شاهد (وصل / لم يصل).']);
@@ -20999,17 +21120,21 @@ function gdSteps(){var r=gdRole(),V2=GDV==='v2',o=[];
       o.push(['٤ · التعبئة والتنبيهات','لكل معيار فرعي ثلاثة مستويات: الوجود والممارسة والفاعلية. يظهر إنذار عند وجود موضع توصية أو إمكانية إشادة، وتنبيه عند فرق درجتين أو أكثر عن رأي المنشأة. راجع تبويب «ملخص الزيارة» قبل التصدير.']);
       o.push(['٥ · أنهِ الزيارة','اضغط «تصدير تقرير Word» ثم «حفظ ودمج البيانات» واحفظ ملف JSON، وضعهما في مجلد الزيارة.']);
     }
+    o.push(['٠ · لوحة الرئيس والعرض المبسّط','في أعلى تبويب النموذج لوحة تعرض تقدّم كل عضو وما ينتظر قرارك: معايير بلا مسؤول، وأعمال معايشين بانتظار مراجعة العضو، ومعايير جاهزة للاعتماد النهائي. اضغط رقم المعيار لتنتقل إليه. وزر «عرض مبسّط» يعرض معيارًا فرعيًا واحدًا في كل شاشة، مناسب للجوال.']);
     o.push(['زيارة جديدة','في الزيارة القادمة اضغط «زيارة جديدة»: تُؤرشف الزيارة الحالية في ورقة جديدة داخل الشيت ويُفرَّغ النموذج. الصفحة والرابط والشيت هي نفسها، ولا حاجة لملف جديد.'])
   }else{
     o.push([r==='obs'?'مرحبًا بك معايشًا':'مرحبًا بك عضوًا في الفريق','يحفظ النموذج كل ما تكتبه تلقائيًا ويشاركه مع الفريق خلال ثوانٍ. لا حساب ولا زر «حفظ». يمكنك العودة إلى هذا الدليل في أي وقت من زر «دليل الاستخدام» في أعلى الصفحة.']);
     o.push(['١ · اختر اسمك','من قائمة «أنا» في أعلى الصفحة اختر اسمك. '+(r==='obs'?'سيظهر لك معيار تدريبك أولًا لتكتب فيه وترصد الدرجة، وبقية المعايير للاطلاع فقط.':'ستظهر لك معاييرك أولًا وتبقى مفتوحة للتعبئة.')]);
     o.push(['٢ · اطّلع على بقية المعايير','من قائمة «عرض» اختر عضوًا آخر أو «كل المعايير» لتطّلع على عمل الفريق. تظهر هذه المعايير للقراءة فقط ولا تقبل التعديل.']);
     o.push(['٣ · عبّئ معاييرك','لكل معيار فرعي ثلاثة مستويات: الوجود والممارسة والفاعلية. اختر رأي المنشأة ورأي المراجع من القائمة، واكتب الأدلة والشواهد والملحوظات. يظهر إنذار عند موضع توصية أو إمكانية إشادة، وتنبيه عند فرق درجتين أو أكثر عن رأي المنشأة.']);
+    if(r==='mem')o.push(['٠ · إن كان معك معايش','قد يرافقك معايش (تحت المعايشة) في أحد معاييرك. هو يكتب ويرصد الدرجة، وأنت المسؤول عن النتيجة النهائية: افتح المعيار وراجع الدرجات والملاحظات وعدّل ما يلزم، ثم اضغط «اعتماد مراجعتي» فتصبح حالته «مُراجَع من العضو». إن كتب المعايش بعد اعتمادك يعود المعيار إلى «بانتظار مراجعة العضو». وينبّهك النموذج حين يكتب المعايش الآن، فتجنّب التعديل في اللحظة نفسها.']);
+    if(r==='obs')o.push(['٠ · ما تكتبه وكيف يُعتمد','اكتب الأدلة والملاحظات وارصد الدرجة في معيار تدريبك فقط. ما تكتبه مسودة يراجعها العضو المسؤول ويعدّلها ثم يعتمدها. وإن عدّلت بعد اعتماده يعود المعيار إلى «بانتظار مراجعة العضو». لا يمكنك تعديل بقية المعايير.']);
+    o.push(['٠ · لوحة «مهمتي» والعرض المبسّط','في أعلى تبويب النموذج لوحة «مهمتي» تعرض معاييرك وتقدّمك وما ينتظرك، واضغط رقم المعيار لتنتقل إليه. وزر «عرض مبسّط» يعرض معيارًا فرعيًا واحدًا في كل شاشة مع أزرار كبيرة للدرجة، مناسب للتعبئة بالجوال. يمكنك الرجوع للعرض الكامل في أي وقت.']);
     if(V2)o.push(['٤ · المرحلة الميدانية','يعمل الفريق مكتبيًا أولًا. بعد أن يجمّد الرئيس التقييم المكتبي يتطلب أي تغيير في درجتك سببًا يُكتب، وتبقى الدرجة المكتبية ظاهرة بجانبها. وإذا اعتمد الرئيس المعيار نهائيًا يُقفل ولا يُعدَّل.']);
     o.push([(V2?'٥':'٤')+' · طلب الشواهد من المنشأة','من تبويب «طلب الشواهد من المنشأة» أضف الشاهد المطلوب لمعاييرك فقط، واختر المعيار الفرعي والمستوى. يصدّر الرئيس النموذج للمنشأة'+(V2?'، وتسجّل حالة وصول كل شاهد.':'.')]);
     o.push([(V2?'٦':'٥')+' · الحفظ والاتصال','إذا ظهرت «تعذّر الاتصال» فلا تقلق: تعبئتك محفوظة عندك وتُرسل تلقائيًا عند عودة الاتصال. وإذا عدّل زميل الخانة نفسها فيُعتمد آخر تعديل.'])
   }
-  return o}
+  var _c=0,_D='٠١٢٣٤٥٦٧٨٩';o.forEach(function(x,i){if(i&&/^[٠-٩]+ · /.test(x[0])){_c++;x[0]=String(_c).replace(/\d/g,function(d){return _D.charAt(d)})+x[0].replace(/^[٠-٩]+/,'')}});return o}
 var gdI=0,gdFirst=false;
 function gdKey(){return 'etec22m.gd.'+GDV+'.'+(gdRole()==='lead'?'lead':'mem')}
 function gdRender(){var st=gdSteps(),n=st.length;if(gdI>=n)gdI=n-1;var s=st[gdI],last=gdI===n-1;
@@ -21055,6 +21180,7 @@ function applyRole(){var role=myRole(),lim=role!=='lead';
 
 function updStd(){STDS.forEach(function(s){var st=stdStats(s);var pc=$('[data-pc="'+s.n+'"]');if(pc)pc.textContent=st.pct+'%';var rb=$('[data-rb="'+s.n+'"]');if(rb)rb.style.width=st.pct+'%';
     var sd=$('[data-sd="'+s.n+'"]');if(sd){var cur=S.stdDay[s.n]||'',h='<option value="">يوم المراجعة</option>';for(var i=0;i<(+S.setup.days||1);i++)h+='<option value="'+i+'"'+(String(i)===String(cur)?' selected':'')+'>'+dayLabel(i)+'</option>';sd.innerHTML=h}
+    var _st=(typeof finalOf==='function'&&finalOf(s.n))?'fin':(st.pct>=100?'done':(st.ans||st.txt?'prog':'new'));$('#std-'+s.n).setAttribute('data-st',_st);var _ra=$('[data-rail="'+s.n+'"]');if(_ra)_ra.setAttribute('data-st',_st);var _sp=$('[data-stp="'+s.n+'"]');if(_sp)_sp.textContent={new:'لم يبدأ',prog:'جارٍ',done:'مكتمل',fin:'معتمد نهائيًا'}[_st];
     $('#std-'+s.n).classList.toggle('collapsed',!!S.ui.collapsed[s.n])})}
 function applyFilter(){var f=S.ui.filter,q=($('#fSearch').value||'').trim(),crit=S.ui.crit,any=false;
   STDS.forEach(function(s){var show=0;s.subs.forEach(function(sb){var ok=true;if(f!=='all'){if(f.indexOf('o:')===0){var om=mem(f.slice(2));if(!om||+om.tr!==sb.std)ok=false}else if(effSub(sb.code)!==f)ok=false}if(crit&&!sb.crit)ok=false;if(q&&sb.text.indexOf(q)<0&&sb.code.indexOf(q)<0)ok=false;$('#sub-'+sb.code).hidden=!ok;if(ok)show++});
@@ -21111,8 +21237,8 @@ function renderSummary(){var tot=0,ans=0,gaps=0,critAns=0,critTot=0,avgs=[],done
   $('#wl').innerHTML=wl}
 var SUBS_ALL=[];STDS.forEach(function(s){s.subs.forEach(function(b){SUBS_ALL.push(b)})});
 
-function updAll(){updOwners();updStd();updFilterSel();applyFilter();SUBS_ALL.forEach(updSubChips);$$('select[data-f]').forEach(updHint);renderQuick();renderDist();renderSetupSum();renderSummary();renderMe();renderReq(false);renderPhase();renderFin();applyRole()}
-function light(code){if(code)updSubChips(SUB[code]);updStd();renderSummary()}
+function updAll(){updOwners();updStd();updFilterSel();applyFilter();SUBS_ALL.forEach(updSubChips);$$('select[data-f]').forEach(updHint);renderQuick();renderDist();renderSetupSum();renderSummary();renderMe();renderReq(false);renderPhase();renderFin();applyRole();try{updMeBar();updTask();simApply()}catch(e){}}
+function light(code){if(code)updSubChips(SUB[code]);updStd();renderSummary();if(typeof schedTask==='function')schedTask()}
 
 /* ---------- tabs ---------- */
 function showTab(t){S.ui.tab=t;$$('.tab').forEach(function(b){b.setAttribute('aria-selected',b.getAttribute('data-tab')===t?'true':'false')});$$('.panel').forEach(function(p){p.hidden=p.id!=='p-'+t});
