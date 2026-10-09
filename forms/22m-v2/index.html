@@ -242,6 +242,7 @@ table.o td.c{text-align:center}
 .gcard li{margin:2px 0}
 .gcard .lnk{background:var(--surface-2);border-radius:12px;padding:10px 12px}
 .gcard .lnk b{color:var(--gc)}
+.gx{background:var(--surface-2);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:10px 0;display:grid;gap:4px}.gx b{font-weight:800}.gbar{margin-bottom:6px}
 .g1{--gc:#3B3A9E}.g2c{--gc:#0D6B63}.g3c{--gc:#B8651B}
 :root[data-theme="dark"] .g1{--gc:#7F7EEE}
 .flow{display:grid;justify-items:center;gap:6px;margin:20px auto 0;max-width:620px}
@@ -376,6 +377,8 @@ table.o.sum td{font-size:.97rem}
       <button class="btn sm" data-preset="A" type="button">١ · نموذج الفريق (الافتراضي): ١+٣ · ٢+٦+٧ · ٤+٥+٨</button>
       <button class="btn sm" data-preset="B" type="button">٢ · المجموعات المترابطة (الرئيس ٢+٨)</button>
       <button class="btn sm" data-preset="C" type="button">٣ · متوازن مع تخفيف الرئيس</button>
+      <button class="btn sm" data-preset="D" type="button">٤ · حسب رحلة المتدرب (١+٢+٣ · ٤+٥+٧ · ٦+٨)</button>
+      <button class="btn sm" data-preset="E" type="button">٥ · حسب الجهة في المنشأة (١+٢+٨ · ٤+٥+٦ · ٣+٧)</button>
       <span class="note" id="modeNote"></span>
     </div>
     <div class="pv" id="pvBox" style="display:none"></div>
@@ -434,6 +437,8 @@ table.o.sum td{font-size:.97rem}
 <!-- GROUPS -->
 <section class="panel" id="p-groups" role="tabpanel" hidden>
   <div class="card">
+    <div class="presets gbar" role="tablist" aria-label="خيارات تقسيم المعايير"><button class="btn sm pri" data-gopt="1" type="button">الخيار ١ · حسب سلسلة العمل</button><button class="btn sm" data-gopt="2" type="button">الخيار ٢ · حسب رحلة المتدرب</button><button class="btn sm" data-gopt="3" type="button">الخيار ٣ · حسب الجهة في المنشأة</button></div>
+    <div class="gopt" data-opt="1"><div class="gx"><div><b>المنطق:</b> تتبّع سلسلة العمل: توجيه وحوكمة، ثم برنامج وتنفيذ ونتائج، ثم شراكات وكوادر</div><div><b>الميزة:</b> المراجع يتتبّع الدليل من أوله إلى آخره دون أن يتشتت</div><div><b>العيب:</b> المجموعة الأولى صغيرة، والثالثة غير متجانسة في المضمون</div><div><b>يناسب:</b> التقييم المكتبي، وهو التقسيم المعتمد حاليًا في النموذج</div></div>
     <p class="doc-t">بناءً على تحليل المعايير الثمانية الرئيسة في وثيقة اعتماد المنشآت التدريبية (مسار)، يمكن توزيعها إلى ثلاث مجموعات مترابطة كما يلي:</p>
     <div class="gcards">
       <article class="gcard g1">
@@ -473,6 +478,9 @@ table.o.sum td{font-size:.97rem}
     </ul>
     <p style="margin-top:14px;font-weight:700">هذا التوزيع يوضح كيف أن هذه المعايير ليست منعزلة، بل تشكل نظامًا متكاملًا يؤدي فيه كل معيار دورًا مكملاً للآخر.</p>
     <div class="presets"><button class="btn pri" data-preset="B" type="button">اعتماد هذه المجموعات في توزيع الفريق</button><span class="note">تُسند كل مجموعة إلى عضو بالترتيب.</span></div>
+</div>
+<div class="gopt" data-opt="2" hidden><div class="gx"><div><b>المنطق:</b> يتبع المتدرب من دخوله إلى خروجه: مدخلات ثم عمليات ثم مخرجات</div><div><b>الميزة:</b> منطقي ويسهل شرحه للمنشأة في تقرير الزيارة</div><div><b>العيب:</b> المعيار ٢ يخدم كل المعايير فيصعب حصره في «المدخلات»، والمجموعة الثالثة صغيرة</div><div><b>يناسب:</b> عرض النتائج وشرح التقرير للمنشأة</div><div><b>الحمل:</b> يأخذ الرئيس المجموعة الأخف حملًا</div></div><div class="gcards"><article class="gcard g1"><h3><span class="gi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg></span>المجموعة الأولى: المدخلات والتهيئة</h3><p class="sub-t">(تركز على الشراكة والحوكمة وقبول المتدربين)</p><ol><li>المعيار (1): الشراكة مع أصحاب العمل</li><li>المعيار (2): الحوكمة والإدارة</li><li>المعيار (3): القبول وخدمات المتدربين</li></ol><div class="lnk"><b>الترابط:</b> الشراكة مع أصحاب العمل (1) توجّه الاحتياج، والحوكمة (2) تضع الإطار والسياسات، والقبول (3) يستقبل المتدرب وفقهما.</div></article><article class="gcard g2c"><h3><span class="gi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 19a2 2 0 0 1 2-2h13"/></svg></span>المجموعة الثانية: العمليات التدريبية</h3><p class="sub-t">(تركز على تصميم البرامج وتنفيذها وجاهزية المدربين)</p><ol><li>المعيار (4): تطوير البرامج وأدوات القياس والتقويم</li><li>المعيار (5): التدريب والموارد</li><li>المعيار (7): تأهيل وتطوير المدربين</li></ol><div class="lnk"><b>الترابط:</b> تصميم البرامج (4) ثم تنفيذها (5) يعتمدان على كفاءة المدربين (7) وتأهيلهم.</div></article><article class="gcard g3c"><h3><span class="gi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="12" r="3"/><circle cx="18" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M8.7 10.6l6.6-3.2M8.7 13.4l6.6 3.2"/></svg></span>المجموعة الثالثة: المخرجات والاستدامة</h3><p class="sub-t">(تركز على نتائج المتدربين واستمرارية الأثر)</p><ol><li>المعيار (6): تحصيل المتدربين</li><li>المعيار (8): الاستدامة والفاعلية</li></ol><div class="lnk"><b>الترابط:</b> تحصيل المتدربين (6) هو نتيجة العملية، والاستدامة والفاعلية (8) تقيس أثرها واستمراره.</div></article></div><div class="presets"><button class="btn pri" data-preset="D" type="button">معاينة هذا التوزيع وتطبيقه على الفريق</button><span class="note">يأخذ الرئيس المجموعة الأخف، ويظهر لك التوزيع قبل الاعتماد.</span></div></div>
+<div class="gopt" data-opt="3" hidden><div class="gx"><div><b>المنطق:</b> يجمع المعايير بحسب الجهة التي ستقابلها في المنشأة</div><div><b>الميزة:</b> يقابل كل عضو جهة واحدة ويطلب شواهدها دفعة واحدة، فيوفّر وقت المقابلات</div><div><b>العيب:</b> يعتمد على الهيكل التنظيمي، وقد يختلف من منشأة إلى أخرى</div><div><b>يناسب:</b> المرحلة الميدانية وجدول المقابلات</div><div><b>الحمل:</b> يأخذ الرئيس المجموعة الأخف حملًا</div></div><div class="gcards"><article class="gcard g1"><h3><span class="gi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg></span>المجموعة الأولى: الإدارة العليا والجودة</h3><p class="sub-t">(تركز على القيادة والشراكات والاستدامة)</p><ol><li>المعيار (1): الشراكة مع أصحاب العمل</li><li>المعيار (2): الحوكمة والإدارة</li><li>المعيار (8): الاستدامة والفاعلية</li></ol><div class="lnk"><b>الترابط:</b> جهة واحدة تقدّم خطط المنشأة وشراكاتها وتقارير المتابعة ومؤشرات الأداء.</div></article><article class="gcard g2c"><h3><span class="gi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 19a2 2 0 0 1 2-2h13"/></svg></span>المجموعة الثانية: الشؤون التدريبية</h3><p class="sub-t">(تركز على البرامج والتدريب ونتائج المتدربين)</p><ol><li>المعيار (4): تطوير البرامج وأدوات القياس والتقويم</li><li>المعيار (5): التدريب والموارد</li><li>المعيار (6): تحصيل المتدربين</li></ol><div class="lnk"><b>الترابط:</b> الجهة التي تملك البرامج وتنفيذها ونتائج المتدربين، وشواهدها متصلة ببعضها.</div></article><article class="gcard g3c"><h3><span class="gi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="12" r="3"/><circle cx="18" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M8.7 10.6l6.6-3.2M8.7 13.4l6.6 3.2"/></svg></span>المجموعة الثالثة: شؤون المتدربين والكوادر</h3><p class="sub-t">(تركز على القبول وخدمات المتدربين وتأهيل المدربين)</p><ol><li>المعيار (3): القبول وخدمات المتدربين</li><li>المعيار (7): تأهيل وتطوير المدربين</li></ol><div class="lnk"><b>الترابط:</b> جهة المتدربين والكوادر: سجلات القبول والخدمات وملفات المدربين وتأهيلهم.</div></article></div><div class="presets"><button class="btn pri" data-preset="E" type="button">معاينة هذا التوزيع وتطبيقه على الفريق</button><span class="note">يأخذ الرئيس المجموعة الأخف، ويظهر لك التوزيع قبل الاعتماد.</span></div></div>
   </div>
 </section>
 
@@ -20747,7 +20755,7 @@ var LV=[{k:'e',ch:'و',name:'الوجود'},{k:'p',ch:'م',name:'الممارس�
 var F_ORG=[['org','رأي المنشأة','sel'],['ev','الأدلة والشواهد المرافقة','ta'],['desc','وصف الدليل','ta']];
 var F_REV=[['rev','رأي المراجع','sel'],['notes','الملحوظات والمبررات والمطلوب','ta'],['q','المقابلات (أسئلة)','ta']];
 var ORD5=['الأول','الثاني','الثالث','الرابع','الخامس'];
-var GROUPS={A:[[1,3],[2,6,7],[4,5,8]],B:[[2,8],[4,5,6],[1,3,7]]};
+var GROUPS={A:[[1,3],[2,6,7],[4,5,8]],B:[[2,8],[4,5,6],[1,3,7]],D:[[1,2,3],[4,5,7],[6,8]],E:[[1,2,8],[4,5,6],[3,7]]};
 var ROLES=['رئيس الفريق','مقيّم','مقيّم مساعد','منسّق','تحت المعايشة'];var OBS='تحت المعايشة';
 var KEY='etec22m.v2';
 var $=function(s,r){return (r||document).querySelector(s)};
@@ -20784,6 +20792,10 @@ function leaderId(){var c=crew();for(var i=0;i<c.length;i++)if(c[i].role==='رئ
 function crewOrd(){var c=crew(),l=leaderId();return c.filter(function(m){return m.id===l}).concat(c.filter(function(m){return m.id!==l}))}
 function computeMap(mode){var t=crewOrd(),m={},n=t.length;if(!n)return m;
   if(mode==='A'||mode==='B'){GROUPS[mode].forEach(function(g,gi){g.forEach(function(s){m[s]=t[gi%n].id})})}
+  else if(mode==='D'||mode==='E'){var un=GROUPS[mode].map(function(g){return g.slice()}),ld=function(u){return u.reduce(function(a,x){return a+STD[x].subs.length},0)};
+    while(un.length<n){un.sort(function(a,b){return ld(b)-ld(a)});var big=un[0];if(big.length<2)break;var pr=[[],[]];big.slice().sort(function(a,b){return STD[b].subs.length-STD[a].subs.length}).forEach(function(x){pr[ld(pr[0])<=ld(pr[1])?0:1].push(x)});un.splice(0,1,pr[0],pr[1])}
+    while(un.length>n){un.sort(function(a,b){return ld(a)-ld(b)});var u1=un.pop(),u2=un.pop();un.push(u1.concat(u2))}
+    un.sort(function(a,b){return ld(a)-ld(b)});un.forEach(function(u,i){u.forEach(function(x){m[x]=t[i%n].id})})}
   else if(mode==='C'){var load={};t.forEach(function(x){load[x.id]=0});
     STDS.slice().sort(function(a,b){return b.subs.length-a.subs.length||a.n-b.n}).forEach(function(s){var bi=0,bv=1e9;t.forEach(function(x,i){var v=(load[x.id]+s.subs.length)/((i===0&&n>1)?0.7:1);if(v<bv-1e-9){bv=v;bi=i}});m[s.n]=t[bi].id;load[t[bi].id]+=s.subs.length})}
   return m}
@@ -20814,7 +20826,7 @@ function renderTeam(){var h='';team().forEach(function(m,i){
 function renderQuick(){var act=document.activeElement&&document.activeElement.id,h='';
   STDS.forEach(function(s){h+='<div class="qk"><span><b class="num">'+s.n+'</b> · '+esc(s.title)+'</span><select class="in" id="qs'+s.n+'" data-qs="'+s.n+'" aria-label="المسؤول عن المعيار '+s.n+'">'+memberOptions(effStd(s.n),'— غير محدد —')+'</select></div>'});
   $('#quickBox').innerHTML=h;if(act&&/^qs/.test(act)){var e=document.getElementById(act);if(e)e.focus()}
-  $('#modeNote').textContent=S.mode==='manual'?'التوزيع الحالي: يدوي':'التوزيع الحالي: '+({A:'نموذج الفريق',B:'المجموعات المترابطة',C:'متوازن مع تخفيف الرئيس'})[S.mode]+' (يتحدث تلقائياً مع أسماء الفريق)'}
+  $('#modeNote').textContent=S.mode==='manual'?'التوزيع الحالي: يدوي':'التوزيع الحالي: '+({A:'نموذج الفريق',B:'المجموعات المترابطة',C:'متوازن مع تخفيف الرئيس',D:'حسب رحلة المتدرب',E:'حسب الجهة في المنشأة'})[S.mode]+' (يتحدث تلقائياً مع أسماء الفريق)'}
 function renderSetupSum(){var s=S.setup,d=pd(s.date),names=team().filter(function(m){return m.name.trim()}).map(function(m){return m.name.trim()});
   var parts=[];parts.push('<b>'+esc(s.facility||'لم تُحدد المنشأة بعد')+'</b>');
   if(d){var di=dayInfo(0);parts.push(esc(di.wd)+' <span class="num">'+esc(di.g)+'</span>')}
@@ -20970,7 +20982,9 @@ function planAttach(map){var o=team().filter(isObs),c=crewOrd(),load={};c.forEac
   o.forEach(function(x){if(plan[x.id])return;var best=pool.slice().sort(function(a,b){return (used[a.id]||0)-(used[b.id]||0)||load[b.id]-load[a.id]})[0];if(best){plan[x.id]=best.id;used[best.id]=(used[best.id]||0)+1}});return plan}
 var MODE_INFO={A:{t:'١ · نموذج الفريق (الافتراضي)',w:'النموذج المعتمد للفريق. المعياران ١ (الشراكة) و٣ (القبول) أخف المعايير، فيتفرغ الرئيس للتنسيق وتجميع التقرير النهائي، ويتقاسم العضوان الآخران المعايير الأثقل ويعينهما المعايشان.'},
   B:{t:'٢ · المجموعات المترابطة',w:'كل عضو يغطي مجموعة مترابطة من المعايير فيرى الصورة كاملة. الرئيس يأخذ المعيارين ٢ (الحوكمة) و٨ (الاستدامة) وهما الأقرب لدوره القيادي، ويعادل حمله أقل عضو آخر.'},
-  C:{t:'٣ · متوازن مع تخفيف الرئيس',w:'توزيع بالأرقام: يُحتسب حمل الرئيس بوزن ٠٫٧ من حمل العضو، فيأخذ أقل عدد من المعايير الفرعية مهما كان حجم الفريق.'}};
+  C:{t:'٣ · متوازن مع تخفيف الرئيس',w:'توزيع بالأرقام: يُحتسب حمل الرئيس بوزن ٠٫٧ من حمل العضو، فيأخذ أقل عدد من المعايير الفرعية مهما كان حجم الفريق.'},
+  D:{t:'٤ · حسب رحلة المتدرب',w:'المعايير مجمّعة في ثلاث مجموعات: المدخلات (١+٢+٣)، والعمليات (٤+٥+٧)، والمخرجات والاستدامة (٦+٨). يأخذ الرئيس المجموعة الأخف حملًا، ويتقاسم الباقون بقية المجموعات، وإذا زاد عدد الأعضاء على ثلاثة تُقسَّم أثقل مجموعة بينهم. مناسب لشرح التقرير للمنشأة وفق مسار المتدرب من القبول إلى النتائج.'},
+  E:{t:'٥ · حسب الجهة في المنشأة',w:'المعايير مجمّعة بحسب الجهة التي ستقابلها: الإدارة العليا والجودة (١+٢+٨)، والشؤون التدريبية (٤+٥+٦)، وشؤون المتدربين والكوادر (٣+٧). يأخذ الرئيس المجموعة الأخف حملًا، فيقابل كل عضو جهة واحدة ويطلب شواهدها دفعة واحدة. مناسب للمرحلة الميدانية، ويعتمد على هيكل المنشأة.'}};
 function showPreview(mode){var map=computeMap(mode),c=crewOrd(),plan=planAttach(map),box=$('#pvBox'),inf=MODE_INFO[mode],l=leaderId();
   var rows='',loads={};c.forEach(function(m,i){var ns=[],cnt=0;STDS.forEach(function(s){if(map[s.n]===m.id){ns.push(s.n);cnt+=s.subs.length}});loads[m.id]=cnt;
     var ob=team().filter(function(x){return isObs(x)&&plan[x.id]===m.id}).map(function(x){return esc(x.name.trim()||'معايش بانتظار الاسم')});
@@ -21373,7 +21387,8 @@ document.addEventListener('change',function(ev){var e=ev.target;
 document.addEventListener('click',function(ev){var t=ev.target,e=t.closest?t.closest('button,a,.hint,[data-tab]'):null;if(!e)return;
   if(e.classList.contains('hint')){e.classList.toggle('open');return}
   if(e.hasAttribute('data-tab')){showTab(e.getAttribute('data-tab'));return}
-  if(e.hasAttribute('data-preset')){showPreview(e.getAttribute('data-preset'));return}
+  if(e.hasAttribute('data-gopt')){var go=e.getAttribute('data-gopt');$$('.gopt').forEach(function(x){x.hidden=x.getAttribute('data-opt')!==go});$$('[data-gopt]').forEach(function(b){b.classList.toggle('pri',b===e)});return}
+  if(e.hasAttribute('data-preset')){if(e.closest&&e.closest('#p-groups'))showTab('dist');showPreview(e.getAttribute('data-preset'));return}
   if(e.hasAttribute('data-pvok')){applyMode(e.getAttribute('data-pvok'));return}
   if(e.hasAttribute('data-pvno')){$('#pvBox').style.display='none';return}
   if(e.hasAttribute('data-finb')){doFinal(+e.getAttribute('data-finb'));return}
