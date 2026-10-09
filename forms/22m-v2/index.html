@@ -340,6 +340,12 @@ table.o.sum td{font-size:.97rem}
 #app.simple .seg button.on[data-segv="1"]{background:var(--r1)}#app.simple .seg button.on[data-segv="2"]{background:var(--r2)}#app.simple .seg button.on[data-segv="3"]{background:var(--r3)}#app.simple .seg button.on[data-segv="4"]{background:var(--r4)}#app.simple .seg button.on[data-segv="5"]{background:var(--r5)}#app.simple .seg button.on[data-segv="NA"]{background:var(--r-na)}
 @media print{.mebar,.simbar,.mytask,.seg{display:none!important}}
 
+
+.ck-l{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.ck{display:grid;grid-template-columns:30px minmax(0,1fr);gap:8px;align-items:start;border:1px solid var(--line);border-radius:10px;padding:6px 12px;background:var(--surface-2)}
+.ck>b{font-size:1.2rem;text-align:center}.ck small{display:block;color:var(--ink-2);font-size:.92rem;font-weight:400}
+.ck-ok{border-inline-start:6px solid var(--ok)}.ck-ok>b{color:var(--ok)}.ck-bad{border-inline-start:6px solid var(--bad);background:var(--crit-soft)}.ck-bad>b{color:var(--bad)}.ck-na{border-inline-start:6px solid var(--warn)}.ck-na>b{color:var(--warn)}
+.btn[hidden]{display:none}#shareSt{cursor:pointer}#shareSt:hover{text-decoration:underline}
 .ov{position:fixed;inset:0;background:rgba(8,20,19,.55);z-index:50;display:grid;place-items:center;padding:16px}
 .ov[hidden]{display:none}
 .modal{background:var(--surface);border-radius:18px;max-width:760px;width:100%;max-height:88vh;overflow:auto;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.4);display:grid;gap:12px}
@@ -387,6 +393,7 @@ table.o.sum td{font-size:.97rem}
     <button class="btn pri" id="btnWord" type="button">تصدير تقرير Word</button>
     <button class="btn" id="btnData" type="button">حفظ ودمج البيانات</button>
     <button class="btn" id="btnGuide" type="button" title="خطوات الاستخدام حسب دورك">دليل الاستخدام</button>
+    <button class="btn" id="btnChk" type="button" hidden title="يفحص الحفظ والاتصال بالـSheet والرمز السري وبيانات الفريق">فحص النموذج</button>
     <button class="btn" id="btnEnd" type="button" title="يحفظ تقرير Word وملف البيانات وجدول CSV دفعة واحدة، ويذكّرك بما يجب فعله قبل الزيارة التالية">إنهاء الزيارة</button>
   </div>
 </header>
@@ -687,6 +694,15 @@ table.o.sum td{font-size:.97rem}
     <label class="chk" id="nvRotRow"><input type="checkbox" id="nvRot"> تغيّر أعضاء الفريق: أنشئ رابطًا جديدًا وعطّل الروابط القديمة</label>
     <p id="nvNote" style="color:var(--ink-2);font-size:.9rem"></p>
     <div class="row"><button class="btn pri" id="nvGo" type="button">ابدأ زيارة جديدة</button><button class="btn ghost" id="nvClose" type="button">إلغاء</button><span id="nvMsg" style="font-weight:700"></span></div>
+  </div>
+</div>
+<div class="ov" id="ovChk" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="chkT">
+    <h2 class="doc-t" id="chkT" style="margin:0">فحص النموذج</h2>
+    <p style="color:var(--ink-2);font-size:.95rem">يفحص الحفظ والاتصال بالـSheet والرمز السري وبيانات الفريق. الفحص للقراءة فقط ولا يغيّر بياناتك.</p>
+    <ul class="ck-l" id="chkList" aria-live="polite"></ul>
+    <p id="chkSum" style="font-weight:800"></p>
+    <div class="row"><button class="btn pri" id="chkAgain" type="button">أعد الفحص</button><button class="btn" id="chkWrite" type="button" hidden>اختبار الكتابة (اختياري)</button><button class="btn ghost" id="chkClose" type="button">إغلاق</button></div>
   </div>
 </div>
 <div class="toast" id="toast" aria-live="polite"><span></span></div>
@@ -21048,7 +21064,7 @@ function myScope(){var r=myRole(),m=mem(SH.me);
   if(!m)return {r:r,name:'لم تختر اسمك بعد',role:'',lab:'اختر اسمك من خانة «أنا»',subs:[],m:null};
   if(r==='obs'){var n=trainStd(m);return {r:r,name:m.name.trim()||'معايش',role:'تحت المعايشة',lab:n?'إنجاز معيار تدريبك':'للاطلاع فقط',subs:n?STD[n].subs:[],m:m,n:n}}
   return {r:r,name:m.name.trim()||'عضو',role:m.role||'مقيّم',lab:'إنجاز معاييرك',subs:subsOfMem(m),m:m}}
-function updMeBar(){var el=$('#meBar');if(!el)return;var sc=myScope(),p=sc.subs.length?pctOf(sc.subs):null;
+function updMeBar(){var cb=$('#btnChk');if(cb)cb.hidden=myRole()!=='lead';var el=$('#meBar');if(!el)return;var sc=myScope(),p=sc.subs.length?pctOf(sc.subs):null;
   el.innerHTML='<b class="mb-n">'+esc(sc.name)+'</b>'+(sc.role?'<span class="mb-r">'+esc(sc.role)+'</span>':'')+'<span class="mb-l">'+esc(sc.lab)+'</span>'+(p==null?'':'<span class="mb-bar"><i style="width:'+p+'%"></i></span><b class="num">'+p+'%</b>')}
 function stOf(n){return (typeof finalOf==='function'&&finalOf(n))?'fin':(stdStats(STD[n]).pct>=100?'done':'prog')}
 function tkChip(n,p,note){return '<button type="button" class="tk-c" data-st="'+(p>=100?'done':(p>0?'prog':'new'))+'" data-goto="'+n+'"><b>'+n+'</b><span class="tk-t">'+esc(STD[n].title)+'</span><em class="num">'+p+'%</em>'+(note?'<small>'+note+'</small>':'')+'</button>'}
@@ -21103,6 +21119,49 @@ document.addEventListener('click',function(ev){var t=ev.target;if(!t.closest)ret
   if(t.closest('#btnSimple')){simOn=!simOn;try{localStorage.setItem('etec22m.simple',simOn?'1':'0')}catch(e){}simApply();if(simOn){showTab('form');toast('العرض المبسّط: معيار فرعي واحد في كل شاشة. اختر الدرجة بالأزرار ثم «التالي».',3500)}else{var c=$('#sub-'+simCur);if(c&&c.scrollIntoView)c.scrollIntoView({block:'center'})}}});
 document.addEventListener('change',function(ev){if(ev.target&&ev.target.id==='meSel')schedTask()});
 document.addEventListener('input',function(ev){var e=ev.target;if(e&&e.hasAttribute&&e.hasAttribute('data-f')){if(e.tagName==='SELECT')setTimeout(simSeg,0);schedTask()}});
+
+/* ---------- فحص النموذج ---------- */
+var CHK_PFX='v2:',chkBusy=false,chkArm=false;
+function chkLi(ok,t,d){return '<li class="ck '+(ok===true?'ck-ok':ok===false?'ck-bad':'ck-na')+'"><b>'+(ok===true?'✔':ok===false?'✘':'!')+'</b><span><b>'+t+'</b>'+(d?'<small>'+d+'</small>':'')+'</span></li>'}
+function chkMine(k){k=String(k);return CHK_PFX?k.indexOf(CHK_PFX)===0:k.indexOf('v2:')!==0}
+async function chkRun(write){if(chkBusy)return;chkBusy=true;var rows=[],bad=0,warn=0,box=$('#chkList'),sum=$('#chkSum');sum.textContent='';
+  function R(ok,t,d){rows.push(chkLi(ok,t,d));if(ok===false)bad++;if(ok===null)warn++;box.innerHTML=rows.join('')}
+  box.innerHTML='<li class="ck ck-na"><b>…</b><span><b>جارٍ الفحص</b></span></li>';
+  try{
+    try{var kk='etec22m.chk.'+Date.now();localStorage.setItem(kk,'1');var lok=localStorage.getItem(kk)==='1';localStorage.removeItem(kk);R(lok,'حفظ المتصفح',lok?'يعمل: تعبئتك تُحفظ على هذا الجهاز':'لا يعمل: قد تكون في وضع التصفح الخاص')}catch(e){R(false,'حفظ المتصفح','محظور في هذا المتصفح')}
+    var role=myRole(),me=mem(SH.me);
+    if(!SH.on){R(null,'الاتصال بالفريق','هذه الصفحة غير مرتبطة بالـSheet (وضع محلي). افتح رابط الرئيس أو رابط الأعضاء ليعمل الاتصال.');return}
+    R(true,'دورك في هذه الصفحة',role==='lead'?'رئيس الفريق':(role==='obs'?'معايش: '+esc(me&&me.name.trim()||''):(me?'عضو: '+esc(me.name.trim()||''):'عضو، لم تختر اسمك بعد من خانة «أنا»')));
+    if(role!=='lead'&&!me)R(null,'اختيار الاسم','اختر اسمك من خانة «أنا» ليفتح لك تعديل معاييرك');
+    var t0=Date.now(),j=null;
+    try{var r=await fetch(shUrl('action=ping'));j=await r.json()}catch(e){R(false,'الاتصال بالـSheet','تعذّر الاتصال. تحقق من الإنترنت، ومن أن نشر الـSheet «أي شخص»، وأن الرابط ينتهي بـ /exec');return}
+    if(j&&j.error==='code'){R(false,'الرمز السري','لا يطابق رمز الـSheet. اطلب رابطًا حديثًا من رئيس الفريق (ربما بدأ زيارة جديدة برمز جديد)');return}
+    if(!j||!j.ok){R(false,'الاتصال بالـSheet','ردّ غير متوقع من الخدمة');return}
+    R(true,'الاتصال بالـSheet والرمز السري','يعمل ('+(Date.now()-t0)+' م.ث)');
+    var j2=null;try{var r2=await fetch(shUrl('action=pull&since=0'));j2=await r2.json()}catch(e){R(false,'قراءة البيانات','تعذّرت قراءة بيانات الفريق من الـSheet');return}
+    var mine=(j2.rows||[]).filter(function(x){return chkMine(x[0])}),nF=0,mset=null;
+    mine.forEach(function(x){var k=String(x[0]);if(CHK_PFX)k=k.slice(CHK_PFX.length);if(k==='m|setup'){try{mset=JSON.parse(String(x[1]))}catch(e){}}else if(k.slice(0,2)==='f|'&&String(x[1]==null?'':x[1])!=='')nF++});
+    if(mset&&mset.team)R(true,'بيانات الزيارة على الـSheet','المنشأة: '+esc(mset.facility||'—')+' · أعضاء الفريق: '+mset.team.length+' · خانات معبّأة: '+nF);
+    else R(null,'بيانات الزيارة على الـSheet','لا توجد بيانات بعد. هذا طبيعي في زيارة جديدة، وإلا فقد لا يكون الرئيس فتح رابطه بعد');
+    var nL=0;Object.keys(S.f).forEach(function(k){var v=S.f[k];if(v!=null&&String(v)!=='')nL++});
+    if(Math.abs(nL-nF)<=2)R(true,'تطابق ما عندك مع الـSheet','عندك '+nL+' خانة وعلى الـSheet '+nF);
+    else R(null,'تطابق ما عندك مع الـSheet','عندك '+nL+' خانة وعلى الـSheet '+nF+'. انتظر ثوانٍ ثم أعد الفحص، فإن بقي الفرق فأعد تحميل الصفحة');
+    var q=Object.keys(SH.q).length;
+    if(!q&&!SH.err)R(true,'التعديلات المعلّقة','كل ما كتبته أُرسل إلى الـSheet');
+    else R(SH.err?false:null,'التعديلات المعلّقة',q+' تعديل بانتظار الإرسال'+(SH.err?'، وآخر محاولة فشلت ('+(SH.ek==='code'?'الرمز':'الشبكة')+'). سيعاود النموذج الإرسال تلقائيًا':''));
+    if(write&&role==='lead'){var val=String(Date.now());try{var r3=await fetch(SH.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({code:SH.code,ops:[{k:CHK_PFX+'z|selftest',v:val,b:'فحص'}]})});var j3=await r3.json();if(!j3||!j3.ok)throw new Error('w');
+      var r4=await fetch(shUrl('action=pull&since='+(+j2.t||0)));var j4=await r4.json(),back=(j4.rows||[]).filter(function(x){return String(x[0])===CHK_PFX+'z|selftest'&&String(x[1])===val}).length;
+      R(back>0,'اختبار الكتابة','كُتب سطر اختبار واحد (z|selftest) وقُرئ من جديد'+(back>0?': سليم':': لم يُقرأ، راجع نشر الـSheet'))}
+    catch(e){R(false,'اختبار الكتابة','فشلت الكتابة على الـSheet. تأكد أن النشر «تنفيذ كـ: أنا» و«أي شخص»')}}
+  }finally{chkBusy=false;sum.textContent=bad?'يوجد '+bad+' فحص فاشل ✘. اقرأ السطر تحته أو أرسله لرئيس الفريق.':(warn?'لا أخطاء، لكن توجد ملاحظات (!) أعلاه.':'كل شيء سليم ✔');sum.style.color=bad?'var(--bad)':(warn?'var(--warn)':'var(--ok)')}}
+function chkOpen(){var wb=$('#chkWrite');wb.hidden=!(SH.on&&myRole()==='lead');chkArm=false;wb.textContent='اختبار الكتابة (اختياري)';$('#ovChk').hidden=false;chkRun(false)}
+document.addEventListener('click',function(ev){var t=ev.target;if(!t.closest)return;
+  if(t.closest('#btnChk')||t.closest('#shareSt')){chkOpen();return}
+  if(t.closest('#chkClose')||t===$('#ovChk')){$('#ovChk').hidden=true;return}
+  if(t.closest('#chkAgain')){chkRun(false);return}
+  if(t.closest('#chkWrite')){var w=$('#chkWrite');if(!chkArm){chkArm=true;w.textContent='تأكيد: سيُكتب سطر اختبار واحد في الـSheet';return}chkArm=false;w.textContent='اختبار الكتابة (اختياري)';chkRun(true)}});
+document.addEventListener('keydown',function(ev){if(ev.key==='Escape')$('#ovChk').hidden=true;if((ev.key==='Enter'||ev.key===' ')&&ev.target&&ev.target.id==='shareSt'){ev.preventDefault();chkOpen()}});
+(function(){var s=$('#shareSt');if(s){s.setAttribute('role','button');s.setAttribute('tabindex','0');s.title='اضغط لفحص الاتصال والحفظ'}})();
 var GDV='v2';
 function gdRole(){var r=myRole();return r==='lead'?'lead':(r==='obs'?'obs':'mem')}
 function gdSteps(){var r=gdRole(),V2=GDV==='v2',o=[];
@@ -21112,6 +21171,7 @@ function gdSteps(){var r=gdRole(),V2=GDV==='v2',o=[];
     o.push(['٢ · وزّع المعايير على الفريق','في «توزيع المعايير على الفريق» خمسة أزرار: نموذج الفريق، والمجموعات المترابطة، ومتوازن، وحسب رحلة المتدرب، وحسب الجهة في المنشأة. اضغط أحدها لتظهر معاينة، ثم «اعتماد هذا التوزيع». في كل خيار يأخذ الرئيس الأقل حملًا. وشرح كل تقسيم في تبويب «مجموعات المعايير وترابطها».']);
     o.push(['٠ · عيّن المعايشين','لكل معايش (تحت المعايشة) اختر العضو الذي سيكون معه، ثم معيار التدريب من معاييره. يكتب المعايش ويرصد الدرجة في ذلك المعيار فقط، ثم يراجعه العضو المسؤول ويعتمده بزر «اعتماد مراجعتي». تتابع حالة كل معيار (لم يبدأ، يكتب الآن، بانتظار مراجعة العضو، مُراجَع من العضو) في بطاقة المعيار وفي «ملخص الزيارة».']);
     o.push(['٣ · شارك الفريق','اضغط «مشاركة الفريق» وانسخ رابط الأعضاء وأرسله لهم بالواتساب أو البريد. رابط الرئيس خاص بك وحدك ولا ترسله لأحد.']);
+    o.push(['٠ · افحص النموذج','اضغط «فحص النموذج» في أعلى الصفحة قبل الزيارة. يفحص الحفظ والاتصال بالـSheet والرمز السري وعدد الأعضاء والتعديلات المعلّقة، ويضع ✔ أو ✘ لكل بند مع سبب أي خلل. الفحص للقراءة فقط، وفيه اختبار كتابة اختياري يطلب تأكيدك. ويستطيع كل عضو الضغط على عبارة «مشترك … متصل» أعلى صفحته ليفحص اتصاله وحفظه.']);
     if(V2){
       o.push(['٤ · المرحلة المكتبية ثم الميدانية','يعبّئ الفريق التقييم المكتبي بحرية قبل الزيارة. عند بدء الزيارة اضغط «تجميد التقييم المكتبي وبدء المرحلة الميدانية». بعدها يتطلب أي تغيير في درجة المراجع سببًا يُكتب، وتبقى الدرجة المكتبية ظاهرة بجانبها. ويمكن تسجيل حالة كل شاهد (وصل / لم يصل).']);
       o.push(['٥ · اعتمد كل معيار','تحت عنوان كل معيار زر «اعتماد نهائي وقفل المعيار». ينبّهك إن بقيت درجات ناقصة أو تغييرات بلا سبب أو توصيات غير مكتوبة، ثم يقفل المعيار فلا يعدّله أحد غيرك.']);
@@ -21132,7 +21192,7 @@ function gdSteps(){var r=gdRole(),V2=GDV==='v2',o=[];
     o.push(['٠ · لوحة «مهمتي» والعرض المبسّط','في أعلى تبويب النموذج لوحة «مهمتي» تعرض معاييرك وتقدّمك وما ينتظرك، واضغط رقم المعيار لتنتقل إليه. وزر «عرض مبسّط» يعرض معيارًا فرعيًا واحدًا في كل شاشة مع أزرار كبيرة للدرجة، مناسب للتعبئة بالجوال. يمكنك الرجوع للعرض الكامل في أي وقت.']);
     if(V2)o.push(['٤ · المرحلة الميدانية','يعمل الفريق مكتبيًا أولًا. بعد أن يجمّد الرئيس التقييم المكتبي يتطلب أي تغيير في درجتك سببًا يُكتب، وتبقى الدرجة المكتبية ظاهرة بجانبها. وإذا اعتمد الرئيس المعيار نهائيًا يُقفل ولا يُعدَّل.']);
     o.push([(V2?'٥':'٤')+' · طلب الشواهد من المنشأة','من تبويب «طلب الشواهد من المنشأة» أضف الشاهد المطلوب لمعاييرك فقط، واختر المعيار الفرعي والمستوى. يصدّر الرئيس النموذج للمنشأة'+(V2?'، وتسجّل حالة وصول كل شاهد.':'.')]);
-    o.push([(V2?'٦':'٥')+' · الحفظ والاتصال','إذا ظهرت «تعذّر الاتصال» فلا تقلق: تعبئتك محفوظة عندك وتُرسل تلقائيًا عند عودة الاتصال. وإذا عدّل زميل الخانة نفسها فيُعتمد آخر تعديل.'])
+    o.push([(V2?'٦':'٥')+' · الحفظ والاتصال','إذا ظهرت «تعذّر الاتصال» فلا تقلق: تعبئتك محفوظة عندك وتُرسل تلقائيًا عند عودة الاتصال. وإذا عدّل زميل الخانة نفسها فيُعتمد آخر تعديل. ولفحص الاتصال والحفظ اضغط على عبارة «مشترك … متصل» أعلى الصفحة.'])
   }
   var _c=0,_D='٠١٢٣٤٥٦٧٨٩';o.forEach(function(x,i){if(i&&/^[٠-٩]+ · /.test(x[0])){_c++;x[0]=String(_c).replace(/\d/g,function(d){return _D.charAt(d)})+x[0].replace(/^[٠-٩]+/,'')}});return o}
 var gdI=0,gdFirst=false;
