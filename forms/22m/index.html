@@ -21347,13 +21347,13 @@ function buildReqDocx(){var D=window.docx;if(!D)throw new Error('docx');
   var bd={style:D.BorderStyle.SINGLE,size:4,color:'7F8C8D'},borders={top:bd,bottom:bd,left:bd,right:bd};
   function C(t,o){o=o||{};return new D.TableCell({children:Ps(t,{size:o.size||24,bold:o.bold,al:o.al,sa:20}),width:{size:o.w,type:DX},columnSpan:o.span,rowSpan:o.rs,verticalAlign:D.VerticalAlign.CENTER,shading:o.fill?{type:D.ShadingType.CLEAR,fill:o.fill,color:'auto'}:undefined,borders:borders,margins:{top:60,bottom:60,left:90,right:90}})}
   function T(cw,rows){var w=cw.reduce(function(a,b){return a+b},0);return new D.Table({visuallyRightToLeft:true,width:{size:w,type:DX},columnWidths:cw,rows:rows.map(function(r){return new D.TableRow({children:r,cantSplit:false})})})}
-  var RED='C00000',HEAD2='D9E2F3',rows=rqRows(),s=S.setup,fac=(s.facility||'').trim()||'المعهد',kids=[];
+  var RED='C00000',HEAD2='D9E2F3',rows=rqRows(),s=S.setup,fac=(s.facility||'').trim()||'المنشأة المزارة',kids=[];
   var branch=(S.f['rq.meta.branch']||'').trim(),tm=(S.f['rq.meta.time']||'').trim()||'الخامسة مساءً',dd=pd(S.f['rq.meta.date']),dtxt='......';
   if(dd){try{dtxt=fW.format(dd)+' '+fG.format(dd)+' م'}catch(e){dtxt=S.f['rq.meta.date']}}
   kids.push(P(fac,{size:40,bold:true,al:AL.CENTER,sa:60}));
   kids.push(P('أدلة وشواهد مطلوب توفيرها قبل نهاية',{size:34,al:AL.CENTER,sa:40}));
   kids.push(P('يوم '+dtxt+' (الساعة '+tm+')',{size:34,al:AL.CENTER,sa:120}));
-  kids.push(P('يجب على المعهد مراعاة ما يلي قبل إرفاق الشواهد وذلك من أجل تسهيل العمل:',{size:24,bold:true,color:RED,sa:60}));
+  kids.push(P('يجب على '+facKind()+' مراعاة ما يلي قبل إرفاق الشواهد وذلك من أجل تسهيل العمل:',{size:24,bold:true,color:RED,sa:60}));
   ['يجب أن تكون جميع الشواهد التي سوف يتم إرفاقها خاصة '+(branch?'بـ'+branch:'بالفرع المزار')+' وعدم إرفاق أي شاهد لا يخص الفرع.',
    'ترتيب الشواهد في ملف خاص وبحسب الترقيم لكل معيار (سوف يتم إرسال رابط من أجل رفع الشواهد عليه).',
    'في حال تم رفع الشاهد من قبل على منصة المرقب نرجو عدم رفعه مرة أخرى، وتأشير «متوفر» و«لم يتم الإرفاق» في النموذج.',
@@ -21661,6 +21661,8 @@ document.addEventListener('focusout',function(ev){var e=ev.target;if(!e||!e.getA
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){$('#ov').hidden=true;$('#ov2').hidden=true;$('#ov3').hidden=true}});
 
 /* ---------- boot ---------- */
+function facKind(){var m=/^(?:ال)?(معهد|كلية|مركز|أكاديمية|اكاديمية|مدرسة|جامعة)/.exec((S.setup.facility||'').trim());return m?'ال'+(m[1]==='اكاديمية'?'أكاديمية':m[1]):'المنشأة'}
+(function(){var fe=$('#facility');if(!fe)return;var keep='',ph=fe.placeholder;fe.addEventListener('focus',function(){keep=fe.value;if(keep){fe.placeholder=keep;fe.value=''}});fe.addEventListener('blur',function(){if(!fe.value&&keep)fe.value=keep;fe.placeholder=ph})})();
 function bootAll(){
   $('#facility').value=S.setup.facility||'';$('#vdate').value=S.setup.date||'';$('#vdays').value=String(S.setup.days||2);
   renderDays();renderTeam();
