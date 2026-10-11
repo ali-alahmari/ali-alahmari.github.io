@@ -380,6 +380,7 @@ table.o.sum td{font-size:.97rem}
   .std.collapsed .subs{display:grid!important}
   .sub,.card{box-shadow:none;break-inside:avoid-page}
 }
+details.adv{border:1px dashed var(--line,#cfd8d6);border-radius:10px;padding:8px 12px;margin-top:10px}details.adv>summary{cursor:pointer;font-weight:700;color:var(--ink-2)}
 </style>
 </head>
 <body>
@@ -679,13 +680,15 @@ table.o.sum td{font-size:.97rem}
     </div>
     <div class="stepbox">
       <b>ثانياً: إرسال الدعوة للأعضاء</b>
-      <label class="lbl" for="shLink">رابط المشاركة (يعمل إذا رُفعت الصفحة على موقع)</label>
-      <div class="row"><input class="in" id="shLink" readonly dir="ltr" style="flex:1"><button class="btn" id="shCopyLink" type="button">نسخ الرابط</button></div>
-      <div id="shMemBox" hidden><label class="lbl" style="margin-top:10px">رابط شخصي لكل عضو (الأفضل: يثبّت اسم العضو ولا يستطيع تغييره)</label><div id="shMemList"></div><input id="shMemTmp" readonly style="position:absolute;opacity:0;pointer-events:none;height:1px" tabindex="-1"><div class="note">أرسل لكل عضو رابطه فقط. الرابط مرتبط بالعضو نفسه فلا يتأثر بتعديل كتابة اسمه. لا يظهر اسم رئيس الفريق هنا لأن رابطه هو «رابط الرئيس» أدناه (يفتح صلاحياتك من أي جهاز آخر، ولا يُرسل لأحد).</div></div>
+            <div id="shMemBox" hidden><label class="lbl" style="margin-top:10px">رابط شخصي لكل عضو (الأفضل: يثبّت اسم العضو ولا يستطيع تغييره)</label><div id="shMemList"></div><input id="shMemTmp" readonly style="position:absolute;opacity:0;pointer-events:none;height:1px" tabindex="-1"><div class="note">أرسل لكل عضو رابطه فقط. الرابط مرتبط بالعضو نفسه فلا يتأثر بتعديل كتابة اسمه. لا يظهر اسم رئيس الفريق هنا لأن رابطه هو «رابط الرئيس» أدناه (يفتح صلاحياتك من أي جهاز آخر، ولا يُرسل لأحد).</div></div>
       <div id="shLeadBox" hidden><label class="lbl" style="margin-top:10px">رابط الرئيس (احتفظ به لنفسك ولا ترسله لأحد: يتيح بدء زيارة جديدة)</label>
       <div class="row"><input class="in" id="shLead" readonly dir="ltr" style="flex:1"><button class="btn" id="shCopyLead" type="button">نسخ رابط الرئيس</button></div></div>
+      <details class="adv" id="shAdv"><summary>روابط عامة للجميع (غير موصى بها: تسمح لأي عضو باختيار أي اسم)</summary>
+      <label class="lbl" for="shLink">رابط المشاركة (يعمل إذا رُفعت الصفحة على موقع)</label>
+      <div class="row"><input class="in" id="shLink" readonly dir="ltr" style="flex:1"><button class="btn" id="shCopyLink" type="button">نسخ الرابط</button></div>
       <label class="lbl" for="shTok">رمز المشاركة (إن وزّعت ملف HTML بالبريد بدل رفعه على موقع)</label>
       <div class="row"><input class="in" id="shTok" readonly dir="ltr" style="flex:1"><button class="btn" id="shCopyTok" type="button">نسخ الرمز</button></div>
+      </details>
     </div>
     <div class="stepbox">
       <b>عضو يريد الانضمام</b>
@@ -701,7 +704,7 @@ table.o.sum td{font-size:.97rem}
     <p style="color:var(--ink-2);font-size:.95rem">يُفرَّغ النموذج لتعبئة زيارة أخرى بنفس الصفحة والفريق. اختر ما تريد حفظه قبل التفريغ.</p>
     <label class="chk"><input type="checkbox" id="nvWord" checked> حفظ تقرير Word للزيارة الحالية</label>
     <label class="chk"><input type="checkbox" id="nvJson" checked> حفظ نسخة JSON احتياطية</label>
-    <label class="chk"><input type="checkbox" id="nvTeam" checked> إبقاء أسماء الفريق وتوزيع المعايير</label>
+    <label class="chk"><input type="checkbox" id="nvTeam" checked> إبقاء أسماء الفريق وتوزيع المعايير (ألغِ التحديد إن كان فريق الزيارة القادمة مختلفاً)</label>
     <label class="chk" id="nvRotRow"><input type="checkbox" id="nvRot"> تغيّر أعضاء الفريق: أنشئ رابطًا جديدًا وعطّل الروابط القديمة</label>
     <p id="nvNote" style="color:var(--ink-2);font-size:.9rem"></p>
     <div class="row"><button class="btn pri" id="nvGo" type="button">ابدأ زيارة جديدة</button><button class="btn ghost" id="nvClose" type="button">إلغاء</button><span id="nvMsg" style="font-weight:700"></span></div>
@@ -20977,10 +20980,10 @@ function renderFin(){var lead=myRole()==='lead';STDS.forEach(function(s){var el=
 async function endVisit(){if(myRole()!=='lead')return;var open=[];STDS.forEach(function(x){if(!finalOf(x.n))open.push(x.n)});
   if(open.length&&!confirm('المعايير التالية لم تُعتمد نهائيًا: '+open.join('، ')+'\nيُفضّل اعتمادها قبل إنهاء الزيارة. هل تريد المتابعة بحفظ النسخ الآن؟'))return;
   var fac=S.setup.facility||'بيانات';
-  try{dl('نموذج-22م-'+fac+'.json',JSON.stringify(exportObj(),null,1),'application/json');dl('نموذج-22م-'+fac+'.csv',csv(),'text/csv;charset=utf-8')}catch(e){}
+  try{await dl('نموذج-22م-'+fac+'.json',JSON.stringify(exportObj(),null,1),'application/json');await wait(900);await dl('نموذج-22م-'+fac+'.csv',csv(),'text/csv;charset=utf-8');await wait(900)}catch(e){}
   try{await exportWord()}catch(e){}
-  try{if(rqRows().length)await exportReq()}catch(e){}
-  $('#nvNote').textContent='';alert('تم حفظ: تقرير Word، وملف البيانات (JSON)، وجدول CSV.\n\nقبل أن تغلق:\n١) انقل الملفات إلى مجلد باسم المنشأة وتاريخ الزيارة.\n٢) لا تحذف Google Sheet ولا رابط الرئيس.\n٣) عند الزيارة القادمة اضغط «زيارة جديدة» لتُؤرشف هذه الزيارة في ورقة جديدة.\nلاسترجاعها لاحقًا: افتح ورقة الأرشيف في الشيت، أو استورد ملف JSON من «حفظ ودمج البيانات».')}
+  try{if(rqRows().length){await wait(900);await exportReq()}}catch(e){}
+  $('#nvNote').textContent='';alert('تم طلب حفظ: تقرير Word، وملف البيانات (JSON)، وجدول CSV.\nإن ظهر في المتصفح طلب «تنزيل ملفات متعددة» (أعلى الصفحة) فاضغط «سماح» وإلا لن تُحفظ كلها، ثم تأكد من وجود الملفات في مجلد التنزيلات.\n\nقبل أن تغلق:\n١) انقل الملفات إلى مجلد باسم المنشأة وتاريخ الزيارة.\n٢) لا تحذف Google Sheet ولا رابط الرئيس.\n٣) عند الزيارة القادمة اضغط «زيارة جديدة» لتُؤرشف هذه الزيارة في ورقة جديدة.\nلاسترجاعها لاحقًا: افتح ورقة الأرشيف في الشيت، أو استورد ملف JSON من «حفظ ودمج البيانات».')}
 function doFinal(n){if(myRole()!=='lead')return;
   if(finalOf(n)){rqSet('meta','final'+n,'');save();updAll();toast('فُتح المعيار '+n);return}
   var is=finIssues(n);if(is.length&&!confirm('ملاحظات على المعيار '+n+': '+is.join('، ')+'.\nهل تعتمده وتقفله رغم ذلك؟'))return;
@@ -21328,7 +21331,8 @@ async function saveFile(name,blob){
   try{if(window.claude&&typeof window.claude.use==='function'){var d=await window.claude.use('downloads');if(d){try{await d.save({filename:name,data:blob});return 'saved'}catch(e){if(e&&e.code==='declined')return 'declined';if(e&&e.code==='rejected_extension')return 'fail'}}}}catch(e){}
   try{var u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(u);a.remove()},800);return 'link'}catch(e){return 'fail'}}
 function reportSaved(r,what){if(r==='saved'||r==='link')toast('تم طلب حفظ '+what);else if(r==='declined')toast('أُلغي الحفظ');else{toast('تعذّر الحفظ هنا');msg('تعذّر حفظ الملف في هذا العرض؛ جرّب الملف المستقل أو «نسخ البيانات».')}}
-function dl(name,text,type){saveFile(name,new Blob([text],{type:type})).then(function(r){reportSaved(r,'الملف');if(r==='link')msg('تم طلب التنزيل. إن لم يبدأ فاستخدم «نسخ البيانات».')})}
+function wait(ms){return new Promise(function(r){setTimeout(r,ms)})}
+function dl(name,text,type){return saveFile(name,new Blob([text],{type:type})).then(function(r){reportSaved(r,'الملف');if(r==='link')msg('تم طلب التنزيل. إن لم يبدأ فاستخدم «نسخ البيانات».')})}
 function parseImp(txt){var o=JSON.parse(txt);return norm(o&&o.state?o.state:o)}
 function applyImport(txt){try{S=parseImp(txt);S.ui.tab=S.ui.tab||'form';saveNow();bootAll();pushAll();msg('تم استبدال البيانات.');toast('تم الاستيراد')}catch(e){msg('تعذّر قراءة البيانات: تأكد من لصق نص JSON كاملاً.')}}
 function mergeImport(txt){try{var I=parseImp(txt),n=0;
@@ -21658,7 +21662,7 @@ async function shConnect(url,code,seed){SH.url=url.trim();SH.code=code||'';
 function nvCan(){if(SH.on)return SH.seed;if(SY.on)return SY.admin||SY.can;return true}
 async function newVisit(){var rotated=0;var go=$('#nvGo');go.disabled=true;var msgEl=$('#nvMsg');msgEl.textContent='جارٍ التنفيذ…';
   try{var old=S,label='زيارة '+safeName(old.setup.facility||'بدون اسم')+' '+(old.setup.date||'');
-    if($('#nvWord').checked&&window.docx){await exportWord()}
+    if($('#nvWord').checked&&window.docx){await exportWord();await wait(900)}
     if($('#nvJson').checked){await saveFile('نسخة احتياطية - '+safeName(old.setup.facility||'زيارة')+'.json',new Blob([JSON.stringify(exportObj(),null,1)],{type:'application/json'}))}
     if(SH.on){var rot=$('#nvRot').checked,nc='';if(rot){var ar=new Uint8Array(9);crypto.getRandomValues(ar);nc=Array.from(ar,function(x){return'abcdefghjkmnpqrstuvwxyz23456789'[x%31]}).join('')}var rr=await fetch(SH.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({code:SH.code,archive:label.slice(0,80),newCode:nc||undefined,ops:[]})});var jj=await rr.json();if(!jj||!jj.ok)throw new Error('archive');if(rot){if(jj.code===nc){SH.code=nc;cfgSave();rotated=1}else rotated=-1}}
     else if(SY.on&&DB&&SY.admin){var qs=await DB.collection('entries').get();for(var i=0;i<qs.docs.length;i++){await DB.collection('entries').doc(qs.docs[i].id).delete()}SY.known={};SY.meta={}}
