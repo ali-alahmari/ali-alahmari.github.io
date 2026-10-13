@@ -705,7 +705,7 @@ details.adv{border:1px dashed var(--line,#cfd8d6);border-radius:10px;padding:8px
     <label class="chk"><input type="checkbox" id="nvWord" checked> حفظ تقرير Word للزيارة الحالية</label>
     <label class="chk"><input type="checkbox" id="nvJson" checked> حفظ نسخة JSON احتياطية</label>
     <label class="chk"><input type="checkbox" id="nvTeam" checked> إبقاء أسماء الفريق وتوزيع المعايير (ألغِ التحديد إن كان فريق الزيارة القادمة مختلفاً)</label>
-    <label class="chk" id="nvRotRow"><input type="checkbox" id="nvRot"> تغيّر أعضاء الفريق: أنشئ رابطًا جديدًا وعطّل الروابط القديمة</label>
+    <label class="chk" id="nvRotRow"><input type="checkbox" id="nvRot" autocomplete="off"> تغيّر أعضاء الفريق: أنشئ رابطًا جديدًا وعطّل الروابط القديمة</label>
     <p id="nvNote" style="color:var(--ink-2);font-size:.9rem"></p>
     <div class="row"><button class="btn pri" id="nvGo" type="button">ابدأ زيارة جديدة</button><button class="btn ghost" id="nvClose" type="button">إلغاء</button><span id="nvMsg" style="font-weight:700"></span></div>
   </div>
@@ -21164,7 +21164,7 @@ async function chkRun(write){if(chkBusy)return;chkBusy=true;var rows=[],bad=0,wa
     var q=Object.keys(SH.q).length;
     if(!q&&!SH.err)R(true,'التعديلات المعلّقة','كل ما كتبته أُرسل إلى الـSheet');
     else R(SH.err?false:null,'التعديلات المعلّقة',q+' تعديل بانتظار الإرسال'+(SH.err?'، وآخر محاولة فشلت ('+(SH.ek==='code'?'الرمز':'الشبكة')+'). سيعاود النموذج الإرسال تلقائيًا':''));
-    if(write&&role==='lead'){var val=String(Date.now());try{var r3=await fetch(SH.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({code:SH.code,ops:[{k:CHK_PFX+'z|selftest',v:val,b:'فحص'}]})});var j3=await r3.json();if(!j3||!j3.ok)throw new Error('w');
+    if(write&&role==='lead'){var val=String(Date.now());try{var r3=await fetch(SH.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({code:SH.code,lead:SH.lead||undefined,ops:[{k:CHK_PFX+'z|selftest',v:val,b:'فحص'}]})});var j3=await r3.json();if(!j3||!j3.ok)throw new Error('w');
       var r4=await fetch(shUrl('action=pull&since='+(+j2.t||0)));var j4=await r4.json(),back=(j4.rows||[]).filter(function(x){return String(x[0])===CHK_PFX+'z|selftest'&&String(x[1])===val}).length;
       R(back>0,'اختبار الكتابة','كُتب سطر اختبار واحد (z|selftest) وقُرئ من جديد'+(back>0?': سليم':': لم يُقرأ، راجع نشر الـSheet'))}
     catch(e){R(false,'اختبار الكتابة','فشلت الكتابة على الـSheet. تأكد أن النشر «تنفيذ كـ: أنا» و«أي شخص»')}}
@@ -21540,7 +21540,7 @@ async function exportWord(mode){var b=$('#btnWord');if(!window.docx){toast('تع
   bs.forEach(function(x,i){x.disabled=false;x.textContent=olds[i]})}
 
 /* ---------- shared team mode (db capability) ---------- */
-var SH={on:false,url:'',code:'',since:0,q:{},tm:null,busy:false,flushing:false,seeded:false,seed:false,me:'',lock:false,err:0,poll:null,known:{}};
+var SH={on:false,url:'',code:'',lead:'',rec:0,since:0,q:{},tm:null,busy:false,flushing:false,seeded:false,seed:false,me:'',lock:false,err:0,poll:null,known:{}};
 var DEF={};
 var DB=null,SY={on:false,can:true,uid:null,user:null,known:{},pend:{},busy:{},timers:{},mainT:null,mainBusy:false,mainDirty:false,mainPending:false,firstEnt:false,remoteMain:false,meta:{},admin:false};
 function setShare(st){applyRole();var el=$('#shareSt');if(!el)return;el.classList.remove('off','busy');var tx=el.lastChild;
@@ -21611,16 +21611,16 @@ async function wipeShared(){if(!SY.on||!SY.admin){S=fresh();saveNow();bootAll();
 var GS_TPL="// نموذج 22م - خدمة مزامنة الفريق (Google Apps Script)\n// الصق هذا الكود كما هو في محرر Apps Script المرتبط بملف Google Sheet.\nvar TEAM_CODE = '__CODE__';   // رمز الفريق السري (يجب أن يطابق الرمز في الصفحة؛ اتركه فارغاً إن لم تستخدم رمزاً)\nvar SHEET_NAME = 'data';\n\nfunction sheet_() {\n  var ss = SpreadsheetApp.getActiveSpreadsheet();\n  var s = ss.getSheetByName(SHEET_NAME);\n  if (!s) {\n    s = ss.insertSheet(SHEET_NAME);\n    s.getRange('A:B').setNumberFormat('@');\n    s.appendRow(['key', 'value', 't', 'by']);\n  }\n  return s;\n}\nfunction out_(o) {\n  return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);\n}\nfunction code_() {\n  return PropertiesService.getScriptProperties().getProperty('code') || TEAM_CODE;\n}\nfunction lastT_() {\n  return Number(PropertiesService.getScriptProperties().getProperty('lastT') || 0);\n}\nfunction doGet(e) {\n  var p = (e && e.parameter) || {};\n  var cc = code_();\n  if (cc && p.code !== cc) return out_({ error: 'code' });\n  if (p.action === 'ping') return out_({ ok: true, t: lastT_() });\n  var since = Number(p.since || 0), last = lastT_();\n  if (last <= since) return out_({ t: last, rows: [] });\n  var v = sheet_().getDataRange().getValues(), rows = [];\n  for (var i = 1; i < v.length; i++) {\n    if (Number(v[i][2]) > since) rows.push([v[i][0], v[i][1], Number(v[i][2]), v[i][3]]);\n  }\n  return out_({ t: last, rows: rows });\n}\nfunction doPost(e) {\n  var body = {};\n  try { body = JSON.parse(e.postData.contents); } catch (err) { return out_({ error: 'bad' }); }\n  var cc = code_();\n  if (cc && body.code !== cc) return out_({ error: 'code' });\n  var lock = LockService.getScriptLock();\n  lock.waitLock(20000);\n  try {\n    var s = sheet_(), n = s.getLastRow(), idx = {};\n    if (body.archive) {   // أرشفة الزيارة الحالية في ورقة جديدة ثم تفريغ القيم\n      var ss = SpreadsheetApp.getActiveSpreadsheet();\n      var base = String(body.archive).replace(/[\\[\\]\\*\\?:\\/\\\\]/g, ' ').slice(0, 90), nm = base, c = 1;\n      while (ss.getSheetByName(nm)) { c++; nm = base + ' (' + c + ')'; }\n      s.copyTo(ss).setName(nm);\n      var tt = Math.max(Date.now(), lastT_() + 1);\n      if (n > 1) {\n        var blank = [];\n        for (var r = 0; r < n - 1; r++) blank.push(['', tt, '']);\n        s.getRange(2, 2, n - 1, 3).setValues(blank);\n      }\n      PropertiesService.getScriptProperties().setProperty('lastT', String(tt));\n      if (body.newCode) PropertiesService.getScriptProperties().setProperty('code', String(body.newCode));\n      return out_({ ok: true, t: tt, code: body.newCode ? String(body.newCode) : undefined });\n    }\n    if (n > 1) {\n      var keys = s.getRange(2, 1, n - 1, 1).getValues();\n      for (var i = 0; i < keys.length; i++) idx[keys[i][0]] = i + 2;\n    }\n    var t = lastT_();\n    (body.ops || []).forEach(function (op) {\n      t = Math.max(Date.now(), t + 1);\n      var val = String(op.v == null ? '' : op.v).slice(0, 45000);\n      var row = idx[op.k];\n      if (!row) { n++; row = n; idx[op.k] = n; }\n      s.getRange(row, 1, 1, 4).setValues([[String(op.k), val, t, String(op.b || '')]]);\n    });\n    PropertiesService.getScriptProperties().setProperty('lastT', String(t));\n    return out_({ ok: true, t: t });\n  } finally {\n    lock.releaseLock();\n  }\n}\n";
 var CFGK='etec22m.sync2';
 function cfgLoad(){try{return JSON.parse(localStorage.getItem(CFGK)||'null')}catch(e){return null}}
-function cfgSave(){try{localStorage.setItem(CFGK,JSON.stringify({u:SH.url,c:SH.code,me:SH.me,seed:SH.seed,lock:SH.lock}))}catch(e){}}
+function cfgSave(){try{localStorage.setItem(CFGK,JSON.stringify({u:SH.url,c:SH.code,k:SH.lead,me:SH.me,seed:SH.seed,lock:SH.lock}))}catch(e){}}
 function cfgClear(){try{localStorage.removeItem(CFGK)}catch(e){}}
 function encShare(){return btoa(unescape(encodeURIComponent(JSON.stringify({u:SH.url,c:SH.code}))))}
 function decShare(s){try{s=String(s||'').trim();var m=/[#&?]s=([^&\s]+)/.exec(s);if(m)s=decodeURIComponent(m[1]);var o=JSON.parse(decodeURIComponent(escape(atob(s))));return(o&&typeof o.u==='string'&&/^https:\/\//.test(o.u))?o:null}catch(e){return null}}
-function shUrl(q){return SH.url+(SH.url.indexOf('?')<0?'?':'&')+q+(SH.code?'&code='+encodeURIComponent(SH.code):'')}
+function shUrl(q){return SH.url+(SH.url.indexOf('?')<0?'?':'&')+q+(SH.code?'&code='+encodeURIComponent(SH.code):'')+(SH.lead?'&lead='+encodeURIComponent(SH.lead):'')}
 function shMeName(){var m=mem(SH.me);return m&&m.name.trim()?m.name.trim():''}
 function shQ(k,v){if(!SH.on)return;if(!SH.seeded&&!SH.seed)return;SH.q[k]=v;clearTimeout(SH.tm);SH.tm=setTimeout(shFlush,800);setShare('saving')}
 async function shFlush(){if(SH.flushing){SH.tm=setTimeout(shFlush,500);return}var keys=Object.keys(SH.q);if(!keys.length||!SH.on)return;SH.flushing=true;
   var snap={},ops=keys.map(function(k){var v=SH.q[k];snap[k]=v;if(v===null)v=JSON.stringify(mainPayload());return {k:'v2:'+k,v:v,b:shMeName()}});
-  try{var r=await fetch(SH.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({code:SH.code,ops:ops})});var j=await r.json();if(!j||!j.ok)throw new Error(j&&j.error||'bad');
+  try{var r=await fetch(SH.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({code:SH.code,lead:SH.lead||undefined,ops:ops})});var j=await r.json();if(!j||!j.ok)throw new Error(j&&j.error||'bad');
     keys.forEach(function(k){if(SH.q[k]===snap[k])delete SH.q[k]});SH.err=0;SH.flushing=false;if(Object.keys(SH.q).length)shFlush();else setShare('ok')}
   catch(e){SH.flushing=false;SH.err++;SH.ek=(e&&e.message==='code')?'code':'net';setShare('err');clearTimeout(SH.tm);SH.tm=setTimeout(shFlush,Math.min(30000,3000*SH.err))}}
 async function shPull(){if(!SH.on||SH.busy)return;SH.busy=true;
@@ -21636,15 +21636,20 @@ async function shPull(){if(!SH.on||SH.busy)return;SH.busy=true;
     SH.err=0;if(!Object.keys(SH.q).length)setShare('ok')}
   catch(e){SH.err++;SH.ek=(e&&e.message==='code')?'code':'net';setShare('err')}
   SH.busy=false}
-function shStart(){if(!SH.on)return;clearInterval(SH.poll);SH.poll=setInterval(function(){if(!document.hidden)shPull()},8000);setShare('ok');shPull()}
+function shLeadSync(){if(!SH.on||!SH.seed||SH.rec)return;SH.rec=1;(async function(){try{
+  if(!SH.lead){var ar=new Uint8Array(12);crypto.getRandomValues(ar);var key=Array.from(ar,function(x){return'abcdefghjkmnpqrstuvwxyz23456789'[x%31]}).join('');
+    var r=await fetch(SH.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({code:SH.code,setLead:key})});var j=await r.json();if(j&&j.ok){SH.lead=key;cfgSave();shLinks()}}
+  else{var r2=await fetch(SH.url+'?action=recover&lead='+encodeURIComponent(SH.lead));var j2=await r2.json();if(j2&&j2.ok&&j2.code&&j2.code!==SH.code){SH.code=j2.code;cfgSave();SH.err=0;shLinks();shPull()}}
+  }catch(e){}SH.rec=0})()}
+function shStart(){if(!SH.on)return;shLeadSync();clearInterval(SH.poll);SH.poll=setInterval(function(){if(!document.hidden)shPull()},8000);setShare('ok');shPull()}
 document.addEventListener('visibilitychange',function(){if(!document.hidden&&SH.on)shPull()});window.addEventListener('hashchange',function(){if(/[#&]s=/.test(location.hash))location.reload()});
 function shBackupReset(){try{localStorage.setItem('etec22m.backup.'+Date.now(),JSON.stringify(S))}catch(e){}var ui=S.ui;S=fresh();S.ui=ui;saveNow()}
 function shInit(){var c=cfgLoad(),o=decShare(location.hash);
-  if(o){if(!c||c.u!==o.u)shBackupReset();SH.url=o.u;SH.code=o.c||'';SH.me=(c&&c.u===o.u)?(c.me||''):'';SH.lock=(c&&c.u===o.u)?!!c.lock:false;if(o.m){SH.me=String(o.m);SH.lock=true}SH.seed=!!o.l;if(SH.seed)SH.lock=false;SH.on=true;cfgSave();try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}}
-  else if(c&&c.u){SH.url=c.u;SH.code=c.c||'';SH.me=c.me||'';SH.seed=!!c.seed;SH.lock=!!c.lock&&!c.seed;SH.on=true}}
+  if(o){if(!c||c.u!==o.u)shBackupReset();SH.url=o.u;SH.code=o.c||'';SH.lead=o.k||((c&&c.u===o.u)?(c.k||''):'');SH.me=(c&&c.u===o.u)?(c.me||''):'';SH.lock=(c&&c.u===o.u)?!!c.lock:false;if(o.m){SH.me=String(o.m);SH.lock=true}SH.seed=!!o.l;if(SH.seed)SH.lock=false;SH.on=true;cfgSave();try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}}
+  else if(c&&c.u){SH.url=c.u;SH.code=c.c||'';SH.lead=c.k||'';SH.me=c.me||'';SH.seed=!!c.seed;SH.lock=!!c.lock&&!c.seed;SH.on=true}}
 function shMsg(t,bad){var e=$('#shMsg');e.textContent=t;e.style.color=bad?'var(--bad)':'var(--ok)'}
 var LEAD_SEL=['#p-groups .presets','#pvBox','#addObs','#setup .grid.g3','#daysBox','#teamBox','#addMember','#quickBox','#presetBox','#distGrid'];
-function shLinks(){applyRole();if(!SH.on){shMemLinks();$('#shLink').value='';$('#shTok').value='';$('#shLeadBox').hidden=true;return}var base=location.href.split('#')[0];$('#shTok').value=encShare();$('#shLink').value=base+'#s='+encodeURIComponent(encShare());$('#shLeadBox').hidden=!SH.seed;shMemLinks();if(SH.seed){var tl=btoa(unescape(encodeURIComponent(JSON.stringify({u:SH.url,c:SH.code,l:1}))));$('#shLead').value=base+'#s='+encodeURIComponent(tl)}}
+function shLinks(){applyRole();if(!SH.on){shMemLinks();$('#shLink').value='';$('#shTok').value='';$('#shLeadBox').hidden=true;return}var base=location.href.split('#')[0];$('#shTok').value=encShare();$('#shLink').value=base+'#s='+encodeURIComponent(encShare());$('#shLeadBox').hidden=!SH.seed;shMemLinks();if(SH.seed){var tl=btoa(unescape(encodeURIComponent(JSON.stringify({u:SH.url,c:SH.code,l:1,k:SH.lead||undefined}))));$('#shLead').value=base+'#s='+encodeURIComponent(tl)}}
 function memLink(id){var base=location.href.split('#')[0];var t=btoa(unescape(encodeURIComponent(JSON.stringify({u:SH.url,c:SH.code,m:id}))));return base+'#s='+encodeURIComponent(t)}
 function shMemLinks(){var b=$('#shMemList');if(!b)return;var bx=$('#shMemBox');bx.hidden=!(SH.on&&SH.seed);if(bx.hidden)return;var h='',n=0;team().forEach(function(m,i){if(!m.name.trim()||m.role==='رئيس الفريق')return;n++;h+='<div class="row" style="margin:4px 0"><b style="flex:1">'+esc(m.name.trim())+(isObs(m)?' <span class="note">(تحت المعايشة)</span>':'')+'</b><button class="btn" type="button" data-mlink="'+esc(m.id)+'">نسخ رابطه</button></div>'});b.innerHTML=h||'<span class="note">أضف أسماء الأعضاء في جدول الفريق أولاً، وستظهر هنا أزرار روابطهم.</span>'}
 document.addEventListener('click',function(ev){var b=ev.target.closest&&ev.target.closest('[data-mlink]');if(!b)return;var t=$('#shMemTmp');t.value=memLink(b.getAttribute('data-mlink'));copyText(t,'تم نسخ رابط العضو')});
@@ -21664,7 +21669,7 @@ async function newVisit(){var rotated=0;var go=$('#nvGo');go.disabled=true;var m
   try{var old=S,label='زيارة '+safeName(old.setup.facility||'بدون اسم')+' '+(old.setup.date||'');
     if($('#nvWord').checked&&window.docx){await exportWord();await wait(900)}
     if($('#nvJson').checked){await saveFile('نسخة احتياطية - '+safeName(old.setup.facility||'زيارة')+'.json',new Blob([JSON.stringify(exportObj(),null,1)],{type:'application/json'}))}
-    if(SH.on){var rot=$('#nvRot').checked,nc='';if(rot){var ar=new Uint8Array(9);crypto.getRandomValues(ar);nc=Array.from(ar,function(x){return'abcdefghjkmnpqrstuvwxyz23456789'[x%31]}).join('')}var rr=await fetch(SH.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({code:SH.code,archive:label.slice(0,80),newCode:nc||undefined,ops:[]})});var jj=await rr.json();if(!jj||!jj.ok)throw new Error('archive');if(rot){if(jj.code===nc){SH.code=nc;cfgSave();rotated=1}else rotated=-1}}
+    if(SH.on){var rot=$('#nvRot').checked,nc='';if(rot){var ar=new Uint8Array(9);crypto.getRandomValues(ar);nc=Array.from(ar,function(x){return'abcdefghjkmnpqrstuvwxyz23456789'[x%31]}).join('')}var rr=await fetch(SH.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({code:SH.code,lead:SH.lead||undefined,archive:label.slice(0,80),newCode:nc||undefined,ops:[]})});var jj=await rr.json();if(!jj||!jj.ok)throw new Error('archive');if(rot){if(jj.code===nc){SH.code=nc;cfgSave();rotated=1}else rotated=-1}}
     else if(SY.on&&DB&&SY.admin){var qs=await DB.collection('entries').get();for(var i=0;i<qs.docs.length;i++){await DB.collection('entries').doc(qs.docs[i].id).delete()}SY.known={};SY.meta={}}
     var keep=$('#nvTeam').checked;S=fresh();S.ui=old.ui;S.ui.collapsed=fresh().ui.collapsed;
     if(keep){S.setup.team=old.setup.team;S.setup.days=old.setup.days;S.mode=old.mode;S.assign=old.assign;S.subAssign={}}
