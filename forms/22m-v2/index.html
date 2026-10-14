@@ -454,6 +454,7 @@ details.adv{border:1px dashed var(--line,#cfd8d6);border-radius:10px;padding:8px
       <button class="btn sm" data-preset="C" type="button">٣ · متوازن مع تخفيف الرئيس</button>
       <button class="btn sm" data-preset="D" type="button">٤ · حسب رحلة المتدرب (١+٢+٣ · ٤+٥+٧ · ٦+٨)</button>
       <button class="btn sm" data-preset="E" type="button">٥ · حسب الجهة في المنشأة (١+٢+٨ · ٤+٥+٦ · ٣+٧)</button>
+      <button class="btn sm" data-preset="F" type="button">٦ · قلب التعليم والتعلم (١+٣ · ٤+٥+٧ · ٢+٦+٨)</button>
       <span class="note" id="modeNote"></span>
     </div>
     <div class="pv" id="pvBox" style="display:none"></div>
@@ -20847,7 +20848,7 @@ var LV=[{k:'e',ch:'و',name:'الوجود'},{k:'p',ch:'م',name:'الممارس�
 var F_ORG=[['org','رأي المنشأة','sel'],['ev','الأدلة والشواهد المرافقة','ta'],['desc','وصف الدليل','ta']];
 var F_REV=[['rev','رأي المراجع','sel'],['notes','الملحوظات والمبررات والمطلوب','ta'],['q','المقابلات (أسئلة)','ta']];
 var ORD5=['الأول','الثاني','الثالث','الرابع','الخامس'];
-var GROUPS={A:[[1,3],[2,6,7],[4,5,8]],B:[[2,8],[4,5,6],[1,3,7]],D:[[1,2,3],[4,5,7],[6,8]],E:[[1,2,8],[4,5,6],[3,7]]};
+var GROUPS={A:[[1,3],[2,6,7],[4,5,8]],B:[[2,8],[4,5,6],[1,3,7]],F:[[1,3],[4,5,7],[2,6,8]],D:[[1,2,3],[4,5,7],[6,8]],E:[[1,2,8],[4,5,6],[3,7]]};
 var ROLES=['رئيس الفريق','مقيّم','مقيّم مساعد','منسّق','تحت المعايشة'];var OBS='تحت المعايشة';
 var KEY='etec22m.v2';
 var $=function(s,r){return (r||document).querySelector(s)};
@@ -20883,7 +20884,7 @@ function crew(){return team().filter(function(m){return !isObs(m)})}
 function leaderId(){var c=crew();for(var i=0;i<c.length;i++)if(c[i].role==='رئيس الفريق')return c[i].id;return c[0]?c[0].id:''}
 function crewOrd(){var c=crew(),l=leaderId();return c.filter(function(m){return m.id===l}).concat(c.filter(function(m){return m.id!==l}))}
 function computeMap(mode){var t=crewOrd(),m={},n=t.length;if(!n)return m;
-  if(mode==='A'||mode==='B'){GROUPS[mode].forEach(function(g,gi){g.forEach(function(s){m[s]=t[gi%n].id})})}
+  if(mode==='A'||mode==='B'||mode==='F'){GROUPS[mode].forEach(function(g,gi){g.forEach(function(s){m[s]=t[gi%n].id})})}
   else if(mode==='D'||mode==='E'){var un=GROUPS[mode].map(function(g){return g.slice()}),ld=function(u){return u.reduce(function(a,x){return a+STD[x].subs.length},0)};
     while(un.length<n){un.sort(function(a,b){return ld(b)-ld(a)});var big=un[0];if(big.length<2)break;var pr=[[],[]];big.slice().sort(function(a,b){return STD[b].subs.length-STD[a].subs.length}).forEach(function(x){pr[ld(pr[0])<=ld(pr[1])?0:1].push(x)});un.splice(0,1,pr[0],pr[1])}
     while(un.length>n){un.sort(function(a,b){return ld(a)-ld(b)});var u1=un.pop(),u2=un.pop();un.push(u1.concat(u2))}
@@ -20918,7 +20919,7 @@ function renderTeam(){var h='';team().forEach(function(m,i){
 function renderQuick(){var act=document.activeElement&&document.activeElement.id,h='';
   STDS.forEach(function(s){h+='<div class="qk"><span><b class="num">'+s.n+'</b> · '+esc(s.title)+'</span><select class="in" id="qs'+s.n+'" data-qs="'+s.n+'" aria-label="المسؤول عن المعيار '+s.n+'">'+memberOptions(effStd(s.n),'— غير محدد —')+'</select></div>'});
   $('#quickBox').innerHTML=h;if(act&&/^qs/.test(act)){var e=document.getElementById(act);if(e)e.focus()}
-  $('#modeNote').textContent=S.mode==='manual'?'التوزيع الحالي: يدوي':'التوزيع الحالي: '+({A:'نموذج الفريق',B:'المجموعات المترابطة',C:'متوازن مع تخفيف الرئيس',D:'حسب رحلة المتدرب',E:'حسب الجهة في المنشأة'})[S.mode]+' (يتحدث تلقائياً مع أسماء الفريق)'}
+  $('#modeNote').textContent=S.mode==='manual'?'التوزيع الحالي: يدوي':'التوزيع الحالي: '+({A:'نموذج الفريق',B:'المجموعات المترابطة',C:'متوازن مع تخفيف الرئيس',D:'حسب رحلة المتدرب',E:'حسب الجهة في المنشأة',F:'قلب التعليم والتعلم'})[S.mode]+' (يتحدث تلقائياً مع أسماء الفريق)'}
 function renderSetupSum(){var s=S.setup,d=pd(s.date),names=team().filter(function(m){return m.name.trim()}).map(function(m){return m.name.trim()});
   var parts=[];parts.push('<b>'+esc(s.facility||'لم تُحدد المنشأة بعد')+'</b>');
   if(d){var di=dayInfo(0);parts.push(esc(di.wd)+' <span class="num">'+esc(di.g)+'</span>')}
@@ -21183,7 +21184,7 @@ function gdSteps(){var r=gdRole(),V2=GDV==='v2',o=[];
   if(r==='lead'){
     o.push(['مرحبًا بك رئيسًا للفريق','النموذج يحفظ كل ما تكتبه تلقائيًا على جهازك ويزامنه مع ملف Google Sheet الخاص بفريقك. لا يوجد زر «حفظ». يمكنك العودة إلى هذا الدليل في أي وقت من زر «دليل الاستخدام» في أعلى الصفحة.']);
     o.push(['١ · جهّز بيانات الزيارة','أدخل اسم المنشأة وتاريخ بداية الزيارة وعدد الأيام، ثم أسماء أعضاء الفريق وأدوارهم (رئيس الفريق أو مقيّم أو تحت المعايشة). بعدها اختر اسمك من خانة «أنا».']);
-    o.push(['٢ · وزّع المعايير على الفريق','في «توزيع المعايير على الفريق» خمسة أزرار: نموذج الفريق، والمجموعات المترابطة، ومتوازن، وحسب رحلة المتدرب، وحسب الجهة في المنشأة. اضغط أحدها لتظهر معاينة، ثم «اعتماد هذا التوزيع». في كل خيار يأخذ الرئيس الأقل حملًا. وشرح كل تقسيم في تبويب «مجموعات المعايير وترابطها».']);
+    o.push(['٢ · وزّع المعايير على الفريق','في «توزيع المعايير على الفريق» ستة أزرار: نموذج الفريق، والمجموعات المترابطة، ومتوازن، وحسب رحلة المتدرب، وحسب الجهة في المنشأة، وقلب التعليم والتعلم. اضغط أحدها لتظهر معاينة، ثم «اعتماد هذا التوزيع». في كل خيار يأخذ الرئيس الأقل حملًا. وشرح كل تقسيم في تبويب «مجموعات المعايير وترابطها».']);
     o.push(['٠ · عيّن المعايشين','لكل معايش (تحت المعايشة) اختر العضو الذي سيكون معه، ثم معيار التدريب من معاييره. يكتب المعايش ويرصد الدرجة في ذلك المعيار فقط، ثم يراجعه العضو المسؤول ويعتمده بزر «اعتماد مراجعتي». تتابع حالة كل معيار (لم يبدأ، يكتب الآن، بانتظار مراجعة العضو، مُراجَع من العضو) في بطاقة المعيار وفي «ملخص الزيارة».']);
     o.push(['٣ · شارك الفريق','اضغط «مشاركة الفريق» وانسخ لكل عضو رابطه الشخصي (زر «نسخ رابطه» بجانب اسمه) وأرسله له وحده، فيثبَّت اسمه ولا يستطيع اختيار اسم غيره. رابط الرئيس خاص بك وحدك ولا ترسله لأحد.']);
     o.push(['٠ · افحص النموذج','اضغط «فحص النموذج» في أعلى الصفحة قبل الزيارة. يفحص الحفظ والاتصال بالـSheet والرمز السري وعدد الأعضاء والتعديلات المعلّقة، ويضع ✔ أو ✘ لكل بند مع سبب أي خلل. الفحص للقراءة فقط، وفيه اختبار كتابة اختياري يطلب تأكيدك. ويستطيع كل عضو الضغط على عبارة «مشترك … متصل» أعلى صفحته ليفحص اتصاله وحفظه.']);
@@ -21229,6 +21230,7 @@ var MODE_INFO={A:{t:'١ · نموذج الفريق (الافتراضي)',w:'ال
   B:{t:'٢ · المجموعات المترابطة',w:'كل عضو يغطي مجموعة مترابطة من المعايير فيرى الصورة كاملة. الرئيس يأخذ المعيارين ٢ (الحوكمة) و٨ (الاستدامة) وهما الأقرب لدوره القيادي، ويعادل حمله أقل عضو آخر.'},
   C:{t:'٣ · متوازن مع تخفيف الرئيس',w:'توزيع بالأرقام: يُحتسب حمل الرئيس بوزن ٠٫٧ من حمل العضو، فيأخذ أقل عدد من المعايير الفرعية مهما كان حجم الفريق.'},
   D:{t:'٤ · حسب رحلة المتدرب',w:'المعايير مجمّعة في ثلاث مجموعات: المدخلات (١+٢+٣)، والعمليات (٤+٥+٧)، والمخرجات والاستدامة (٦+٨). يأخذ الرئيس المجموعة الأخف حملًا، ويتقاسم الباقون بقية المجموعات، وإذا زاد عدد الأعضاء على ثلاثة تُقسَّم أثقل مجموعة بينهم. مناسب لشرح التقرير للمنشأة وفق مسار المتدرب من القبول إلى النتائج.'},
+  F:{t:'٦ · قلب التعليم والتعلم',w:'تُجمع معايير التعليم والتعلم معًا: تصميم البرامج وأدوات القياس (٤)، والتدريب والموارد (٥)، وتأهيل المدربين (٧) عند عضو واحد، فيُدقّق البرنامج وتنفيذه ومدربه في سياق واحد. أما الحوكمة (٢) وتحصيل المتدربين (٦) والاستدامة (٨) فعند العضو الآخر، ويأخذ الرئيس المعيارين ١ و٣. التقسيم بين العضوين ١٣ و١٦ معيارًا فرعيًا.'},
   E:{t:'٥ · حسب الجهة في المنشأة',w:'المعايير مجمّعة بحسب الجهة التي ستقابلها: الإدارة العليا والجودة (١+٢+٨)، والشؤون التدريبية (٤+٥+٦)، وشؤون المتدربين والكوادر (٣+٧). يأخذ الرئيس المجموعة الأخف حملًا، فيقابل كل عضو جهة واحدة ويطلب شواهدها دفعة واحدة. مناسب للمرحلة الميدانية، ويعتمد على هيكل المنشأة.'}};
 function showPreview(mode){var map=computeMap(mode),c=crewOrd(),plan=planAttach(map),box=$('#pvBox'),inf=MODE_INFO[mode],l=leaderId();
   var rows='',loads={};c.forEach(function(m,i){var ns=[],cnt=0;STDS.forEach(function(s){if(map[s.n]===m.id){ns.push(s.n);cnt+=s.subs.length}});loads[m.id]=cnt;
