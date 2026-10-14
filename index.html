@@ -152,6 +152,14 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--pine);outline-offse
 .cbit svg{width:14px;height:14px;flex:none;stroke:var(--hero-ink-2);fill:none;stroke-width:1.8}
 
 .stats{position:relative;max-width:1200px;margin:26px auto 0;padding:0 22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.stats{display:block}
+.lead .n{display:flex;align-items:baseline;justify-content:flex-start;gap:.22em;font-family:"Sakkal Majalla","Majalla UI","Cairo",sans-serif;font-size:clamp(56px,10vw,104px);font-weight:900;line-height:1;color:#fff;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.lead .n .from{font-size:.5em;font-weight:700;color:var(--hero-ink-2)}
+.lead .n .arr{font-size:.4em;color:var(--brass-2);font-weight:700}
+.lead .t{max-width:60ch;font-size:15px;line-height:1.8;color:var(--hero-ink);margin-top:8px}
+.facts{list-style:none;margin:24px 0 0;padding:16px 0 0;border-top:1px solid rgba(255,255,255,.2);display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px 28px}
+.facts li{font-size:13px;line-height:1.7;color:var(--hero-ink-2)}
+.facts b{display:block;font-size:22px;color:#fff;font-weight:700;line-height:1.2}
 .stat{
   background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:var(--r);
   padding:15px 17px;backdrop-filter:blur(6px);position:relative;overflow:hidden;
@@ -294,6 +302,8 @@ footer{margin:48px 0 64px;padding-top:18px;border-top:1px solid var(--line);font
   .hero .role,.eyebrow,.stat .t{color:#444!important}
   .stat{background:#f4f6f5!important;border-color:#ccc!important}
   .stat .n{color:#0D5A46!important}
+  .lead .n,.facts b{color:#0D5A46!important}
+  .lead .t,.facts li{color:#444!important}
   .cbit{color:#333!important;background:#f0f0f0!important;border-color:#ddd!important}
   .card,.comp,.proj,.jhead,.jbody,.quote{box-shadow:none!important;break-inside:avoid}
   .job .jbody{display:block!important}
@@ -329,12 +339,12 @@ footer{margin:48px 0 64px;padding-top:18px;border-top:1px solid var(--line);font
 <main class="wrap" id="main">
 
   <section>
-    <div class="shead"><span class="idx">01</span><h2 id="s1"></h2><span class="rule"></span></div>
+    <div class="shead"><h2 id="s1"></h2><span class="rule"></span></div>
     <div class="card pad"><p class="summary" id="summary"></p></div>
   </section>
 
   <section>
-    <div class="shead"><span class="idx">02</span><h2 id="s2"></h2><span class="rule"></span></div>
+    <div class="shead"><h2 id="s2"></h2><span class="rule"></span></div>
     <p class="lede" id="s2lede"></p>
     <div class="card spanchart">
       <div class="axis" id="axis"></div>
@@ -347,7 +357,7 @@ footer{margin:48px 0 64px;padding-top:18px;border-top:1px solid var(--line);font
   </section>
 
   <section>
-    <div class="shead"><span class="idx">03</span><h2 id="s3"></h2><span class="rule"></span></div>
+    <div class="shead"><h2 id="s3"></h2><span class="rule"></span></div>
     <p class="lede" id="s3lede"></p>
     <div class="two">
       <div class="tl" id="timeline"></div>
@@ -369,29 +379,29 @@ footer{margin:48px 0 64px;padding-top:18px;border-top:1px solid var(--line);font
   </section>
 
   <section>
-    <div class="shead"><span class="idx">04</span><h2 id="s11"></h2><span class="rule"></span></div>
+    <div class="shead"><h2 id="s11"></h2><span class="rule"></span></div>
     <p class="lede" id="s11lede"></p>
     <div class="card pad" id="committees"></div>
   </section>
 
   <section>
-    <div class="shead"><span class="idx">05</span><h2 id="s7"></h2><span class="rule"></span></div>
+    <div class="shead"><h2 id="s7"></h2><span class="rule"></span></div>
     <p class="lede" id="s7lede"></p>
     <div class="grid2" id="comps"></div>
   </section>
 
   <section>
-    <div class="shead"><span class="idx">06</span><h2 id="s8"></h2><span class="rule"></span></div>
+    <div class="shead"><h2 id="s8"></h2><span class="rule"></span></div>
     <div class="grid2" id="projects"></div>
   </section>
 
   <section>
-    <div class="shead"><span class="idx">07</span><h2 id="s10"></h2><span class="rule"></span></div>
+    <div class="shead"><h2 id="s10"></h2><span class="rule"></span></div>
     <div class="card pad" id="contracts"></div>
   </section>
 
   <section>
-    <div class="shead"><span class="idx">08</span><h2 id="s9"></h2><span class="rule"></span></div>
+    <div class="shead"><h2 id="s9"></h2><span class="rule"></span></div>
     <p class="lede" id="s9lede"></p>
     <div class="card pad scrollx">
       <table class="ledger">
@@ -403,7 +413,7 @@ footer{margin:48px 0 64px;padding-top:18px;border-top:1px solid var(--line);font
   </section>
 
   <section>
-    <div class="shead"><span class="idx">09</span><h2 id="s13"></h2><span class="rule"></span></div>
+    <div class="shead"><h2 id="s13"></h2><span class="rule"></span></div>
     <div class="quote">
       <span class="qgrade" id="qgrade"></span>
       <p class="qtext" id="qtext"></p>
@@ -412,7 +422,7 @@ footer{margin:48px 0 64px;padding-top:18px;border-top:1px solid var(--line);font
   </section>
 
   <section>
-    <div class="shead"><span class="idx">10</span><h2 id="s12"></h2><span class="rule"></span></div>
+    <div class="shead"><h2 id="s12"></h2><span class="rule"></span></div>
     <div class="card pad" id="recognition"></div>
   </section>
 
@@ -531,8 +541,13 @@ function render(){
     `<a class="cbit" href="mailto:${c.email}">${ICON.mail}<span dir="ltr">${c.email}</span></a>` +
     `<span class="cbit">${ICON.pin}<span>${L==='ar'?c.city_ar:c.city_en}</span></span>`;
 
-  document.getElementById('stats').innerHTML = CV.stats.map(s =>
-    `<div class="stat"><div class="n mono">${s.v}</div><div class="t">${s[L]}</div></div>`).join('');
+  const LEAD = {
+    ar:'متوسط نتائج التدقيق الخارجي لنظام جودة التدريب في منشآت المنطقة (٢١ منشأة): من ٣٦٪ عام ١٤٤٤هـ إلى ٩٠٪ عام ١٤٤٧هـ',
+    en:'Regional average of the external audit of the training quality system (21 facilities): from 36% in 1444H to 90% in 1447H'
+  };
+  document.getElementById('stats').innerHTML =
+    `<div class="lead"><div class="n"><span class="from" dir="ltr">36%</span><span class="arr">${L==='ar'?'&larr;':'&rarr;'}</span><span dir="ltr">90%</span></div><div class="t">${LEAD[L]}</div></div>` +
+    `<ul class="facts">${CV.stats.map(s => `<li><b class="mono">${s.v}</b>${s[L]}</li>`).join('')}</ul>`;
 
   renderSpan();
 
