@@ -75,12 +75,14 @@ html[lang=en] .card p{font-size:18px}
 html[lang=en] .pn.nx{text-align:right}
 footer{text-align:center;font-size:14px;opacity:.7;padding:20px}
 .ar,.en{display:none} html[lang=ar] .ar,html[lang=en] .en{display:block} html[lang=ar] .kpis.ar,html[lang=en] .kpis.en{display:grid}
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent,#E4C271);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
 </style>
 </head>
 <body>
 <div class="bar"><div class="in">
  <div class="crumb"><a href="../index.html" data-ar="علي الأحمري" data-en="Ali Alahmari">علي الأحمري</a><span>›</span><a href="index.html" data-ar="المشاريع" data-en="Projects">المشاريع</a><span>›</span><span data-ar="مشروع ٦" data-en="Project 6">مشروع ٦</span></div>
- <button class="btn" id="lang" aria-label="Switch language">English</button>
+ <button class="btn" id="lang" type="button" aria-label="Switch language / تغيير اللغة">English</button>
 </div></div>
 
 <header class="hero"><div class="in">
@@ -96,7 +98,7 @@ footer{text-align:center;font-size:14px;opacity:.7;padding:20px}
  <div>
   <section class="card ar"><h2>وصف المشروع</h2><p>لوحة تفاعلية تقيس تمثيل العينة في استبيانات رضا المتدربين لكل منشأة تدريبية، بمقارنة الاستجابات الفعلية بحجم العينة المستهدف المحسوب بمعادلة ستيفن ثومبسون (مستوى ثقة ٩٥٪ وهامش خطأ ٥٪) من أعداد المتدربين المستجدين والمستمرين، مع تنظيف بيانات الاستجابات ومطابقة هوية المستجيبين بالسجلات الرسمية قبل التحليل.</p><p>تُبنى اللوحة تلقائياً من ملفات Excel المسلَّمة إلى صفحة HTML مستقلة تجمع مؤشرات الأداء العلوية وجدول التفاصيل وتصنيفاً لونياً (أحمر / أصفر / أخضر)، ومنها يُشتق تقرير خطط التحسين لنتائج قياس جودة مخرجات التدريب وتقرير متابعة الإجراءات التحسينية للفصل السابق.</p><p>الأثر: قرارات مبنية على تمثيل إحصائي صحيح للعينة بدل الاعتماد على عدد الاستجابات الخام، وتقرير يُحدَّث في دقائق بدل أيام من التجميع اليدوي.</p><p>المخرج الثاني من المنهجية نفسها: تحويل الخطة التشغيلية لوحدة الجودة ١٤٤٧هـ (١٢ هدفاً تشغيلياً و١,٤٠٩ مخرجات منجزة من ١,٤٣٦ بنسبة ٩٨٪) إلى صفحة عرض تفاعلية للمدير العام، بمؤشرات ورسوم توضح المتحقق مقابل المستهدف وحالة كل هدف (مكتمل / قيد الاستكمال / متوقف لسبب خارجي).</p></section>
   <section class="card en"><h2>Project description</h2><p>An interactive dashboard checking survey-sample adequacy per institution (actual trainee-survey responses vs. a Thompson-formula target at 95% confidence), fed by cleaned and identity-validated data and built automatically from Excel into a self-contained HTML page with a KPI row, detail table and red/amber/green status — the basis for the training-outcomes improvement-plan report. The same approach produced an interactive executive page turning the unit’s 1447H operational plan (12 objectives; 1,409 of 1,436 deliverables — 98%) into KPI cards and charts of achieved vs. target with a status per objective.</p></section>
-  <figure class="card media" style="margin:22px 0 0"><img src="media/06-outcomes-dashboard.png" alt="لوحات قياس الأداء والتقارير التنفيذية" width="1200" height="630"><figcaption class="ar">لوحة قياس جودة مخرجات التدريب (ثقة ٩٥٪ · خطأ ±٥٪) من Excel إلى HTML تلقائياً · تقرير منجزات الوحدة التفاعلي ١٤٤٧هـ (١٢ هدفاً · ٩٨٪ إنجاز)</figcaption><figcaption class="en">Performance Dashboards & Executive Reporting — project card</figcaption></figure>
+  <figure class="card media" style="margin:22px 0 0"><img src="media/06-outcomes-dashboard.png" alt="لوحات قياس الأداء والتقارير التنفيذية" width="1200" height="630" loading="lazy"><figcaption class="ar">لوحة قياس جودة مخرجات التدريب (ثقة ٩٥٪ · خطأ ±٥٪) من Excel إلى HTML تلقائياً · تقرير منجزات الوحدة التفاعلي ١٤٤٧هـ (١٢ هدفاً · ٩٨٪ إنجاز)</figcaption><figcaption class="en">Performance Dashboards & Executive Reporting — project card</figcaption></figure>
  </div>
  <aside>
   <section class="card">
