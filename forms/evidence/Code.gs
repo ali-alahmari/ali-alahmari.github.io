@@ -10,6 +10,9 @@
  * 3) نفّذ الدالة selfCheck مرة واحدة ووافق على الصلاحيات.
  * 4) انشر المشروع: Deploy ثم Web app. Execute as: Me. Who has access: Anyone.
  *
+ * بعد النشر مرة واحدة لا تحتاج إلى أي تعديل في الكود. كل زيارة جديدة تُنشأ من صفحة الفريق
+ * بمنشآتها وشواهدها وموعدها، ولها مجلدها وروابطها الخاصة، وتبقى الزيارات السابقة محفوظة.
+ *
  * لا تُرجع هذه البوابة أي رابط مجلد للمنشأة، ولا ترى المنشأة إلا صفوفها.
  */
 
@@ -34,6 +37,8 @@ function handle_(q) {
     switch (q.action) {
       case 'ping': return out_({ ok: 1 });
       case 'createVisit': return out_(createVisit_(q));
+      case 'listVisits': return out_(listVisits_(q));
+      case 'setMembers': return out_(setMembers_(q));
       case 'portal': return out_(portal_(q));
       case 'uploadChunk': return out_(uploadChunk_(q));
       case 'addLink': return out_(addLink_(q));
@@ -108,45 +113,99 @@ function rowView_(r, admin) {
 }
 
 /* ---------- الفريق ---------- */
+var MAIL = /^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]+$/;
+function idx_() { try { return JSON.parse(props_().getProperty('VISITS') || '[]'); } catch (e) { return []; } }
+function putIdx_(a) { props_().setProperty('VISITS', JSON.stringify(a.slice(0, 50))); }
+function members_() { return (props_().getProperty('MEMBERS') || '').split(',').filter(String); }
+function mail_(a) {
+  var seen = {}, out = [];
+  (a || []).forEach(function (x) {
+    var e = String(x || '').trim().toLowerCase();
+    if (MAIL.test(e) && e.length < 120 && !seen[e]) { seen[e] = 1; out.push(e); }
+  });
+  return out.slice(0, 40);
+}
+function autoCode_() { return Utilities.formatDate(new Date(), 'Asia/Riyadh', 'yyyyMMdd-HHmmss'); }
+
+function listVisits_(q) {
+  admin_(q);
+  return { ok: 1, visits: idx_(), members: members_() };
+}
+
+/* مشاركة المجلد الرئيسي مع أعضاء الفريق مرة واحدة، وتنتقل الصلاحية إلى كل زيارة جديدة تلقائياً */
+function setMembers_(q) {
+  admin_(q);
+  var next = mail_(q.emails), prev = members_(), failed = [];
+  var root = DriveApp.getFolderById(props_().getProperty('ROOT_FOLDER_ID'));
+  next.forEach(function (e) { if (prev.indexOf(e) < 0) { try { root.addViewer(e); } catch (x) { failed.push(e); } } });
+  prev.forEach(function (e) { if (next.indexOf(e) < 0) { try { root.removeViewer(e); } catch (x) {} } });
+  var kept = next.filter(function (e) { return failed.indexOf(e) < 0; });
+  props_().setProperty('MEMBERS', kept.join(','));
+  return { ok: 1, members: kept, failed: failed };
+}
+
 function createVisit_(q) {
   admin_(q);
-  var code = String(q.visit || '').replace(/[^A-Za-z0-9\-]/g, '');
+  var code = String(q.visit || '').replace(/[^A-Za-z0-9\-]/g, ''), auto = !code;
+  if (auto) {
+    code = autoCode_();
+    while (props_().getProperty('VMAN_' + code)) code += token_().charAt(0).toLowerCase();
+  }
   if (code.length < 3) throw new Error('رمز الزيارة غير صالح');
-  if (!q.facilities || !q.facilities.length) throw new Error('أضف منشأة واحدة على الأقل');
+  var fas = q.facilities || [];
+  if (!fas.length) throw new Error('أضف منشأة واحدة على الأقل');
+  if (fas.length > 40) throw new Error('الحد الأعلى 40 منشأة في الزيارة');
+  var shared = q.rows || [];
+  fas.forEach(function (fa) { if (!(fa.rows || shared).length) throw new Error('حدّد الشواهد المطلوبة'); });
   return withLock_(function () {
     if (props_().getProperty('VMAN_' + code)) throw new Error('رمز الزيارة مستخدم من قبل');
     var root = DriveApp.getFolderById(props_().getProperty('ROOT_FOLDER_ID'));
+    var title = clean_(q.title, 60);
     var vf = sub_(root, 'زيارة ' + code);
-    var m = { code: code, created: new Date().toISOString(), deadline: q.deadline || '', pageUrl: String(q.pageUrl || ''), facilities: {} };
-    var res = [];
-    q.facilities.forEach(function (fa, i) {
+    var m = { code: code, title: title, created: new Date().toISOString(), deadline: q.deadline || '', pageUrl: String(q.pageUrl || ''), facilities: {} };
+    var res = [], nrows = 0;
+    fas.forEach(function (fa, i) {
       var fid = 'f' + (i + 1), fname = clean_(fa.name, 80) || ('منشأة ' + (i + 1));
       var ff = sub_(vf, fname), token = token_();
       var f = { name: fname, token: token, folderId: ff.getId(), folderUrl: ff.getUrl(), rows: {} };
-      (fa.rows || []).forEach(function (r) {
+      (fa.rows || shared).slice(0, 400).forEach(function (r) {
         var id = String(r.id || '').replace(/[^A-Za-z0-9_\-]/g, '');
         var lv = LV_NAME[r.lv] ? r.lv : 'e', sb = String(r.sub || '').replace(/[^0-9\-]/g, '');
         if (!id || !sb || f.rows[id]) return;
-        var sd = sb.split('-')[0];
-        var rf = sub_(sub_(sub_(sub_(ff, 'المعيار ' + sd), sb), LV_NAME[lv]), 'شاهد ' + id);
-        f.rows[id] = { id: id, sub: sb, lv: lv, txt: clean_(r.txt, 300), status: 'none', note: '', files: [], links: [], folderId: rf.getId(), folderUrl: rf.getUrl() };
+        f.rows[id] = { id: id, sub: sb, lv: lv, txt: clean_(r.txt, 300), status: 'none', note: '', files: [], links: [], folderId: '', folderUrl: '' };
       });
+      nrows += Object.keys(f.rows).length;
       m.facilities[fid] = f;
       props_().setProperty('TOK_' + token, code + '|' + fid);
       res.push({ fid: fid, name: fname, rows: Object.keys(f.rows).length, folderUrl: f.folderUrl, link: pageLink_(m, token) });
     });
     var mf = vf.createFile('_manifest.json', JSON.stringify(m), 'application/json');
     props_().setProperty('VMAN_' + code, mf.getId());
-    return { ok: 1, visit: code, folderUrl: vf.getUrl(), facilities: res };
+    members_().forEach(function (e) { try { vf.addViewer(e); } catch (x) {} });
+    var a = idx_();
+    a.unshift({ c: code, t: title, d: m.created, e: m.deadline, n: res.length });
+    putIdx_(a);
+    return { ok: 1, visit: code, folderUrl: vf.getUrl(), rows: nrows, facilities: res };
   });
+}
+
+/* مجلد الشاهد يُنشأ عند أول رفع فقط، بترتيب ثابت: المنشأة › المعيار › الفرعي › المستوى › الشاهد */
+function rowFolder_(f, r) {
+  if (r.folderId) { try { return DriveApp.getFolderById(r.folderId); } catch (e) {} }
+  var sd = r.sub.split('-')[0];
+  var ff = DriveApp.getFolderById(f.folderId);
+  var rf = sub_(sub_(sub_(sub_(ff, 'المعيار ' + sd), r.sub), LV_NAME[r.lv]), 'شاهد ' + r.id);
+  r.folderId = rf.getId(); r.folderUrl = rf.getUrl();
+  return rf;
 }
 
 function team_(q) {
   admin_(q);
-  var v = loadV_(String(q.visit || ''));
+  var code = String(q.visit || '') || (idx_()[0] || {}).c || '';
+  var v = loadV_(code);
   var m = v.m;
   return {
-    ok: 1, visit: m.code, deadline: m.deadline, closed: closed_(m),
+    ok: 1, visit: m.code, title: m.title || '', deadline: m.deadline, closed: closed_(m),
     facilities: Object.keys(m.facilities).map(function (fid) {
       var f = m.facilities[fid];
       return {
@@ -191,6 +250,9 @@ function setDeadline_(q) {
     var v = loadV_(String(q.visit || ''));
     v.m.deadline = String(q.deadline || '');
     saveV_(v);
+    var a = idx_();
+    a.forEach(function (x) { if (x.c === v.m.code) x.e = v.m.deadline; });
+    putIdx_(a);
     return { ok: 1, deadline: v.m.deadline };
   });
 }
@@ -199,7 +261,7 @@ function setDeadline_(q) {
 function portal_(q) {
   var h = byToken_(q.token), m = h.v.m;
   return {
-    ok: 1, visit: m.code, facility: h.f.name, deadline: m.deadline, closed: closed_(m),
+    ok: 1, visit: m.code, title: m.title || '', facility: h.f.name, deadline: m.deadline, closed: closed_(m),
     rows: Object.keys(h.f.rows).map(function (id) { return rowView_(h.f.rows[id], false); })
   };
 }
@@ -239,7 +301,7 @@ function uploadChunk_(q) {
     if (bytes.length > 11 * 1024 * 1024) throw new Error('الملف أكبر من 10 ميغابايت. الصق رابطاً بدلاً منه');
     var mime = String(q.mime || 'application/octet-stream').slice(0, 100);
     var stamp = Utilities.formatDate(new Date(), 'Asia/Riyadh', 'yyyyMMdd-HHmmss');
-    var file = DriveApp.getFolderById(r.folderId).createFile(Utilities.newBlob(bytes, mime, stamp + ' ' + name));
+    var file = rowFolder_(h.f, r).createFile(Utilities.newBlob(bytes, mime, stamp + ' ' + name));
     files.forEach(function (x) { x.setTrashed(true); });
     r.files.push({ id: file.getId(), name: name, size: bytes.length, url: file.getUrl(), at: new Date().toISOString() });
     if (r.status === 'none' || r.status === 'redo') r.status = 'up';
