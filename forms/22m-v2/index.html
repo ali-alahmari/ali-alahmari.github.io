@@ -1,12 +1,12 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" data-skin="heritage">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>نموذج تقويم المعايير للمراجعة المكتبية (مكتبي ثم ميداني)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Amiri:wght@400;700&display=swap">
 <style>
 /* Layout: sticky tab bar over a visit-setup card; the form tab pairs a standards rail with long-form cards (organisation side | reviewer side). */
 :root{
@@ -534,6 +534,46 @@ table.o th{background:linear-gradient(180deg,var(--th),color-mix(in srgb,var(--t
 }
 }
 @media (prefers-reduced-motion:reduce){.panel:not([hidden]){animation-duration:.01s}body::before{animation:none}}
+/* emerald-gold skin */
+@media screen{
+html[data-skin="heritage"][data-skin="heritage"][data-skin="heritage"]{--bg:#EFF1E6;--surface:#FFFEFA;--surface-2:#F6F5EA;--ink:#0E2E29;--ink-2:#4F6A63;--line:#D8D4B8;--brand:#0A5A4B;--brand-ink:#FFFFFF;--brand-2:#8A6A1D;--brand-soft:#E1EDE4;--crit:#B4530F;--crit-soft:#FBEBD6;--th:#E8E2C6;--hero-a:#032E27;--hero-b:#0A5A4B;--hero-c:#0E7662;--gold:#E6C673;--shadow:0 1px 0 #fff inset,0 20px 40px -26px rgba(5,60,50,.45);--chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234F6A63' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");--lat-op:.07;--lat-img:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96' fill='none' stroke='%230A5A4B' stroke-width='1.2'%3E%3Crect x='18' y='18' width='60' height='60'/%3E%3Crect x='18' y='18' width='60' height='60' transform='rotate(45 48 48)'/%3E%3Ccircle cx='48' cy='48' r='9'/%3E%3Ccircle cx='48' cy='48' r='22'/%3E%3C/svg%3E");color-scheme:light}
+html[data-skin="heritage"] body{background:radial-gradient(60vmax 40vmax at 100% 0,rgba(201,162,75,.22),transparent 60%),radial-gradient(60vmax 40vmax at 0 100%,rgba(10,90,75,.16),transparent 60%),#EFF1E6}
+html[data-skin="heritage"] body::after{opacity:.085;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96' fill='none' stroke='%230A5A4B' stroke-width='1.2'%3E%3Crect x='18' y='18' width='60' height='60'/%3E%3Crect x='18' y='18' width='60' height='60' transform='rotate(45 48 48)'/%3E%3Ccircle cx='48' cy='48' r='9'/%3E%3Ccircle cx='48' cy='48' r='22'/%3E%3C/svg%3E");background-size:96px 96px}
+html[data-skin="heritage"] .top{background:linear-gradient(118deg,#032E27,#0A5A4B 56%,#0E7662);border-radius:30px;box-shadow:0 0 0 1px rgba(230,198,115,.6),0 0 0 7px rgba(230,198,115,.12),0 36px 70px -30px rgba(3,46,39,.7)}
+html[data-skin="heritage"] .top::before{opacity:.16;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96' fill='none' stroke='%23E6C673' stroke-width='1.2'%3E%3Crect x='18' y='18' width='60' height='60'/%3E%3Crect x='18' y='18' width='60' height='60' transform='rotate(45 48 48)'/%3E%3Ccircle cx='48' cy='48' r='9'/%3E%3Ccircle cx='48' cy='48' r='22'/%3E%3C/svg%3E");background-size:96px 96px}
+html[data-skin="heritage"] .top::after{height:3px;background:linear-gradient(90deg,transparent,#E6C673 20%,#E6C673 80%,transparent)}
+html[data-skin="heritage"] .top .ttl h1{font-family:'Amiri','Tajawal',var(--font);font-size:2.7rem;font-weight:700;line-height:1.5;color:#FBF3D6}
+html[data-skin="heritage"] .top .ttl p[style]{color:#E6C673!important;border-color:rgba(230,198,115,.5);background:rgba(230,198,115,.10)}
+html[data-skin="heritage"] .top .btn.pri{background:linear-gradient(135deg,#F3DC96,#D3A94A);color:#2B1F00!important;border-color:transparent;box-shadow:0 10px 24px -8px rgba(230,198,115,.7)}
+html[data-skin="heritage"] .top .btn{border-color:rgba(230,198,115,.45)}
+html[data-skin="heritage"] .card,html[data-skin="heritage"] .sub,html[data-skin="heritage"] .tools,html[data-skin="heritage"] .rail,html[data-skin="heritage"] .tabs-in,html[data-skin="heritage"] .kpi,html[data-skin="heritage"] .mytask,html[data-skin="heritage"] .mebar,html[data-skin="heritage"] .dcard,html[data-skin="heritage"] .gcard{border:1px solid var(--line);border-top:2px solid #C9A24B}
+html[data-skin="heritage"] .card{border-radius:26px}
+html[data-skin="heritage"] .tab{font-family:'Amiri','Tajawal',var(--font);font-size:1.02rem}
+html[data-skin="heritage"] .tab[aria-selected="true"]{background:linear-gradient(135deg,#032E27,#0A5A4B);color:#FBE9A8!important;box-shadow:0 10px 20px -10px #0A5A4B,inset 0 -3px 0 #E6C673}
+html[data-skin="heritage"] .tab[aria-selected="true"]::before{background:#FBE9A8!important}
+html[data-skin="heritage"] .tab[aria-selected="false"]{color:#0E2E29!important}
+html[data-skin="heritage"] .tab[aria-selected="false"]::before{background:#0A5A4B!important}
+html[data-skin="heritage"] .btn.pri{background:linear-gradient(135deg,#0A5A4B,#0E7662)}
+html[data-skin="heritage"] .card-h h2,html[data-skin="heritage"] .doc-t,html[data-skin="heritage"] .sec-t{font-family:'Amiri','Tajawal',var(--font)}
+html[data-skin="heritage"] .sec-t{color:#8A6A1D}
+html[data-skin="heritage"] .sec-t::after{background:linear-gradient(90deg,#C9A24B,transparent)}
+html[data-skin="heritage"] .card-h h2 .st,html[data-skin="heritage"] .rail .rn{background:linear-gradient(160deg,#0A5A4B,#032E27);color:#F3DC96;border-radius:999px 999px 8px 8px/22px 22px 8px 8px;box-shadow:0 0 0 2px #E6C673 inset}
+html[data-skin="heritage"] .std-h{background:linear-gradient(118deg,#032E27,#0A5A4B 60%,#0E7662);border-radius:26px;box-shadow:0 0 0 1px rgba(230,198,115,.6),0 26px 50px -26px rgba(3,46,39,.65)}
+html[data-skin="heritage"] .std-h::before{opacity:.16;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96' fill='none' stroke='%23E6C673' stroke-width='1.2'%3E%3Crect x='18' y='18' width='60' height='60'/%3E%3Crect x='18' y='18' width='60' height='60' transform='rotate(45 48 48)'/%3E%3Ccircle cx='48' cy='48' r='9'/%3E%3Ccircle cx='48' cy='48' r='22'/%3E%3C/svg%3E");background-size:96px 96px}
+html[data-skin="heritage"] .std-h h2{font-family:'Amiri','Tajawal',var(--font);color:#FBF3D6}
+html[data-skin="heritage"] .std-num{width:64px;height:78px;border-radius:999px 999px 10px 10px/38px 38px 10px 10px;background:linear-gradient(180deg,rgba(230,198,115,.28),rgba(230,198,115,.06));border:2px solid #E6C673;color:#F6E3A1;font-family:'Amiri','Tajawal',var(--font);font-size:2.3rem;box-shadow:none}
+html[data-skin="heritage"] .code{background:linear-gradient(160deg,#0A5A4B,#032E27);color:#F3DC96;border-radius:999px 999px 6px 6px/16px 16px 6px 6px;box-shadow:0 0 0 2px #E6C673 inset;padding:.3rem 1rem .2rem}
+html[data-skin="heritage"] .is-crit .code{background:linear-gradient(160deg,#B4530F,#7F3507);color:#FFE6BF}
+html[data-skin="heritage"] .crit-tag{background:#B4530F}
+html[data-skin="heritage"] .sub-h{background:linear-gradient(180deg,#F6F5EA,#FFFEFA)}
+html[data-skin="heritage"] .lv{background:color-mix(in srgb,var(--lc) 5%,#FFFEFA);border-radius:22px}
+html[data-skin="heritage"] .kpi b{font-family:'Amiri','Tajawal',var(--font);color:#0A5A4B}
+html[data-skin="heritage"] .kpi::before{background:linear-gradient(90deg,#C9A24B,#E6C673,#C9A24B)}
+html[data-skin="heritage"] .in,html[data-skin="heritage"] .fld select,html[data-skin="heritage"] .fld textarea{background-color:#FFFEFA;border-color:#D8D4B8}
+html[data-skin="heritage"] .in:focus,html[data-skin="heritage"] .fld select:focus,html[data-skin="heritage"] .fld textarea:focus{border-color:#C9A24B;box-shadow:0 0 0 4px rgba(201,162,75,.25)}
+html[data-skin="heritage"] table.o th{background:#E8E2C6;color:#0E2E29}
+html[data-skin="heritage"] .gd::before{background:linear-gradient(90deg,#C9A24B,#E6C673,#C9A24B)}
+}
 </style>
 </head>
 <body>
