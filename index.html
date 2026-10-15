@@ -153,10 +153,6 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--pine);outline-offse
 
 .stats{position:relative;max-width:1200px;margin:26px auto 0;padding:0 22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
 .stats{display:block}
-.lead .n{display:flex;align-items:baseline;justify-content:flex-start;gap:.22em;font-family:"Sakkal Majalla","Majalla UI","Cairo",sans-serif;font-size:clamp(56px,10vw,104px);font-weight:900;line-height:1;color:#fff;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
-.lead .n .from{font-size:.5em;font-weight:700;color:var(--hero-ink-2)}
-.lead .n .arr{font-size:.4em;color:var(--brass-2);font-weight:700}
-.lead .t{max-width:60ch;font-size:15px;line-height:1.8;color:var(--hero-ink);margin-top:8px}
 .facts{list-style:none;margin:24px 0 0;padding:16px 0 0;border-top:1px solid rgba(255,255,255,.2);display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px 28px}
 .facts li{font-size:13px;line-height:1.7;color:var(--hero-ink-2)}
 .facts b{display:block;font-size:22px;color:#fff;font-weight:700;line-height:1.2}
@@ -303,8 +299,8 @@ footer{margin:48px 0 64px;padding-top:18px;border-top:1px solid var(--line);font
   .hero .role,.eyebrow,.stat .t{color:#444!important}
   .stat{background:#f4f6f5!important;border-color:#ccc!important}
   .stat .n{color:#0D5A46!important}
-  .lead .n,.facts b{color:#0D5A46!important}
-  .lead .t,.facts li{color:#444!important}
+  .facts b{color:#0D5A46!important}
+  .facts li{color:#444!important}
   .cbit{color:#333!important;background:#f0f0f0!important;border-color:#ddd!important}
   .card,.comp,.proj,.jhead,.jbody,.quote{box-shadow:none!important;break-inside:avoid}
   .job .jbody{display:block!important}
@@ -542,12 +538,7 @@ function render(){
     `<a class="cbit" href="mailto:${c.email}">${ICON.mail}<span dir="ltr">${c.email}</span></a>` +
     `<span class="cbit">${ICON.pin}<span>${L==='ar'?c.city_ar:c.city_en}</span></span>`;
 
-  const LEAD = {
-    ar:'متوسط نتائج التدقيق الخارجي لنظام جودة التدريب في منشآت المنطقة (٢١ منشأة): من ٣٦٪ عام ١٤٤٤هـ إلى ٩٠٪ عام ١٤٤٧هـ',
-    en:'Regional average of the external audit of the training quality system (21 facilities): from 36% in 1444H to 90% in 1447H'
-  };
   document.getElementById('stats').innerHTML =
-    `<div class="lead"><div class="n"><span class="from" dir="ltr">36%</span><span class="arr">${L==='ar'?'&larr;':'&rarr;'}</span><span dir="ltr">90%</span></div><div class="t">${LEAD[L]}</div></div>` +
     `<ul class="facts">${CV.stats.map(s => `<li><b class="mono">${s.v}</b>${s[L]}</li>`).join('')}</ul>`;
 
   renderSpan();
