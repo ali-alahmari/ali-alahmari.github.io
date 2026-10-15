@@ -130,8 +130,8 @@ td{padding:8px 10px;border-top:1px solid var(--line);vertical-align:top}
 <section class="panel" id="v-new" aria-label="زيارة جديدة" hidden>
   <div class="card"><h2 style="font-size:1.3rem">زيارة جديدة</h2>
     <p class="hint">لكل زيارة شواهدها ومنشآتها وموعدها ومجلدها وروابطها الخاصة. تبقى الزيارات السابقة محفوظة كما هي، وتختار بينها من منظور الفريق.</p>
-    <div class="imp"><b>استيراد من نموذج 22م</b><p class="hint">في نموذج 22م اضغط «نسخة JSON» ثم اختر الملف هنا، فتؤخذ المنشأة والشواهد المطلوبة منه كما كتبها الفريق. اختر أكثر من ملف لأكثر من منشأة. لا يتغير النموذج بأي شكل.</p><div class="lk" style="flex-wrap:wrap;margin:8px 0"><button class="btn pri" type="button" id="syImp" disabled>استيراد من مزامنة الفريق</button><span class="hint" id="syncState" style="margin:0;align-self:center"></span></div>
-    <details class="syset"><summary>إعداد المزامنة، مرة واحدة فقط</summary><p class="hint">في نموذج 22م افتح إعدادات المزامنة وانسخ «رمز المشاركة» أو «رابط المشاركة»، والصقه هنا مرة واحدة. يُحفظ داخل سكربت البوابة ولا يظهر لأحد، فلا تلصقه في الزيارات القادمة.</p><textarea id="syTok" rows="2" dir="ltr" aria-label="رمز المشاركة من نموذج 22م"></textarea><div class="lk"><button class="btn sm" type="button" id="sySave">حفظ</button><button class="btn sm warn" type="button" id="syClr">حذف المحفوظ</button></div></details>
+    <div class="imp"><b>استيراد من نموذج 22م</b><p class="hint">في نموذج 22م اضغط «نسخة JSON» ثم اختر الملف هنا، فتؤخذ المنشأة والشواهد المطلوبة منه كما كتبها الفريق. اختر أكثر من ملف لأكثر من منشأة. لا يتغير النموذج بأي شكل.</p><div class="lk" style="flex-wrap:wrap;margin:8px 0"><button class="btn pri" type="button" id="syImp">استيراد من مزامنة الفريق</button><span class="hint" id="syncState" style="margin:0;align-self:center"></span></div>
+    <label for="syTok" style="font-weight:700;display:block;margin-top:6px">رمز المشاركة الجديد <small style="font-weight:500;color:var(--ink2)">الصقه عند بدء زيارة بفريق جديد، وإلا اتركه فارغاً</small></label><textarea id="syTok" rows="2" dir="ltr" aria-label="رمز المشاركة من نموذج 22م"></textarea><p class="hint" style="margin:4px 0 0">تجده في نموذج 22م داخل إعدادات المزامنة، وهو «رمز المشاركة» أو «رابط المشاركة». يُحفظ داخل سكربت البوابة ولا يظهر لأحد، ويبقى صالحاً حتى يتغير فريقك.</p><div class="lk"><button class="btn sm warn" type="button" id="syClr">حذف المحفوظ</button></div>
     <p class="hint" style="margin-top:10px">أو استورد من ملف «نسخة JSON»:</p>
     <input type="file" id="nvImp" accept=".json,application/json" multiple aria-label="ملفات نموذج 22م"><div id="nvImpOut" class="hint" aria-live="polite"></div></div>
     <div class="nvg">
@@ -247,7 +247,6 @@ document.addEventListener('click',function(e){var b=e.target.closest('button');i
  if(d.preset){preset(d.preset);return}
  if(d.impclr){IMP=[];impUI();return}
  if(b.id==='syImp'){doSyncImport();return}
- if(b.id==='sySave'){doSyncSave();return}
  if(b.id==='syClr'){doSyncClear();return}
  if(d.cpl!==undefined){var li=$('[data-lin="'+d.cpl+'"]');try{navigator.clipboard.writeText(li.value).then(function(){toast('نُسخ الرابط')},function(){li.select();toast('حدّد الرابط وانسخه')})}catch(x){li.select();toast('حدّد الرابط وانسخه')}return}
  if(d.gov){setView('team');return}
@@ -277,17 +276,20 @@ function doImport(files){var out=[],errs=[];var seq=Promise.resolve();
  seq.then(function(){var seen={};out.forEach(function(x){var n=x.name,k=1;while(seen[n])n=x.name+' '+(++k);seen[n]=1;x.name=n});IMP=out;impUI();if(errs.length){var d=document.createElement('div');d.className='err';d.textContent=errs.join(' | ');$('#nvImpOut').appendChild(d)}})}
 /* ---- المزامنة المحفوظة ---- */
 var SYNC=false;
-function syncUI(){var e=$('#syncState');if(e)e.textContent=SYNC?'المزامنة محفوظة وجاهزة.':'لم تُحفظ المزامنة بعد.';var b=$('#syImp');if(b)b.disabled=!SYNC}
+function syncUI(){var e=$('#syncState');if(e)e.textContent=SYNC?'يوجد رمز محفوظ. اتركه فارغاً إلا إذا تغيّر فريقك.':'لم يُحفظ رمز بعد، الصقه في الخانة التالية.';}
 function parseShare(t){t=String(t||'').trim();var m=/#s=([^&\s]+)/.exec(t);if(m){try{t=decodeURIComponent(m[1])}catch(e){}}try{var o=JSON.parse(decodeURIComponent(escape(atob(t))));if(o&&o.u)return{u:String(o.u),c:String(o.c||'')}}catch(e){}return null}
 function doSyncSave(){var o=parseShare($('#syTok').value);if(!o){toast('الرمز غير صالح. انسخه من إعدادات المزامنة في نموذج 22م');return}
  api({action:'setSync',u:o.u,c:o.c}).then(function(j){SYNC=!!j.sync;$('#syTok').value='';syncUI();toast('حُفظت المزامنة')}).catch(fail)}
 function doSyncClear(){api({action:'setSync',u:'',c:''}).then(function(){SYNC=false;syncUI();toast('حُذفت المزامنة المحفوظة')}).catch(fail)}
-function doSyncImport(){var b=$('#syImp');b.disabled=true;b.textContent='جارٍ الجلب…';
- api({action:'importSync'}).then(function(j){var rows=[];j.rows.forEach(function(r){if(!SUB[r.sub]||!LVN[r.lv])return;rows.push({id:r.id,sub:r.sub,lv:r.lv,txt:r.txt||SUB[r.sub].b.t.replace(/…$/,'')})});
+function doSyncImport(){var b=$('#syImp'),tk=$('#syTok').value.trim(),pre=Promise.resolve();
+ if(tk){var o=parseShare(tk);if(!o){toast('الرمز غير صالح. انسخه من إعدادات المزامنة في نموذج 22م');return}pre=api({action:'setSync',u:o.u,c:o.c}).then(function(j){SYNC=!!j.sync;$('#syTok').value='';syncUI()})}
+ else if(!SYNC){toast('الصق رمز المشاركة من نموذج 22م أولاً');return}
+ b.disabled=true;b.textContent='جارٍ الجلب…';
+ pre.then(function(){return api({action:'importSync'})}).then(function(j){var rows=[];j.rows.forEach(function(r){if(!SUB[r.sub]||!LVN[r.lv])return;rows.push({id:r.id,sub:r.sub,lv:r.lv,txt:r.txt||SUB[r.sub].b.t.replace(/…$/,'')})});
   if(!rows.length){IMP=[];impUI();var d=document.createElement('div');d.className='err';d.textContent='لا توجد شواهد مطلوبة صالحة في المزامنة.';$('#nvImpOut').appendChild(d);return}
   IMP=[{name:j.name||'منشأة بلا اسم',rows:rows,skip:j.skip,got:j.got}];impUI()})
  .catch(function(e){IMP=[];impUI();var d=document.createElement('div');d.className='err';d.textContent=e&&e.message?e.message:'تعذر الجلب';$('#nvImpOut').appendChild(d)})
- .then(function(){b.textContent='استيراد من مزامنة الفريق';syncUI()})}
+ .then(function(){b.disabled=false;b.textContent='استيراد من مزامنة الفريق';syncUI()})}
 /* ---- زيارة جديدة ---- */
 function buildMat(){if($('#nvMat').firstChild)return;var h='';STDS.forEach(function(x){h+='<details class="mstd"><summary>المعيار '+x.n+' · '+esc(x.title)+' <span class="cnt" data-mc="'+x.n+'">0</span></summary>';
  x.subs.forEach(function(b){h+='<div class="mrow"><div class="mt"><span class="code">'+b.c+'</span> '+esc(b.t)+(b.k?' <span class="crit">معيار حرج</span>':'')+'</div><div class="mlv">'+['e','p','f'].map(function(l){return'<label><input type="checkbox" data-sel="'+b.c+'|'+l+'"> '+LVN[l]+'</label>'}).join('')+'</div></div>'});
@@ -321,6 +323,7 @@ else{$('#demoNote').hidden=true;$('#mFac').textContent='جارٍ التحميل�
  if(MODE==='fac'){$('#seg').hidden=true;load().catch(function(e){$('#fList').innerHTML='<div class="card" role="alert"><b>تعذر فتح الرابط.</b><p class="hint">'+esc(e.message)+'</p></div>'})}
  else{$('#seg').hidden=true;$('#keyCard').hidden=false;$('#mFac').textContent='فريق المراجعة';['fac','team','tree','new'].forEach(function(k){$('#v-'+k).hidden=true})}}
 </script>
+
 
 
 
