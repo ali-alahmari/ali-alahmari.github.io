@@ -75,7 +75,7 @@ td{padding:8px 10px;border-top:1px solid var(--line);vertical-align:top}
 .tree summary{cursor:pointer;font-weight:700;padding:3px 0}
 .tree .leaf{font-weight:500;color:var(--ink2);font-size:.92rem;margin:2px 0}
 .cnt{background:var(--em);color:#FBE9A8;border-radius:99px;padding:0 9px;font-size:.82rem;margin-inline-start:8px}
-.nvg{display:grid;gap:6px}.nvg label{font-weight:700;margin-top:6px}.nvg label small{font-weight:500;color:var(--ink2)}
+.imp{border:1px dashed var(--gold);border-radius:14px;padding:12px 14px;margin-bottom:14px;background:var(--sf2)}.imp input{max-width:100%}.nvg{display:grid;gap:6px}.nvg label{font-weight:700;margin-top:6px}.nvg label small{font-weight:500;color:var(--ink2)}
 .nvg input,.nvg textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--sf);color:var(--ink);font:inherit}
 .mstd{border:1px solid var(--line);border-radius:14px;margin-block:8px;background:var(--sf2)}
 .mstd>summary{cursor:pointer;padding:10px 14px;font-weight:700}
@@ -130,13 +130,14 @@ td{padding:8px 10px;border-top:1px solid var(--line);vertical-align:top}
 <section class="panel" id="v-new" aria-label="زيارة جديدة" hidden>
   <div class="card"><h2 style="font-size:1.3rem">زيارة جديدة</h2>
     <p class="hint">لكل زيارة شواهدها ومنشآتها وموعدها ومجلدها وروابطها الخاصة. تبقى الزيارات السابقة محفوظة كما هي، وتختار بينها من منظور الفريق.</p>
+    <div class="imp"><b>استيراد من نموذج 22م</b><p class="hint">في نموذج 22م اضغط «نسخة JSON» ثم اختر الملف هنا، فتؤخذ المنشأة والشواهد المطلوبة منه كما كتبها الفريق. اختر أكثر من ملف لأكثر من منشأة. لا يتغير النموذج بأي شكل.</p><input type="file" id="nvImp" accept=".json,application/json" multiple aria-label="ملفات نموذج 22م"><div id="nvImpOut" class="hint" aria-live="polite"></div></div>
     <div class="nvg">
       <label for="nvTitle">اسم الزيارة <small>اختياري</small></label><input id="nvTitle" maxlength="60" placeholder="مثال: زيارة مكة المكرمة، ربيع الآخر">
       <label for="nvDl">آخر موعد للتسليم <small>اختياري، ويُغلق الرفع بعده</small></label><input id="nvDl" type="datetime-local">
-      <label for="nvFac">المنشآت المزارة، كل منشأة في سطر</label><textarea id="nvFac" rows="5" placeholder="معهد الشراكة الاستراتيجية&#10;كلية التقنية بجدة"></textarea>
+      <div id="nvFacWrap" class="nvg"><label for="nvFac">المنشآت المزارة، كل منشأة في سطر</label><textarea id="nvFac" rows="5" placeholder="معهد الشراكة الاستراتيجية&#10;كلية التقنية بجدة"></textarea></div>
     </div>
   </div>
-  <div class="card" style="margin-top:14px"><h2 style="font-size:1.3rem">الشواهد المطلوبة في هذه الزيارة</h2>
+  <div class="card" id="nvMatCard" style="margin-top:14px"><h2 style="font-size:1.3rem">الشواهد المطلوبة في هذه الزيارة</h2>
     <p class="hint">اختر لكل معيار فرعي المستويات التي تريد شواهدها. المحدد الآن: <b id="nvCnt">0</b> شاهداً لكل منشأة.</p>
     <div class="lk" style="flex-wrap:wrap;margin-bottom:10px"><button class="btn sm" type="button" data-preset="all">كل المستويات</button><button class="btn sm" type="button" data-preset="e">الوجود فقط</button><button class="btn sm" type="button" data-preset="k">المعايير الحرجة</button><button class="btn sm" type="button" data-preset="none">مسح الاختيار</button></div>
     <div id="nvMat"></div>
@@ -241,17 +242,33 @@ document.addEventListener('click',function(e){var b=e.target.closest('button');i
  if(b.id==='keyGo'){KEY=$('#keyIn').value;$('#keyErr').textContent='';api({action:'listVisits'}).then(function(j){VISITS=j.visits;MEMBERS=j.members;buildMat();$('#nvMem').value=MEMBERS.join('\n');$('#keyCard').hidden=true;$('#seg').hidden=false;$('[data-v=fac]').hidden=true;$('[data-v=new]').hidden=false;
   if(!VCODE&&VISITS.length)VCODE=VISITS[0].c;if(!VCODE){setView('new');return}return load().then(function(){setView('team')})}).catch(function(e){$('#keyErr').textContent=e.message});return}
  if(d.preset){preset(d.preset);return}
+ if(d.impclr){IMP=[];impUI();return}
  if(d.cpl!==undefined){var li=$('[data-lin="'+d.cpl+'"]');try{navigator.clipboard.writeText(li.value).then(function(){toast('نُسخ الرابط')},function(){li.select();toast('حدّد الرابط وانسخه')})}catch(x){li.select();toast('حدّد الرابط وانسخه')}return}
  if(d.gov){setView('team');return}
  if(b.id==='nvGo'){doCreate();return}
  if(b.id==='nvMemGo'){doMembers();return}
 });
 function setView(v){view=v;$$('.seg button').forEach(function(x){x.setAttribute('aria-pressed',x.dataset.v===view)});['fac','team','tree','new'].forEach(function(k){$('#v-'+k).hidden=k!==view})}
-document.addEventListener('change',function(e){var i=e.target;if(i.dataset&&i.dataset.fi){addFiles(i.dataset.fi,i.files);i.value=''}if(i.id==='facPick'){curF=+i.value;pickFac();render()}if(i.id==='visPick'){VCODE=i.value;curF=0;load().catch(fail)}if(i.dataset&&i.dataset.sel)countSel();});
+document.addEventListener('change',function(e){var i=e.target;if(i.dataset&&i.dataset.fi){addFiles(i.dataset.fi,i.files);i.value=''}if(i.id==='facPick'){curF=+i.value;pickFac();render()}if(i.id==='nvImp'){doImport(i.files);i.value=''}if(i.id==='visPick'){VCODE=i.value;curF=0;load().catch(fail)}if(i.dataset&&i.dataset.sel)countSel();});
 document.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.id==='keyIn')$('#keyGo').click()});
 document.addEventListener('dragover',function(e){var z=e.target.closest('[data-drop]');if(z){e.preventDefault();z.classList.add('on')}});
 document.addEventListener('dragleave',function(e){var z=e.target.closest('[data-drop]');if(z)z.classList.remove('on')});
 document.addEventListener('drop',function(e){var z=e.target.closest('[data-drop]');if(z){e.preventDefault();z.classList.remove('on');addFiles(z.dataset.drop,e.dataTransfer.files)}});
+/* ---- استيراد من نموذج 22م ---- */
+var IMP=[];
+function readText(f){return new Promise(function(ok,no){var r=new FileReader();r.onload=function(){ok(String(r.result))};r.onerror=no;r.readAsText(f)})}
+function parseForm(o,fname){var st=o&&o.state;if(!o||o.app!=='etec22m'||!st||!st.f)throw new Error('ليس ملف نموذج 22م');var f=st.f,ids={},rows=[],skip=0,got=0;
+ Object.keys(f).forEach(function(k){var m=/^rq\.(r[a-z0-9]+)\./.exec(k);if(m)ids[m[1]]=1});
+ Object.keys(ids).forEach(function(id){var g=function(x){return f['rq.'+id+'.'+x]||''};if(g('del')==='1')return;var sub=g('sub'),lv=g('lv'),txt=g('txt').trim();
+  if(!SUB[sub]||!LVN[lv]){if(sub||txt)skip++;return}if(g('st')==='وصل'){got++;return}rows.push({id:id,sub:sub,lv:lv,txt:txt||SUB[sub].b.t.replace(/…$/,''),n:+g('n')||0})});
+ rows.sort(function(a,b){return a.n-b.n});
+ return{name:String((st.setup&&st.setup.facility)||'').trim()||fname.replace(/\.json$/i,''),rows:rows.map(function(r){return{id:r.id,sub:r.sub,lv:r.lv,txt:r.txt}}),skip:skip,got:got}}
+function impUI(){var on=IMP.length>0;$('#nvFacWrap').hidden=on;$('#nvMatCard').hidden=on;var o=$('#nvImpOut');
+ if(!on){o.innerHTML='';return}
+ o.innerHTML=IMP.map(function(x){return'<div>'+esc(x.name)+': '+x.rows.length+' شاهداً مطلوباً'+(x.got?'، وتجاوزت '+x.got+' وصل سابقاً':'')+(x.skip?'، وتجاوزت '+x.skip+' بلا معيار فرعي أو مستوى':'')+'</div>'}).join('')+'<button class="btn sm" type="button" data-impclr="1" style="margin-top:8px">إلغاء الاستيراد</button>'}
+function doImport(files){var out=[],errs=[];var seq=Promise.resolve();
+ [].slice.call(files).forEach(function(f){seq=seq.then(function(){return readText(f)}).then(function(t){var x=parseForm(JSON.parse(t),f.name);if(!x.rows.length)errs.push(x.name+': لا توجد شواهد مطلوبة صالحة');else out.push(x)}).catch(function(e){errs.push(f.name+': '+(e&&e.message&&!/JSON/.test(e.message)?e.message:'ملف غير صالح'))})});
+ seq.then(function(){var seen={};out.forEach(function(x){var n=x.name,k=1;while(seen[n])n=x.name+' '+(++k);seen[n]=1;x.name=n});IMP=out;impUI();if(errs.length){var d=document.createElement('div');d.className='err';d.textContent=errs.join(' | ');$('#nvImpOut').appendChild(d)}})}
 /* ---- زيارة جديدة ---- */
 function buildMat(){if($('#nvMat').firstChild)return;var h='';STDS.forEach(function(x){h+='<details class="mstd"><summary>المعيار '+x.n+' · '+esc(x.title)+' <span class="cnt" data-mc="'+x.n+'">0</span></summary>';
  x.subs.forEach(function(b){h+='<div class="mrow"><div class="mt"><span class="code">'+b.c+'</span> '+esc(b.t)+(b.k?' <span class="crit">معيار حرج</span>':'')+'</div><div class="mlv">'+['e','p','f'].map(function(l){return'<label><input type="checkbox" data-sel="'+b.c+'|'+l+'"> '+LVN[l]+'</label>'}).join('')+'</div></div>'});
@@ -259,13 +276,16 @@ function buildMat(){if($('#nvMat').firstChild)return;var h='';STDS.forEach(funct
 function countSel(){var n=0,per={};$$('#nvMat [data-sel]').forEach(function(c){if(!c.checked)return;n++;var k=SUB[c.dataset.sel.split('|')[0]].std.n;per[k]=(per[k]||0)+1});$('#nvCnt').textContent=n;$$('[data-mc]').forEach(function(e){e.textContent=per[e.dataset.mc]||0})}
 function preset(p){$$('#nvMat [data-sel]').forEach(function(c){var a=c.dataset.sel.split('|'),k=SUB[a[0]].b.k;c.checked=p==='all'||(p==='e'&&a[1]==='e')||(p==='k'&&!!k)});countSel()}
 function doCreate(){var e=$('#nvErr'),rows=[],names=[],seen={};e.textContent='';
- $$('#nvMat [data-sel]').forEach(function(c){if(!c.checked)return;var a=c.dataset.sel.split('|');rows.push({id:a[0]+'_'+a[1],sub:a[0],lv:a[1],txt:SUB[a[0]].b.t.replace(/…$/,'')})});
+ var facs;
+ if(IMP.length){facs=IMP.map(function(x){return{name:x.name,rows:x.rows}})}
+ else{$$('#nvMat [data-sel]').forEach(function(c){if(!c.checked)return;var a=c.dataset.sel.split('|');rows.push({id:a[0]+'_'+a[1],sub:a[0],lv:a[1],txt:SUB[a[0]].b.t.replace(/…$/,'')})});
  $('#nvFac').value.split(/\n+/).forEach(function(x){x=x.trim();if(x&&!seen[x]){seen[x]=1;names.push(x)}});
  if(!names.length){e.textContent='اكتب اسم منشأة واحدة على الأقل، كل منشأة في سطر.';return}
  if(!rows.length){e.textContent='اختر شاهداً واحداً على الأقل.';return}
+ facs=names.map(function(n){return{name:n,rows:rows}})}
  var dl=$('#nvDl').value,iso='';if(dl){var d=new Date(dl);if(isNaN(d.getTime())){e.textContent='موعد التسليم غير صالح.';return}iso=d.toISOString()}
  var b=$('#nvGo');b.disabled=true;b.textContent='جارٍ إنشاء الزيارة…';
- api({action:'createVisit',visit:'',title:$('#nvTitle').value.trim(),deadline:iso,pageUrl:location.origin+location.pathname,rows:rows,facilities:names.map(function(n){return{name:n}})})
+ api({action:'createVisit',visit:'',title:$('#nvTitle').value.trim(),deadline:iso,pageUrl:location.origin+location.pathname,facilities:facs})
  .then(function(j){NEWOUT=j.facilities;VCODE=j.visit;showOut(j);return api({action:'listVisits'}).then(function(l){VISITS=l.visits}).then(load)}).then(function(){toast('أُنشئت الزيارة')})
  .catch(function(x){e.textContent=x&&x.message?x.message:'تعذر إنشاء الزيارة'}).then(function(){b.disabled=false;b.textContent='إنشاء الزيارة وروابط المنشآت'})}
 function showOut(j){var h='<h3 style="font-size:1.2rem;margin-top:14px">أُنشئت الزيارة <bdi dir="ltr">'+esc(j.visit)+'</bdi></h3><p class="hint">أرسل لكل منشأة رابطها الخاص فقط. الرابط يفتح شواهد تلك المنشأة وحدها.</p>';
@@ -282,6 +302,7 @@ else{$('#demoNote').hidden=true;$('#mFac').textContent='جارٍ التحميل�
  if(MODE==='fac'){$('#seg').hidden=true;load().catch(function(e){$('#fList').innerHTML='<div class="card" role="alert"><b>تعذر فتح الرابط.</b><p class="hint">'+esc(e.message)+'</p></div>'})}
  else{$('#seg').hidden=true;$('#keyCard').hidden=false;$('#mFac').textContent='فريق المراجعة';['fac','team','tree','new'].forEach(function(k){$('#v-'+k).hidden=true})}}
 </script>
+
 
 
 </html>
