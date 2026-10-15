@@ -34,7 +34,7 @@
   --pine:#0D5A46; --pine-2:#127A5E; --pine-3:#1B9B78; --pine-soft:#D9EBE4;
   --brass:#7A5C16; --brass-2:#B08A2E; --brass-soft:#F4EBD5;
   --spine:#C0D2CB;
-  --hero-1:#0D5A46; --hero-2:#0A3F33; --hero-ink:#EAF5F0; --hero-ink-2:#9FC9B9;
+  --hero-1:#0D5A46; --hero-2:#0A3F33; --hero-ink:#EAF5F0; --hero-ink-2:#B3D6C8;
   --shadow-s:0 1px 2px rgba(13,26,22,.05);
   --shadow:0 1px 2px rgba(13,26,22,.05), 0 10px 30px -16px rgba(13,26,22,.24);
   --shadow-l:0 2px 4px rgba(13,26,22,.06), 0 22px 50px -24px rgba(13,26,22,.34);
@@ -153,10 +153,6 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--pine);outline-offse
 
 .stats{position:relative;max-width:1200px;margin:26px auto 0;padding:0 22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
 .stats{display:block}
-.lead .n{display:flex;align-items:baseline;justify-content:flex-start;gap:.22em;font-family:"Sakkal Majalla","Majalla UI","Cairo",sans-serif;font-size:clamp(56px,10vw,104px);font-weight:900;line-height:1;color:#fff;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
-.lead .n .from{font-size:.5em;font-weight:700;color:var(--hero-ink-2)}
-.lead .n .arr{font-size:.4em;color:var(--brass-2);font-weight:700}
-.lead .t{max-width:60ch;font-size:15px;line-height:1.8;color:var(--hero-ink);margin-top:8px}
 .facts{list-style:none;margin:24px 0 0;padding:16px 0 0;border-top:1px solid rgba(255,255,255,.2);display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px 28px}
 .facts li{font-size:13px;line-height:1.7;color:var(--hero-ink-2)}
 .facts b{display:block;font-size:22px;color:#fff;font-weight:700;line-height:1.2}
@@ -197,6 +193,7 @@ section{margin-top:44px}
 .lane .barx span{font-size:12px;color:#fff;white-space:nowrap;font-family:"IBM Plex Sans Arabic","Cairo",system-ui,sans-serif;font-weight:500}
 :root[data-theme="dark"] .lane .barx span,:root:not([data-theme="light"]) .lane .barx span{color:#071815}
 @media (prefers-color-scheme: light){:root:not([data-theme="dark"]) .lane .barx span{color:#fff}}
+:root:root .lane .barx.past span{color:var(--ink)}
 .lane .lbl{position:absolute;inset-inline-start:0;top:2px;font-size:12.5px;color:var(--ink-2);pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70%;font-weight:500}
 .lane .yrs{position:absolute;inset-inline-end:0;top:2px;font-size:12px;color:var(--ink-3);font-family:"IBM Plex Sans Arabic","Cairo",system-ui,sans-serif}
 .spanlegend{display:flex;gap:18px;font-size:12px;color:var(--ink-3);margin-top:8px;flex-wrap:wrap}
@@ -232,18 +229,18 @@ section{margin-top:44px}
 .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:13px}
 
 .comp{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);padding:16px 18px;box-shadow:var(--shadow);border-top:3px solid var(--pine)}
-.comp h4{font-size:14px;color:var(--pine);margin-bottom:11px;display:flex;justify-content:space-between;align-items:center}
-.comp h4 em{font-style:normal;font-family:"IBM Plex Sans Arabic","Cairo",system-ui,sans-serif;font-size:12px;color:var(--ink-3);background:var(--surface-2);border-radius:5px;padding:1px 7px}
+.comp h3{font-size:14px;color:var(--pine);margin-bottom:11px;display:flex;justify-content:space-between;align-items:center}
+.comp h3 em{font-style:normal;font-family:"IBM Plex Sans Arabic","Cairo",system-ui,sans-serif;font-size:12px;color:var(--ink-3);background:var(--surface-2);border-radius:5px;padding:1px 7px}
 .tags{display:flex;flex-wrap:wrap;gap:6px}
 .tag{font-size:12.5px;background:var(--surface-2);border:1px solid var(--line);color:var(--ink-2);border-radius:7px;padding:3px 11px}
 
 .proj{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);padding:16px 18px;box-shadow:var(--shadow);border-top:3px solid var(--brass-2)}
-.proj h4{font-size:14px;margin-bottom:6px}
+.proj h3{font-size:14px;margin-bottom:6px}
 .proj p{margin:0;font-size:13px;color:var(--ink-2)}
 .proj.tool{display:block;text-decoration:none;color:inherit;border-top-color:var(--ink);transition:transform .15s}
 .proj.tool:hover{transform:translateY(-2px)}
 .toolk{display:inline-block;font-size:12px;letter-spacing:.3px;color:var(--brass);margin-bottom:4px}
-.toolgo{display:block;margin-top:8px;font-size:13px;font-weight:600;color:inherit;text-decoration:none}
+.toolgo{display:block;margin-top:4px;padding-block:6px;font-size:13px;font-weight:600;color:inherit;text-decoration:none}
 .toolgo:hover{text-decoration:underline}
 .toolalt{display:block;margin-top:4px;font-size:12px;color:var(--brass);text-decoration:none}
 .toolalt:hover{text-decoration:underline}
@@ -302,8 +299,8 @@ footer{margin:48px 0 64px;padding-top:18px;border-top:1px solid var(--line);font
   .hero .role,.eyebrow,.stat .t{color:#444!important}
   .stat{background:#f4f6f5!important;border-color:#ccc!important}
   .stat .n{color:#0D5A46!important}
-  .lead .n,.facts b{color:#0D5A46!important}
-  .lead .t,.facts li{color:#444!important}
+  .facts b{color:#0D5A46!important}
+  .facts li{color:#444!important}
   .cbit{color:#333!important;background:#f0f0f0!important;border-color:#ddd!important}
   .card,.comp,.proj,.jhead,.jbody,.quote{box-shadow:none!important;break-inside:avoid}
   .job .jbody{display:block!important}
@@ -541,12 +538,7 @@ function render(){
     `<a class="cbit" href="mailto:${c.email}">${ICON.mail}<span dir="ltr">${c.email}</span></a>` +
     `<span class="cbit">${ICON.pin}<span>${L==='ar'?c.city_ar:c.city_en}</span></span>`;
 
-  const LEAD = {
-    ar:'متوسط نتائج التدقيق الخارجي لنظام جودة التدريب في منشآت المنطقة (٢١ منشأة): من ٣٦٪ عام ١٤٤٤هـ إلى ٩٠٪ عام ١٤٤٧هـ',
-    en:'Regional average of the external audit of the training quality system (21 facilities): from 36% in 1444H to 90% in 1447H'
-  };
   document.getElementById('stats').innerHTML =
-    `<div class="lead"><div class="n"><span class="from" dir="ltr">36%</span><span class="arr">${L==='ar'?'&larr;':'&rarr;'}</span><span dir="ltr">90%</span></div><div class="t">${LEAD[L]}</div></div>` +
     `<ul class="facts">${CV.stats.map(s => `<li><b class="mono">${s.v}</b>${s[L]}</li>`).join('')}</ul>`;
 
   renderSpan();
@@ -599,15 +591,15 @@ function render(){
   document.getElementById('recognition').innerHTML = rows(CV.recognition, true);
 
   document.getElementById('comps').innerHTML = CV.competencies.map(g =>
-    `<div class="comp"><h4>${g[L]}<em>${(L==='ar'?g.items_ar:g.items_en).length}</em></h4>
+    `<div class="comp"><h3>${g[L]}<em>${(L==='ar'?g.items_ar:g.items_en).length}</em></h3>
      <div class="tags">${(L==='ar'?g.items_ar:g.items_en).map(i=>`<span class="tag">${i}</span>`).join('')}</div></div>`).join('');
 
   document.getElementById('projects').innerHTML = CV.projects.map(p => {
     const [h,b] = p[L];
-    return `<div class="proj"><h4>${h}</h4><p>${b}</p></div>`;
+    return `<div class="proj"><h3>${h}</h3><p>${b}</p></div>`;
   }).join('') + (L==='ar'
-    ? `<div class="proj tool"><span class="toolk">أداة تفاعلية</span><h4>مدقق شواهد الاعتماد</h4><p>ارفع شاهد الاعتماد المؤسسي أو البرامجي بأي صيغة، فيحلله Claude ويضعه في مستواه وفق مقاييس هيئة تقويم التعليم والتدريب مع التعليل والتوصية.</p><a class="toolgo" href="claude/" target="_blank" rel="noopener">افتح المدقق في Claude ←</a></div>`
-    : `<div class="proj tool"><span class="toolk">Interactive tool</span><h4>Accreditation Evidence Auditor</h4><p>Upload institutional or programmatic accreditation evidence in any format; Claude analyses it and places it at its level against ETEC's official scales, with a written rationale and recommendation.</p><a class="toolgo" href="claude/" target="_blank" rel="noopener">Open the auditor in Claude →</a></div>`);
+    ? `<div class="proj tool"><span class="toolk">أداة تفاعلية</span><h3>مدقق شواهد الاعتماد</h3><p>ارفع شاهد الاعتماد المؤسسي أو البرامجي بأي صيغة، فيحلله Claude ويضعه في مستواه وفق مقاييس هيئة تقويم التعليم والتدريب مع التعليل والتوصية.</p><a class="toolgo" href="claude/" target="_blank" rel="noopener">افتح المدقق في Claude ←</a></div>`
+    : `<div class="proj tool"><span class="toolk">Interactive tool</span><h3>Accreditation Evidence Auditor</h3><p>Upload institutional or programmatic accreditation evidence in any format; Claude analyses it and places it at its level against ETEC's official scales, with a written rationale and recommendation.</p><a class="toolgo" href="claude/" target="_blank" rel="noopener">Open the auditor in Claude →</a></div>`);
 
   document.getElementById('training').innerHTML = CV.training.map(x =>
     `<tr><td>${x[L]}</td><td class="h">${L==='ar'?x.src_ar:x.src_en}</td><td class="mono">${L==='ar'?x.date_ar:x.date_en}</td><td class="mono">${d.hoursu(x.hours)}</td></tr>`).join('');
