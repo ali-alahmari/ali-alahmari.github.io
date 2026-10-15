@@ -694,6 +694,14 @@ html[data-skin="heritage"] .gd::before{background:linear-gradient(90deg,#C9A24B,
     </div>
     <div id="reqRows"></div>
     <div class="presets"><button class="btn pri" id="reqAdd" type="button">+ إضافة شاهد مطلوب</button><button class="btn" id="reqWord" type="button">تصدير نموذج الشواهد (Word)</button><span class="note" id="reqCount"></span></div>
+    <div class="pub" id="pubBox" style="margin-top:12px;border-top:1px solid var(--line,#ddd);padding-top:12px">
+      <div class="presets"><button class="btn pri" id="reqPub" type="button">نشر الطلب على بوابة المنشأة</button><span class="note" id="pubMsg" role="status" aria-live="polite"></span></div>
+      <div id="pubOut" hidden style="margin-top:8px"><label class="lbl" for="pubLinkOut">رابط المنشأة (أرسله لها)</label><div class="presets"><input class="in" id="pubLinkOut" readonly dir="ltr" style="flex:1;min-width:200px"><button class="btn" id="pubCopy" type="button">نسخ الرابط</button></div></div>
+      <details id="pubSet" style="margin-top:8px"><summary>إعداد الربط مع البوابة (مرة واحدة لكل جهاز)</summary>
+        <div class="grid g2" style="margin:8px 0"><div><label class="lbl" for="pubUrl">رابط الفريق الدائم للبوابة</label><input class="in" id="pubUrl" dir="ltr" autocomplete="off" placeholder="https://ali-alahmari.github.io/forms/evidence/#t=…"></div><div><label class="lbl" for="pubKey">كلمة سر الفريق في البوابة</label><input class="in" id="pubKey" type="password" autocomplete="off"></div></div>
+        <div class="presets"><button class="btn" id="pubSave" type="button">حفظ على هذا الجهاز</button><button class="btn ghost" id="pubForget" type="button">حذف من هذا الجهاز</button></div>
+      </details>
+    </div>
   </div>
 </section>
 
@@ -21543,6 +21551,36 @@ function mergeImport(txt){try{var I=parseImp(txt),n=0;
 
 /* ---------- evidence request (طلب الشواهد من المنشأة) ---------- */
 var LVN={e:'الوجود',p:'الممارسة',f:'الفاعلية'},LVO=['e','p','f'];
+/* ---- النشر على بوابة شواهد المنشأة (يعمل بضغطة زر؛ لا يمس بقية النموذج) ---- */
+var PUB={page:'https://ali-alahmari.github.io/forms/evidence/'};
+function pubLS(k,v){try{if(v===undefined)return localStorage.getItem('ev22.'+k)||'';if(v===null)localStorage.removeItem('ev22.'+k);else localStorage.setItem('ev22.'+k,v)}catch(e){return ''}}
+function pubExec(x){x=String(x||'').trim();var m=/#t=([A-Za-z0-9+\/=_-]+)/.exec(x);if(m){try{var o=JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/-/g,'+').replace(/_/g,'/')))));x=o&&o.u||''}catch(e){return ''}}
+  return /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_\-]+\/exec$/.test(x)?x:''}
+function pubMsg(t,bad){var el=$('#pubMsg');if(!el)return;el.textContent=t||'';el.style.color=bad?'#b3261e':''}
+function pubInit(){var bx=$('#pubBox');if(bx&&bx.contains(document.activeElement))return;var u=pubLS('url'),k=pubLS('key');if($('#pubSet')){$('#pubSet').open=!(u&&k);$('#pubUrl').value=u;$('#pubKey').value=k?'••••••••':''}
+  var l=S.f['rq.meta.plink']||'';if(l){$('#pubOut').hidden=false;$('#pubLinkOut').value=l}}
+async function pubPost(url,o){var r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(o)});return r.json()}
+async function pubSend(){
+  if(myRole()!=='lead'){pubMsg('النشر لرئيس الفريق فقط',1);return}
+  var url=pubLS('url'),key=pubLS('key');if(!url||!key){$('#pubSet').open=true;pubMsg('احفظ إعداد الربط أولاً',1);return}
+  var name=(S.setup.facility||'').trim();if(!name){pubMsg('اكتب اسم المنشأة في بيانات الزيارة أولاً',1);return}
+  var rows=rqIds().map(function(id){var sb=rqGet(id,'sub');return {id:id,sub:sb,lv:rqGet(id,'lv')||'e',txt:rqGet(id,'txt')}}).filter(function(r){return r.sub&&r.txt.trim()});
+  if(!rows.length){pubMsg('أكمل شاهداً واحداً على الأقل (المعيار الفرعي ونص الشاهد)',1);return}
+  var d=(S.f['rq.meta.date']||'').trim(),dl=/^\d{4}-\d{2}-\d{2}$/.test(d)?new Date(d+'T23:59:00+03:00').toISOString():'';
+  var b=$('#reqPub');b.disabled=true;pubMsg('جارٍ النشر…');
+  try{var r=await pubPost(url,{action:'publishForm',key:key,name:name,rows:rows,deadline:dl,pageUrl:PUB.page,visit:S.f['rq.meta.pvisit']||'',title:name});
+    if(!r.ok)throw new Error(r.error||'تعذّر النشر');
+    rqSet('meta','pvisit',r.visit);rqSet('meta','plink',r.link);save();
+    $('#pubOut').hidden=false;$('#pubLinkOut').value=r.link;
+    pubMsg(r.created?('تم إنشاء الزيارة ونشر '+r.rows+' شاهد'):('تم التحديث: '+r.added+' شاهد جديد، المجموع '+r.rows))}
+  catch(e){pubMsg(String(e&&e.message||e)==='Failed to fetch'?'تعذّر الاتصال بالبوابة، تحقق من الإنترنت':String(e.message||e),1)}
+  b.disabled=false}
+function pubSave(){var u=pubExec($('#pubUrl').value);if(!u){pubMsg('الرابط غير صالح، الصق رابط الفريق الدائم من صفحة البوابة',1);return}
+  var k=$('#pubKey').value;if(k&&k.indexOf('•')<0)pubLS('key',k.trim());if(!pubLS('key')){pubMsg('اكتب كلمة سر الفريق',1);return}
+  pubLS('url',u);pubMsg('تم الحفظ على هذا الجهاز');$('#pubKey').value='••••••••';$('#pubSet').open=false}
+function pubForget(){pubLS('url',null);pubLS('key',null);$('#pubUrl').value='';$('#pubKey').value='';pubMsg('تم الحذف من هذا الجهاز')}
+function pubCopy(){var el=$('#pubLinkOut');el.select();try{navigator.clipboard.writeText(el.value).then(function(){toast('تم نسخ الرابط')},function(){document.execCommand('copy');toast('تم نسخ الرابط')})}catch(e){document.execCommand('copy');toast('تم نسخ الرابط')}}
+
 function rqGet(id,f){return S.f['rq.'+id+'.'+f]||''}
 function rqSet(id,f,v){var k='rq.'+id+'.'+f;S.f[k]=v;queueEntry(k,v)}
 function rqVis(id){if(myRole()==='lead')return true;var sub=rqGet(id,'sub'),sd=+rqGet(id,'std')||0;if(sub&&SUB[sub])return canSub(sub);if(sd)return canStd(sd);return !!SH.me&&rqGet(id,'by')===SH.me}
@@ -21553,7 +21591,7 @@ function rqRowHTML(id,i){var sd=rqGet(id,'std'),sb=rqGet(id,'sub'),lv=rqGet(id,'
   h+='<select class="in" data-rq="'+id+'.sub" aria-label="المعيار الفرعي"><option value="">— المعيار الفرعي —</option>'+(STD[sd]?STD[sd].subs.filter(function(b){return canSub(b.code)}).map(function(b){var tx=b.text.length>46?b.text.slice(0,46)+'…':b.text;return '<option value="'+b.code+'"'+(b.code===sb?' selected':'')+'>'+b.code+' · '+esc(tx)+'</option>'}).join(''):'')+'</select>';
   h+='<select class="in" data-rq="'+id+'.lv" aria-label="المستوى"><option value="">— المستوى —</option>'+LVO.map(function(k){return '<option value="'+k+'"'+(k===lv?' selected':'')+'>'+LVN[k]+'</option>'}).join('')+'</select>';
   h+='<textarea data-rq="'+id+'.txt" rows="2" placeholder="اكتب الشاهد المطلوب من المنشأة…">'+esc(rqGet(id,'txt'))+'</textarea><select class="in" data-rq="'+id+'.st" aria-label="حالة الشاهد"><option value="">— الحالة —</option><option value="وصل"'+(rqGet(id,'st')==='وصل'?' selected':'')+'>وصل</option><option value="لم يصل"'+(rqGet(id,'st')==='لم يصل'?' selected':'')+'>لم يصل بعد</option></select><button class="btn sm danger" data-rqdel="'+id+'" type="button">حذف</button></div>';return h}
-function renderReq(force){var box=$('#reqRows');if(!box)return;try{rqiRender()}catch(e){}var ae=document.activeElement;
+function renderReq(force){var box=$('#reqRows');if(!box)return;try{rqiRender()}catch(e){}try{pubInit()}catch(e){}var ae=document.activeElement;
   [['reqBranch','branch'],['reqDate','date'],['reqTime','time']].forEach(function(x){var el=$('#'+x[0]);if(el&&el!==ae)el.value=S.f['rq.meta.'+x[1]]||''});
   var role=myRole(),noName=role!=='lead'&&!mem(SH.me),ids=rqVisIds();$('#reqCount').textContent=ids.length?ids.length+' شاهد مطلوب · وصل '+ids.filter(function(i){return rqGet(i,'st')==='وصل'}).length+' · معلّق '+ids.filter(function(i){return rqGet(i,'st')!=='وصل'}).length+(role==='lead'?'':' (معاييرك فقط)'):'';
   ['reqBranch','reqDate','reqTime'].forEach(function(i){var el=$('#'+i);if(el)el.disabled=role!=='lead'});
@@ -21924,6 +21962,10 @@ document.addEventListener('click',function(ev){var t=ev.target,e=t.closest?t.clo
     case 'btnFreeze':doFreeze();break;
     case 'reqAdd':rqAdd();break;
     case 'reqWord':exportReq();break;
+    case 'reqPub':pubSend();break;
+    case 'pubSave':pubSave();break;
+    case 'pubForget':pubForget();break;
+    case 'pubCopy':pubCopy();break;
     case 'addObs':if(team().length<8){team().push({id:uid(),name:'',role:OBS,with:'',tr:0});renderTeam();updAll();queueMain();save()}break;
     case 'addMember':if(team().length<8){team().push({id:uid(),name:'',role:'مقيّم'});renderTeam();updAll();queueMain();save()}break;
     case 'expAll':STDS.forEach(function(s){S.ui.collapsed[s.n]=0});updStd();$$('textarea[data-f]').forEach(autosize);save();break;

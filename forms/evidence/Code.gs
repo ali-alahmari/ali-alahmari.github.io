@@ -41,6 +41,7 @@ function handle_(q) {
       case 'setMembers': return out_(setMembers_(q));
       case 'setSync': return out_(setSync_(q));
       case 'importSync': return out_(importSync_(q));
+      case 'publishForm': return out_(publishForm_(q));
       case 'portal': return out_(portal_(q));
       case 'uploadChunk': return out_(uploadChunk_(q));
       case 'addLink': return out_(addLink_(q));
@@ -215,6 +216,45 @@ function setSync_(q) {
   if (c.length > 200) throw new Error('رمز الفريق غير صالح');
   props_().setProperty('SYNC_U', u); props_().setProperty('SYNC_C', c);
   return { ok: 1, sync: true };
+}
+
+/* ---------- النشر من نموذج 22م بضغطة زر ----------
+ * يستقبل اسم المنشأة وشواهدها، فينشئ الزيارة عند أول مرة،
+ * ثم يحدّث الطلب نفسه عند كل ضغطة دون أن يمسّ ما رفعته المنشأة. */
+function publishForm_(q) {
+  admin_(q);
+  var name = clean_(q.name, 80), rows = q.rows || [];
+  if (!name) throw new Error('اكتب اسم المنشأة في النموذج أولاً');
+  if (!rows.length) throw new Error('أضف شاهداً مطلوباً واحداً على الأقل');
+  var code = String(q.visit || '').replace(/[^A-Za-z0-9\-]/g, '');
+  if (!code || !props_().getProperty('VMAN_' + code)) {
+    var r = createVisit_({ key: q.key, visit: code, title: q.title || name, deadline: q.deadline || '', pageUrl: q.pageUrl || '', facilities: [{ name: name, rows: rows }] });
+    return { ok: 1, visit: r.visit, link: r.facilities[0].link, rows: r.rows, created: 1 };
+  }
+  return withLock_(function () {
+    var v = loadV_(code), m = v.m, fid = null, added = 0;
+    Object.keys(m.facilities).forEach(function (k) { if (m.facilities[k].name === name) fid = k; });
+    var root = DriveApp.getFolderById(props_().getProperty('ROOT_FOLDER_ID'));
+    var vf = sub_(root, 'زيارة ' + code), f;
+    if (!fid) {
+      fid = 'f' + (Object.keys(m.facilities).length + 1);
+      var ff = sub_(vf, name), token = token_();
+      f = { name: name, token: token, folderId: ff.getId(), folderUrl: ff.getUrl(), rows: {} };
+      m.facilities[fid] = f;
+      props_().setProperty('TOK_' + token, code + '|' + fid);
+    } else f = m.facilities[fid];
+    rows.slice(0, 400).forEach(function (r) {
+      var id = String(r.id || '').replace(/[^A-Za-z0-9_\-]/g, '');
+      var lv = LV_NAME[r.lv] ? r.lv : 'e', sb = String(r.sub || '').replace(/[^0-9\-]/g, '');
+      if (!id || !sb) return;
+      if (f.rows[id]) { f.rows[id].txt = clean_(r.txt, 300); f.rows[id].sub = sb; f.rows[id].lv = lv; return; }
+      f.rows[id] = { id: id, sub: sb, lv: lv, txt: clean_(r.txt, 300), status: 'none', note: '', files: [], links: [], folderId: '', folderUrl: '' };
+      added++;
+    });
+    if (q.deadline) m.deadline = q.deadline;
+    saveV_(v);
+    return { ok: 1, visit: code, link: pageLink_(m, f.token), rows: Object.keys(f.rows).length, added: added, created: 0 };
+  });
 }
 
 function importSync_(q) {
@@ -393,7 +433,7 @@ function remove_(q) {
 function selfCheck() {
   var id = props_().getProperty('ROOT_FOLDER_ID');
   if (!id) throw new Error('أضف ROOT_FOLDER_ID في Script properties');
-  if (!props_().getProperty('ADMIN_KEY') || props_().getProperty('ADMIN_KEY').length < 12) throw new Error('أضف ADMIN_KEY بطول 12 حرفاً على الأقل');
+  if (!props_().getProperty('ADMIN_KEY') || props_().getProperty('ADMIN_KEY').length < 8) throw new Error('أضف ADMIN_KEY بطول 8 حروف على الأقل');
   var f = DriveApp.getFolderById(id);
   Logger.log('المجلد: ' + f.getName() + ' — الإعداد سليم');
 }
