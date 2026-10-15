@@ -39,6 +39,8 @@ function handle_(q) {
       case 'createVisit': return out_(createVisit_(q));
       case 'listVisits': return out_(listVisits_(q));
       case 'setMembers': return out_(setMembers_(q));
+      case 'setSync': return out_(setSync_(q));
+      case 'importSync': return out_(importSync_(q));
       case 'portal': return out_(portal_(q));
       case 'uploadChunk': return out_(uploadChunk_(q));
       case 'addLink': return out_(addLink_(q));
@@ -129,7 +131,7 @@ function autoCode_() { return Utilities.formatDate(new Date(), 'Asia/Riyadh', 'y
 
 function listVisits_(q) {
   admin_(q);
-  return { ok: 1, visits: idx_(), members: members_() };
+  return { ok: 1, visits: idx_(), members: members_(), sync: !!props_().getProperty('SYNC_U') };
 }
 
 /* مشاركة المجلد الرئيسي مع أعضاء الفريق مرة واحدة، وتنتقل الصلاحية إلى كل زيارة جديدة تلقائياً */
@@ -197,6 +199,52 @@ function rowFolder_(f, r) {
   var rf = sub_(sub_(sub_(sub_(ff, 'المعيار ' + sd), r.sub), LV_NAME[r.lv]), 'شاهد ' + r.id);
   r.folderId = rf.getId(); r.folderUrl = rf.getUrl();
   return rf;
+}
+
+/* ---------- الاستيراد من مزامنة نموذج 22م ----------
+ * يُحفظ رابط المزامنة ورمز الفريق مرة واحدة داخل السكربت نفسه (Script properties)،
+ * فلا يحتاج الرئيس إلى لصقهما في كل زيارة، ولا يظهران في أي صفحة. */
+function setSync_(q) {
+  admin_(q);
+  var u = String(q.u || '').trim(), c = String(q.c || '').trim();
+  if (!u && !c) {
+    props_().deleteProperty('SYNC_U'); props_().deleteProperty('SYNC_C');
+    return { ok: 1, sync: false };
+  }
+  if (!/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_\-]+\/exec$/.test(u)) throw new Error('رابط المزامنة غير صالح');
+  if (c.length > 200) throw new Error('رمز الفريق غير صالح');
+  props_().setProperty('SYNC_U', u); props_().setProperty('SYNC_C', c);
+  return { ok: 1, sync: true };
+}
+
+function importSync_(q) {
+  admin_(q);
+  var u = props_().getProperty('SYNC_U');
+  if (!u) throw new Error('لم يُحفظ رابط المزامنة بعد');
+  var c = props_().getProperty('SYNC_C') || '';
+  var r = UrlFetchApp.fetch(u + '?action=pull&since=0&code=' + encodeURIComponent(c), { muteHttpExceptions: true, followRedirects: true });
+  var j;
+  try { j = JSON.parse(r.getContentText()); } catch (e) { throw new Error('تعذر قراءة المزامنة. تحقق من الرابط'); }
+  if (!j || j.error) throw new Error(j && j.error === 'code' ? 'رمز الفريق المحفوظ لم يعد صالحاً. احفظ الرمز الجديد' : 'تعذر قراءة المزامنة');
+  var name = '', f = {};
+  (j.rows || []).forEach(function (row) {
+    var k = String(row[0]), v = String(row[1] == null ? '' : row[1]);
+    if (k === 'v2:m|setup') { try { name = String(JSON.parse(v).facility || ''); } catch (e) {} }
+    else if (k.indexOf('v2:f|rq.') === 0) f[k.slice(8)] = v;
+  });
+  var ids = {};
+  Object.keys(f).forEach(function (k) { var m = /^(r[a-z0-9]+)\./.exec(k); if (m) ids[m[1]] = 1; });
+  var rows = [], skip = 0, got = 0;
+  Object.keys(ids).forEach(function (id) {
+    var g = function (x) { return f[id + '.' + x] || ''; };
+    if (g('del') === '1') return;
+    var sub = g('sub'), lv = g('lv'), txt = g('txt').trim();
+    if (!/^[0-9]+-[0-9]+$/.test(sub) || !LV_NAME[lv]) { if (sub || txt) skip++; return; }
+    if (g('st') === 'وصل') { got++; return; }
+    rows.push({ id: id, sub: sub, lv: lv, txt: txt, n: Number(g('n')) || 0 });
+  });
+  rows.sort(function (a, b) { return a.n - b.n; });
+  return { ok: 1, name: clean_(name, 80), rows: rows.map(function (x) { return { id: x.id, sub: x.sub, lv: x.lv, txt: x.txt }; }), skip: skip, got: got };
 }
 
 function team_(q) {
