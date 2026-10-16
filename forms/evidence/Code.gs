@@ -394,8 +394,15 @@ function openDay_(q) {
     teamAuth_(q, v.m);
     var d = dayOf_(v.m, String(q.day || ''));
     if (!d) throw new Error('اليوم غير موجود');
+    var expired = !!d.dl && Date.now() > new Date(d.dl).getTime();
+    /* الإغلاق المبكر وإعادة فتح يوم انتهى موعده بإذن رئيس الفريق فقط */
+    if (!q.open || expired) leaderAuth_(q);
     d.open = !!q.open;
-    if (d.open && !d.opened) d.opened = new Date().toISOString();
+    if (d.open) {
+      if (!d.opened) d.opened = new Date().toISOString();
+      /* يُغلق اليوم تلقائياً في نهاية يوم الزيارة (11:59 مساءً بتوقيت الرياض) ما لم يحدد الرئيس موعداً آخر */
+      if (!d.dl || expired) d.dl = new Date(Utilities.formatDate(new Date(), 'Asia/Riyadh', 'yyyy-MM-dd') + 'T23:59:00+03:00').toISOString();
+    }
     saveV_(v);
     return { ok: 1, days: v.m.days };
   });
