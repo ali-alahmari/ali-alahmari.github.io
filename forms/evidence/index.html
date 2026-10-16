@@ -168,7 +168,7 @@ var LVN={e:'الوجود',p:'الممارسة',f:'الفاعلية'};
 var HINT={e:'ارفع الوثيقة المعتمدة نفسها، مثل السياسة أو الدليل أو اللائحة، وفيها التاريخ والاعتماد.',p:'ارفع ما يثبت التنفيذ، مثل السجلات والمحاضر والتقارير والصور.',f:'ارفع النتائج والمؤشرات وقياس الأثر وإجراءات التحسين التي ترتبت عليها.'};
 var SUB={};STDS.forEach(function(s){s.subs.forEach(function(b){SUB[b.c]={std:s,b:b}})});
 var SL={none:'لم يُرفع',up:'رُفع بانتظار المراجعة',ok:'مقبول',redo:'يحتاج استكمال'};
-var VISITS=[],MEMBERS=[],VCODE='',NEWOUT=[],MODE='demo',CFG=null,KEY='',R=[],FAC='معهد الشراكة الاستراتيجية (مثال)',VISIT='زيارة 1448-12',DEADLINE='',CLOSED=false,FACS=[],curF=0,view='fac',flt=0,busy=0,MAXMB=10,CH=1500000;
+var VISITS=[],MEMBERS=[],VCODE='',NEWOUT=[],MODE='demo',CFG=null,KEY='',R=[],FAC='معهد الشراكة الاستراتيجية (مثال)',VISIT='زيارة 1448-12',DEADLINE='',CLOSED=false,FACS=[],curF=0,view='fac',flt=0,busy=0,MAXMB=20,CH=1500000;
 var BAD=/\.(exe|js|jse|bat|cmd|com|scr|msi|apk|ps1|vbs|vbe|jar|sh|dll|lnk|html?|svg)$/i;
 function $(q,c){return(c||document).querySelector(q)}function $$(q,c){return[].slice.call((c||document).querySelectorAll(q))}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}

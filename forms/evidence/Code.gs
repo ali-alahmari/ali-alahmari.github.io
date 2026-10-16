@@ -16,7 +16,7 @@
  * لا تُرجع هذه البوابة أي رابط مجلد للمنشأة، ولا ترى المنشأة إلا صفوفها.
  */
 
-var MAX_CHUNKS = 7;             // 7 × 1.5MB تقريباً = 10MB
+var MAX_CHUNKS = 14;            // 14 × 1.5MB تقريباً = 20MB
 var MAX_B64 = 2100000;          // أقصى طول لقطعة base64 واحدة
 var BAD_EXT = /\.(exe|js|jse|bat|cmd|com|scr|msi|apk|ps1|vbs|vbe|jar|sh|dll|lnk|html?|svg)$/i;
 var LV_NAME = { e: 'الوجود', p: 'الممارسة', f: 'الفاعلية' };
@@ -386,7 +386,7 @@ function uploadChunk_(q) {
       files.push(f);
       bytes = bytes.concat(Utilities.base64Decode(f.getBlob().getDataAsString()));
     }
-    if (bytes.length > 11 * 1024 * 1024) throw new Error('الملف أكبر من 10 ميغابايت. الصق رابطاً بدلاً منه');
+    if (bytes.length > 21 * 1024 * 1024) throw new Error('الملف أكبر من 20 ميغابايت. الصق رابطاً بدلاً منه');
     var mime = String(q.mime || 'application/octet-stream').slice(0, 100);
     var stamp = Utilities.formatDate(new Date(), 'Asia/Riyadh', 'yyyyMMdd-HHmmss');
     var file = rowFolder_(h.f, r).createFile(Utilities.newBlob(bytes, mime, stamp + ' ' + name));
