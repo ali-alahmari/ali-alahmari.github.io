@@ -114,7 +114,7 @@ td{padding:8px 10px;border-top:1px solid var(--line);vertical-align:top}
 </nav>
 <main id="main">
 <section class="panel" id="v-fac" aria-label="منظور المنشأة">
-  <div id="rounds"></div><div id="dayForm"></div>
+  <div id="rounds"></div><div class="card" id="dlNote" role="note" style="margin-bottom:14px" hidden></div><div id="dayForm"></div>
   <div class="card" style="margin-bottom:14px"><strong>تقدمك في رفع الشواهد</strong><div class="bar" aria-hidden="true"><i id="fBar"></i></div><p class="hint" id="fTxt" style="margin:8px 0 0"></p></div>
   <div class="chips" id="chips" role="group" aria-label="تصفية حسب المعيار"></div>
   <div id="fList"></div>
@@ -237,6 +237,9 @@ function renderFac(){var s=stat(false);$('#fBar').style.setProperty('--p',s.t?s.
  var dl=RD==='o'?DEADLINE:(dc&&dc.dl);
  $('#mFac').textContent=FAC;$('#mProg').textContent='تقدم الرفع '+Math.round(s.t?s.u*100/s.t:0)+'%';
  $('#mDl').textContent=dl?'آخر موعد للتسليم: '+new Date(dl).toLocaleString('ar-SA-u-nu-latn',{dateStyle:'full',timeStyle:'short'}):(MODE==='demo'?'آخر موعد للتسليم: الخميس 29 ربيع الآخر 1448':'لم يُحدد موعد للتسليم');
+ var dn=$('#dlNote'),fmt=function(x){return new Date(x).toLocaleString('ar-SA-u-nu-latn',{dateStyle:'full',timeStyle:'short'})};
+ if(MODE==='demo'||roundClosed()||(RD!=='o'&&!dc)){dn.hidden=true}
+ else{dn.hidden=false;dn.innerHTML=dl?'<b>آخر موعد لرفع شواهد '+(RD==='o'?'الطلب المكتبي':esc(dc.label))+':</b> '+esc(fmt(dl))+'. يُغلق الرفع تلقائياً بعد هذا الموعد، فارفع شواهدك قبله.':(RD==='o'?'لم يُحدد موعد لرفع الطلب المكتبي بعد.':'<b>'+esc(dc.label)+':</b> يُغلق الرفع في نهاية يوم الزيارة، فارفع شواهدك قبل ذلك.')}
  var cn=$('#closedNote');cn.hidden=!roundClosed();cn.textContent='انتهى موعد رفع الشواهد لهذا الطلب. يمكنك الاطلاع على ما رُفع فقط.'}
 function roundsHTML(list){return'<div class="chips" role="group" aria-label="الطلب">'+list.map(function(x){return'<button class="chip" type="button" data-rnd="'+x.k+'" aria-pressed="'+(RD===x.k)+'">'+esc(x.label)+'</button>'}).join('')+'</div>'}
 function dayCur(){return DAYS.filter(function(x){return x.k===RD})[0]||null}
