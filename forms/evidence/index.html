@@ -131,7 +131,7 @@ td{padding:8px 10px;border-top:1px solid var(--line);vertical-align:top}
     </div>
   </div>
   <div class="card" id="tAdd" style="margin-top:14px"><h2 style="font-size:1.3rem">إضافة شاهد مطلوب</h2><p class="hint">للشواهد التي لم تكتبها المنشأة. تُضاف إلى الطلب المعروض أعلاه.</p>
-    <div class="nvg"><label for="taSub">المعيار الفرعي</label><select class="sel" id="taSub"></select><label for="taLv">المستوى</label><select class="sel" id="taLv"></select><label for="taScope">المنشأة</label><select class="sel" id="taScope"><option value="one">المنشأة المعروضة فقط</option><option value="all">كل المنشآت</option></select><label for="taTxt">الشاهد المطلوب</label><input id="taTxt" maxlength="300" placeholder="اكتب الشاهد المطلوب"></div>
+    <div class="nvg"><label for="taSub">المعيار الفرعي</label><select class="sel" id="taSub"></select><label for="taLv">المستوى</label><select class="sel" id="taLv"></select><label for="taTxt">الشاهد المطلوب</label><input id="taTxt" maxlength="300" placeholder="اكتب الشاهد المطلوب"></div>
     <div class="chips" id="taSg" aria-label="اقتراحات"></div><div class="lk"><button class="btn pri" type="button" id="taGo">إضافة</button></div><div class="err" id="taErr" role="alert"></div></div>
 </section>
 <section class="panel" id="v-lead" aria-label="صفحة الرئيس" hidden><div id="ldBody"></div></section>
@@ -390,9 +390,9 @@ function doAp(op,id,txt){var r=id?byId(id):null;
  api(b).then(load).then(function(){toast(op==='del'?'حُذف الطلب':'اعتُمد')}).catch(fail)}
 function doDayOpen(on){if(MODE==='demo'){toast('في النسخة الحية يفتح اليوم للمنشأة');return}api({action:'openDay',day:RD,open:on}).then(load).then(function(){toast(on?'فُتح اليوم للمنشأة':'أُغلق اليوم')}).catch(fail)}
 function doDayRec(){if(MODE==='demo'){toast('في النسخة الحية يُحفظ المحضر في مجلد اليوم');return}api({action:'closeDay',day:RD}).then(function(j){toast('حُفظ المحضر لدى '+j.saved+' منشأة')}).catch(fail)}
-function doTeamAdd(){var sb=$('#taSub').value,lv=$('#taLv').value,tx=$('#taTxt').value.trim(),sc=$('#taScope').value,e=$('#taErr');e.textContent='';if(!tx){e.textContent='اكتب الشاهد المطلوب.';return}
+function doTeamAdd(){var sb=$('#taSub').value,lv=$('#taLv').value,tx=$('#taTxt').value.trim(),e=$('#taErr');e.textContent='';if(!tx){e.textContent='اكتب الشاهد المطلوب.';return}
  if(MODE==='demo'){RALL.push(nrm({id:'ty'+Date.now(),sub:sb,lv:lv,txt:tx,status:'none',rd:RD,src:'team',ap:1}));$('#taTxt').value='';applyRd();render();toast('أُضيف الشاهد');return}
- api({action:'teamAddReq',day:RD,sub:sb,lv:lv,txt:tx,fid:sc==='all'?'all':FACS[curF].fid}).then(function(){$('#taTxt').value='';return load()}).then(function(){toast('أُضيف الشاهد')}).catch(function(x){e.textContent=x.message})}
+ api({action:'teamAddReq',day:RD,sub:sb,lv:lv,txt:tx,fid:FACS[curF].fid}).then(function(){$('#taTxt').value='';return load()}).then(function(){toast('أُضيف الشاهد')}).catch(function(x){e.textContent=x.message})}
 /* ---- صفحة رئيس الفريق ---- */
 function toLocal(iso){if(!iso)return'';var d=new Date(iso);if(isNaN(d.getTime()))return'';var p=function(n){return String(n).padStart(2,'0')};return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes())}
 function toIso(v){if(!v)return'';var d=new Date(v);return isNaN(d.getTime())?'':d.toISOString()}
