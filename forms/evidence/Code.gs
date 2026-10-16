@@ -52,6 +52,7 @@ function handle_(q) {
       case 'uploadChunk': return out_(uploadChunk_(q));
       case 'addLink': return out_(addLink_(q));
       case 'remove': return out_(remove_(q));
+      case 'confirm': return out_(confirm_(q));
       case 'team': return out_(team_(q));
       case 'review': return out_(review_(q));
       case 'rotate': return out_(rotate_(q));
@@ -160,7 +161,7 @@ function pageLink_(m, token) {
 function rowView_(r, admin) {
   return {
     id: r.id, sub: r.sub, lv: r.lv, txt: r.txt, rd: r.rd || 'o', src: r.src || 'team', ap: r.ap === 0 ? 0 : 1,
-    status: admin ? r.status : (r.status === 'ok' ? 'up' : r.status), locked: r.status === 'ok',
+    status: admin ? r.status : (r.status === 'ok' ? 'up' : r.status), locked: r.status === 'ok', cf: r.cf ? 1 : 0,
     note: (admin || r.status === 'redo') ? (r.note || '') : '',
     files: r.files.map(function (f) { return admin ? { name: f.name, size: f.size, url: f.url, at: f.at } : { name: f.name, size: f.size }; }),
     links: r.links.slice(),
@@ -526,6 +527,7 @@ function review_(q) {
     if (!r) throw new Error('الشاهد غير موجود');
     if (q.status !== 'ok' && q.status !== 'redo') throw new Error('حالة غير صالحة');
     r.status = q.status;
+    if (q.status === 'redo') r.cf = 0;
     r.note = q.status === 'redo' ? (clean_(q.note, 300) || 'يحتاج الشاهد إلى استكمال.') : '';
     saveV_(v);
     return { ok: 1 };
@@ -583,6 +585,7 @@ function editableRow_(h, rowId) {
   if (!r) throw new Error('الشاهد غير موجود');
   if (closedRd_(h.v.m, r.rd)) throw new Error('أُغلق باب رفع الشواهد');
   if (r.status === 'ok') throw new Error('هذا الشاهد مقبول ولا يمكن تعديله');
+  if (r.cf) throw new Error('تم اعتماد رفع هذا الشاهد');
   return r;
 }
 
@@ -630,6 +633,16 @@ function addLink_(q) {
     if (r.links.length >= 5) throw new Error('الحد الأعلى 5 روابط للشاهد');
     r.links.push(u);
     if (r.status === 'none' || r.status === 'redo') r.status = 'up';
+    saveV_(h.v);
+    return { ok: 1 };
+  });
+}
+
+function confirm_(q) {
+  return withLock_(function () {
+    var h = byToken_(q.token), r = editableRow_(h, String(q.row || ''));
+    if (!r.files.length && !r.links.length) throw new Error('ارفع ملفاً أو رابطاً أولاً');
+    r.cf = 1;
     saveV_(h.v);
     return { ok: 1 };
   });
