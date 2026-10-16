@@ -695,10 +695,10 @@ html[data-skin="heritage"] .gd::before{background:linear-gradient(90deg,#C9A24B,
     <div id="reqRows"></div>
     <div class="presets"><button class="btn pri" id="reqAdd" type="button">+ إضافة شاهد مطلوب</button><button class="btn" id="reqWord" type="button">تصدير نموذج الشواهد (Word)</button><span class="note" id="reqCount"></span></div>
     <div class="pub" id="pubBox" style="margin-top:12px;border-top:1px solid var(--line,#ddd);padding-top:12px">
-      <div class="presets"><button class="btn pri" id="reqPub" type="button">نشر الطلب على بوابة المنشأة</button><span class="note" id="pubMsg" role="status" aria-live="polite"></span></div>
+      <div class="presets"><button class="btn pri" id="reqPub" type="button">نشر الطلب المكتبي على بوابة المنشأة</button><button class="btn" id="pubTeam" type="button" hidden>فتح شواهد المنشأة (الفريق)</button><span class="note" id="pubMsg" role="status" aria-live="polite"></span></div>
       <div id="pubOut" hidden style="margin-top:8px"><label class="lbl" for="pubLinkOut">رابط المنشأة (أرسله لها)</label><div class="presets"><input class="in" id="pubLinkOut" readonly dir="ltr" style="flex:1;min-width:200px"><button class="btn" id="pubCopy" type="button">نسخ الرابط</button></div></div>
       <details id="pubSet" style="margin-top:8px"><summary>إعداد الربط مع البوابة (مرة واحدة لكل جهاز)</summary>
-        <div class="grid g2" style="margin:8px 0"><div><label class="lbl" for="pubUrl">رابط الفريق الدائم للبوابة</label><input class="in" id="pubUrl" dir="ltr" autocomplete="off" placeholder="https://ali-alahmari.github.io/forms/evidence/#t=…"></div><div><label class="lbl" for="pubKey">كلمة سر الفريق في البوابة</label><input class="in" id="pubKey" type="password" autocomplete="off"></div></div>
+        <div class="grid g2" style="margin:8px 0"><div><label class="lbl" for="pubUrl">رابط رئيس الفريق للبوابة</label><input class="in" id="pubUrl" dir="ltr" autocomplete="off" placeholder="https://ali-alahmari.github.io/forms/evidence/#l=…"></div><div><label class="lbl" for="pubKey">كلمة سر الفريق في البوابة</label><input class="in" id="pubKey" type="password" autocomplete="off"></div></div>
         <div class="presets"><button class="btn" id="pubSave" type="button">حفظ على هذا الجهاز</button><button class="btn ghost" id="pubForget" type="button">حذف من هذا الجهاز</button></div>
       </details>
     </div>
@@ -21554,11 +21554,13 @@ var LVN={e:'الوجود',p:'الممارسة',f:'الفاعلية'},LVO=['e','p
 /* ---- النشر على بوابة شواهد المنشأة (يعمل بضغطة زر؛ لا يمس بقية النموذج) ---- */
 var PUB={page:'https://ali-alahmari.github.io/forms/evidence/'};
 function pubLS(k,v){try{if(v===undefined)return localStorage.getItem('ev22.'+k)||'';if(v===null)localStorage.removeItem('ev22.'+k);else localStorage.setItem('ev22.'+k,v)}catch(e){return ''}}
-function pubExec(x){x=String(x||'').trim();var m=/#t=([A-Za-z0-9+\/=_-]+)/.exec(x);if(m){try{var o=JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/-/g,'+').replace(/_/g,'/')))));x=o&&o.u||''}catch(e){return ''}}
+function pubExec(x){x=String(x||'').trim();var m=/#[tl]=([A-Za-z0-9+\/=_-]+)/.exec(x);if(m){try{var o=JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/-/g,'+').replace(/_/g,'/')))));x=o&&o.u||''}catch(e){return ''}}
   return /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_\-]+\/exec$/.test(x)?x:''}
 function pubMsg(t,bad){var el=$('#pubMsg');if(!el)return;el.textContent=t||'';el.style.color=bad?'#b3261e':''}
 function pubInit(){var bx=$('#pubBox');if(bx&&bx.contains(document.activeElement))return;var u=pubLS('url'),k=pubLS('key');if($('#pubSet')){$('#pubSet').open=!(u&&k);$('#pubUrl').value=u;$('#pubKey').value=k?'••••••••':''}
-  var l=S.f['rq.meta.plink']||'';if(l){$('#pubOut').hidden=false;$('#pubLinkOut').value=l}}
+  var l=S.f['rq.meta.plink']||'';if(l){$('#pubOut').hidden=false;$('#pubLinkOut').value=l}pubTeamShow()}
+function pubTeamShow(){var b=$('#pubTeam');if(b)b.hidden=!(S.f['rq.meta.ptc']&&S.f['rq.meta.pvisit']&&(S.f['rq.meta.pexec']||pubLS('url')))}
+function pubTeamOpen(){var u=S.f['rq.meta.pexec']||pubLS('url'),v=S.f['rq.meta.pvisit'],tc=S.f['rq.meta.ptc'];if(!u||!v||!tc){toast('انشر الطلب أولاً');return}window.open(PUB.page+'#t='+btoa(unescape(encodeURIComponent(JSON.stringify({u:u,v:v,tc:tc})))),'_blank','noopener')}
 async function pubPost(url,o){var r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(o)});return r.json()}
 async function pubSend(){
   if(myRole()!=='lead'){pubMsg('النشر لرئيس الفريق فقط',1);return}
@@ -21570,7 +21572,7 @@ async function pubSend(){
   var b=$('#reqPub');b.disabled=true;pubMsg('جارٍ النشر…');
   try{var r=await pubPost(url,{action:'publishForm',key:key,name:name,rows:rows,deadline:dl,pageUrl:PUB.page,visit:S.f['rq.meta.pvisit']||'',title:name});
     if(!r.ok)throw new Error(r.error||'تعذّر النشر');
-    rqSet('meta','pvisit',r.visit);rqSet('meta','plink',r.link);save();
+    rqSet('meta','pvisit',r.visit);rqSet('meta','plink',r.link);if(r.tc){rqSet('meta','ptc',r.tc);rqSet('meta','pexec',url)}save();pubTeamShow();
     $('#pubOut').hidden=false;$('#pubLinkOut').value=r.link;
     pubMsg(r.created?('تم إنشاء الزيارة ونشر '+r.rows+' شاهد'):('تم التحديث: '+r.added+' شاهد جديد، المجموع '+r.rows))}
   catch(e){pubMsg(String(e&&e.message||e)==='Failed to fetch'?'تعذّر الاتصال بالبوابة، تحقق من الإنترنت':String(e.message||e),1)}
@@ -21966,6 +21968,7 @@ document.addEventListener('click',function(ev){var t=ev.target,e=t.closest?t.clo
     case 'pubSave':pubSave();break;
     case 'pubForget':pubForget();break;
     case 'pubCopy':pubCopy();break;
+    case 'pubTeam':pubTeamOpen();break;
     case 'addObs':if(team().length<8){team().push({id:uid(),name:'',role:OBS,with:'',tr:0});renderTeam();updAll();queueMain();save()}break;
     case 'addMember':if(team().length<8){team().push({id:uid(),name:'',role:'مقيّم'});renderTeam();updAll();queueMain();save()}break;
     case 'expAll':STDS.forEach(function(s){S.ui.collapsed[s.n]=0});updStd();$$('textarea[data-f]').forEach(autosize);save();break;

@@ -281,7 +281,7 @@ function publishForm_(q) {
   var code = String(q.visit || '').replace(/[^A-Za-z0-9\-]/g, '');
   if (!code || !props_().getProperty('VMAN_' + code)) {
     var r = createVisit_({ key: q.key, visit: code, title: q.title || name, deadline: q.deadline || '', pageUrl: q.pageUrl || '', facilities: [{ name: name, rows: rows }] });
-    return { ok: 1, visit: r.visit, link: r.facilities[0].link, rows: r.rows, created: 1 };
+    return { ok: 1, visit: r.visit, tc: r.tc, link: r.facilities[0].link, rows: r.rows, created: 1 };
   }
   return withLock_(function () {
     var v = loadV_(code), m = v.m, fid = null, added = 0;
@@ -304,8 +304,9 @@ function publishForm_(q) {
       added++;
     });
     if (q.deadline) m.deadline = q.deadline;
+    if (!m.tc) m.tc = token_();
     saveV_(v);
-    return { ok: 1, visit: code, link: pageLink_(m, f.token), rows: Object.keys(f.rows).length, added: added, created: 0 };
+    return { ok: 1, visit: code, tc: m.tc, link: pageLink_(m, f.token), rows: Object.keys(f.rows).length, added: added, created: 0 };
   });
 }
 
