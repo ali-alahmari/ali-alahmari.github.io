@@ -7,6 +7,7 @@
  * 2) في إعدادات المشروع، أضف خاصيتين في Script properties:
  *      ROOT_FOLDER_ID = معرّف المجلد
  *      ADMIN_KEY      = كلمة سر طويلة لفريق المراجعة
+ *      LEAD_KEY       = كلمة سر الرئيس (اختيارية؛ إن لم تُضف فالرئيس يستعمل ADMIN_KEY)
  * 3) نفّذ الدالة selfCheck مرة واحدة ووافق على الصلاحيات.
  * 4) انشر المشروع: Deploy ثم Web app. Execute as: Me. Who has access: Anyone.
  *
@@ -14,6 +15,11 @@
  * بمنشآتها وشواهدها وموعدها، ولها مجلدها وروابطها الخاصة، وتبقى الزيارات السابقة محفوظة.
  *
  * لا تُرجع هذه البوابة أي رابط مجلد للمنشأة، ولا ترى المنشأة إلا صفوفها.
+ *
+ * التصميم: رابط واحد دائم لكل منشأة. للزيارة طلب مكتبي، وطلبات للميدان موزعة على أيام.
+ * في الميدان تكتب المنشأة ما طُلب منها في معايير اليوم، ويعتمده الفريق، ثم ترفع الشواهد.
+ * لا تظهر للمنشأة حالة القبول، بل تظهر لها فقط حالة «تم الرفع» أو «مطلوب استكمال».
+ * يدخل الفريق برمز خاص بكل زيارة (tc) يتغير في كل زيارة، ويملك الرئيس وحده إنشاء الزيارات.
  */
 
 var MAX_CHUNKS = 14;            // 14 × 1.5MB تقريباً = 20MB
@@ -50,6 +56,14 @@ function handle_(q) {
       case 'review': return out_(review_(q));
       case 'rotate': return out_(rotate_(q));
       case 'setDeadline': return out_(setDeadline_(q));
+      case 'leader': return out_(leader_(q));
+      case 'setDays': return out_(setDays_(q));
+      case 'openDay': return out_(openDay_(q));
+      case 'facReq': return out_(facReq_(q));
+      case 'facRmReq': return out_(facRmReq_(q));
+      case 'teamAddReq': return out_(teamAddReq_(q));
+      case 'approve': return out_(approve_(q));
+      case 'closeDay': return out_(closeDay_(q));
       default: return out_({ ok: 0, error: 'إجراء غير معروف' });
     }
   } catch (err) {
@@ -58,12 +72,27 @@ function handle_(q) {
 }
 
 /* ---------- أدوات ---------- */
-function admin_(q) {
-  var k = props_().getProperty('ADMIN_KEY');
-  if (!k || !q.key || String(q.key).length !== k.length) throw new Error('كلمة سر الفريق غير صحيحة');
+function keyEq_(a, b) {
+  a = String(a || ''); b = String(b || '');
+  if (!a || a.length !== b.length) return false;
   var d = 0;
-  for (var i = 0; i < k.length; i++) d |= k.charCodeAt(i) ^ String(q.key).charCodeAt(i);
-  if (d) throw new Error('كلمة سر الفريق غير صحيحة');
+  for (var i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return d === 0;
+}
+/* كلمة سر الفريق القديمة أو كلمة سر الرئيس */
+function admin_(q) {
+  if (keyEq_(props_().getProperty('ADMIN_KEY'), q.key) || keyEq_(props_().getProperty('LEAD_KEY'), q.key)) return;
+  throw new Error('كلمة سر الفريق غير صحيحة');
+}
+/* الرئيس وحده: LEAD_KEY إن وُجدت وإلا ADMIN_KEY */
+function leaderAuth_(q) {
+  var k = props_().getProperty('LEAD_KEY') || props_().getProperty('ADMIN_KEY');
+  if (!keyEq_(k, q.key)) throw new Error('كلمة سر الرئيس غير صحيحة');
+}
+/* الفريق: رمز الزيارة tc، أو كلمة سر الفريق/الرئيس */
+function teamAuth_(q, m) {
+  if (m && m.tc && keyEq_(m.tc, q.tc)) return;
+  admin_(q);
 }
 function clean_(s, n) {
   return String(s == null ? '' : s).replace(/[\\\/:*?"<>|\u0000-\u001f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, n || 80);
@@ -101,6 +130,28 @@ function byToken_(token) {
   return { v: v, f: f, fid: p[1] };
 }
 function closed_(m) { return !!m.deadline && Date.now() > new Date(m.deadline).getTime(); }
+function dayOf_(m, k) { return (m.days || []).filter(function (x) { return x.k === k; })[0] || null; }
+function dayClosed_(d) { return !d || !d.open || (!!d.dl && Date.now() > new Date(d.dl).getTime()); }
+function closedRd_(m, rd) { return (!rd || rd === 'o') ? closed_(m) : dayClosed_(dayOf_(m, rd)); }
+function rdName_(m, rd) { if (!rd || rd === 'o') return 'الطلب المكتبي'; var d = dayOf_(m, rd); return d ? d.label : rd; }
+function facToken_(name) {
+  var map = {};
+  try { map = JSON.parse(props_().getProperty('FACTOK') || '{}'); } catch (e) {}
+  if (!map[name]) { map[name] = token_(); props_().setProperty('FACTOK', JSON.stringify(map)); }
+  return map[name];
+}
+function newRow_(id, sb, lv, txt, rd, src, ap) {
+  return { id: id, sub: sb, lv: lv, txt: clean_(txt, 300), status: 'none', note: '', files: [], links: [], folderId: '', folderUrl: '', rd: rd || 'o', src: src || 'team', ap: ap === 0 ? 0 : 1 };
+}
+function normDays_(a, prev) {
+  var out = [];
+  (a || []).slice(0, 7).forEach(function (d, i) {
+    var k = 'd' + (i + 1), old = (prev || []).filter(function (x) { return x.k === k; })[0] || {};
+    var subs = (d.subs || []).map(function (x) { return String(x).replace(/[^0-9\-]/g, ''); }).filter(function (x) { return /^[0-9]+-[0-9]+$/.test(x); }).slice(0, 80);
+    out.push({ k: k, label: clean_(d.label, 40) || ('اليوم ' + (i + 1)), dl: String(d.dl || ''), subs: subs, open: !!old.open, opened: old.opened || '' });
+  });
+  return out;
+}
 function pageLink_(m, token) {
   var base = m.pageUrl || '';
   var j = JSON.stringify({ u: ScriptApp.getService().getUrl(), t: token });
@@ -108,7 +159,9 @@ function pageLink_(m, token) {
 }
 function rowView_(r, admin) {
   return {
-    id: r.id, sub: r.sub, lv: r.lv, txt: r.txt, status: r.status, note: r.note || '',
+    id: r.id, sub: r.sub, lv: r.lv, txt: r.txt, rd: r.rd || 'o', src: r.src || 'team', ap: r.ap === 0 ? 0 : 1,
+    status: admin ? r.status : (r.status === 'ok' ? 'up' : r.status), locked: r.status === 'ok',
+    note: (admin || r.status === 'redo') ? (r.note || '') : '',
     files: r.files.map(function (f) { return admin ? { name: f.name, size: f.size, url: f.url, at: f.at } : { name: f.name, size: f.size }; }),
     links: r.links.slice(),
     folderUrl: admin ? r.folderUrl : undefined
@@ -137,7 +190,7 @@ function listVisits_(q) {
 
 /* مشاركة المجلد الرئيسي مع أعضاء الفريق مرة واحدة، وتنتقل الصلاحية إلى كل زيارة جديدة تلقائياً */
 function setMembers_(q) {
-  admin_(q);
+  leaderAuth_(q);
   var next = mail_(q.emails), prev = members_(), failed = [];
   var root = DriveApp.getFolderById(props_().getProperty('ROOT_FOLDER_ID'));
   next.forEach(function (e) { if (prev.indexOf(e) < 0) { try { root.addViewer(e); } catch (x) { failed.push(e); } } });
@@ -148,7 +201,7 @@ function setMembers_(q) {
 }
 
 function createVisit_(q) {
-  admin_(q);
+  leaderAuth_(q);
   var code = String(q.visit || '').replace(/[^A-Za-z0-9\-]/g, ''), auto = !code;
   if (auto) {
     code = autoCode_();
@@ -159,23 +212,22 @@ function createVisit_(q) {
   if (!fas.length) throw new Error('أضف منشأة واحدة على الأقل');
   if (fas.length > 40) throw new Error('الحد الأعلى 40 منشأة في الزيارة');
   var shared = q.rows || [];
-  fas.forEach(function (fa) { if (!(fa.rows || shared).length) throw new Error('حدّد الشواهد المطلوبة'); });
   return withLock_(function () {
     if (props_().getProperty('VMAN_' + code)) throw new Error('رمز الزيارة مستخدم من قبل');
     var root = DriveApp.getFolderById(props_().getProperty('ROOT_FOLDER_ID'));
     var title = clean_(q.title, 60);
     var vf = sub_(root, 'زيارة ' + code);
-    var m = { code: code, title: title, created: new Date().toISOString(), deadline: q.deadline || '', pageUrl: String(q.pageUrl || ''), facilities: {} };
+    var m = { code: code, title: title, created: new Date().toISOString(), deadline: q.deadline || '', pageUrl: String(q.pageUrl || ''), tc: token_(), days: normDays_(q.days, []), facilities: {} };
     var res = [], nrows = 0;
     fas.forEach(function (fa, i) {
       var fid = 'f' + (i + 1), fname = clean_(fa.name, 80) || ('منشأة ' + (i + 1));
-      var ff = sub_(vf, fname), token = token_();
+      var ff = sub_(vf, fname), token = facToken_(fname);
       var f = { name: fname, token: token, folderId: ff.getId(), folderUrl: ff.getUrl(), rows: {} };
       (fa.rows || shared).slice(0, 400).forEach(function (r) {
         var id = String(r.id || '').replace(/[^A-Za-z0-9_\-]/g, '');
         var lv = LV_NAME[r.lv] ? r.lv : 'e', sb = String(r.sub || '').replace(/[^0-9\-]/g, '');
         if (!id || !sb || f.rows[id]) return;
-        f.rows[id] = { id: id, sub: sb, lv: lv, txt: clean_(r.txt, 300), status: 'none', note: '', files: [], links: [], folderId: '', folderUrl: '' };
+        f.rows[id] = newRow_(id, sb, lv, r.txt, 'o', 'team', 1);
       });
       nrows += Object.keys(f.rows).length;
       m.facilities[fid] = f;
@@ -188,15 +240,15 @@ function createVisit_(q) {
     var a = idx_();
     a.unshift({ c: code, t: title, d: m.created, e: m.deadline, n: res.length });
     putIdx_(a);
-    return { ok: 1, visit: code, folderUrl: vf.getUrl(), rows: nrows, facilities: res };
+    return { ok: 1, visit: code, tc: m.tc, folderUrl: vf.getUrl(), rows: nrows, facilities: res };
   });
 }
 
 /* مجلد الشاهد يُنشأ عند أول رفع فقط، بترتيب ثابت: المنشأة › المعيار › الفرعي › المستوى › الشاهد */
-function rowFolder_(f, r) {
+function rowFolder_(f, r, m) {
   if (r.folderId) { try { return DriveApp.getFolderById(r.folderId); } catch (e) {} }
   var sd = r.sub.split('-')[0];
-  var ff = DriveApp.getFolderById(f.folderId);
+  var ff = sub_(DriveApp.getFolderById(f.folderId), clean_(rdName_(m, r.rd), 40));
   var rf = sub_(sub_(sub_(sub_(ff, 'المعيار ' + sd), r.sub), LV_NAME[r.lv]), 'شاهد ' + r.id);
   r.folderId = rf.getId(); r.folderUrl = rf.getUrl();
   return rf;
@@ -206,7 +258,7 @@ function rowFolder_(f, r) {
  * يُحفظ رابط المزامنة ورمز الفريق مرة واحدة داخل السكربت نفسه (Script properties)،
  * فلا يحتاج الرئيس إلى لصقهما في كل زيارة، ولا يظهران في أي صفحة. */
 function setSync_(q) {
-  admin_(q);
+  leaderAuth_(q);
   var u = String(q.u || '').trim(), c = String(q.c || '').trim();
   if (!u && !c) {
     props_().deleteProperty('SYNC_U'); props_().deleteProperty('SYNC_C');
@@ -222,7 +274,7 @@ function setSync_(q) {
  * يستقبل اسم المنشأة وشواهدها، فينشئ الزيارة عند أول مرة،
  * ثم يحدّث الطلب نفسه عند كل ضغطة دون أن يمسّ ما رفعته المنشأة. */
 function publishForm_(q) {
-  admin_(q);
+  leaderAuth_(q);
   var name = clean_(q.name, 80), rows = q.rows || [];
   if (!name) throw new Error('اكتب اسم المنشأة في النموذج أولاً');
   if (!rows.length) throw new Error('أضف شاهداً مطلوباً واحداً على الأقل');
@@ -238,7 +290,7 @@ function publishForm_(q) {
     var vf = sub_(root, 'زيارة ' + code), f;
     if (!fid) {
       fid = 'f' + (Object.keys(m.facilities).length + 1);
-      var ff = sub_(vf, name), token = token_();
+      var ff = sub_(vf, name), token = facToken_(name);
       f = { name: name, token: token, folderId: ff.getId(), folderUrl: ff.getUrl(), rows: {} };
       m.facilities[fid] = f;
       props_().setProperty('TOK_' + token, code + '|' + fid);
@@ -248,7 +300,7 @@ function publishForm_(q) {
       var lv = LV_NAME[r.lv] ? r.lv : 'e', sb = String(r.sub || '').replace(/[^0-9\-]/g, '');
       if (!id || !sb) return;
       if (f.rows[id]) { f.rows[id].txt = clean_(r.txt, 300); f.rows[id].sub = sb; f.rows[id].lv = lv; return; }
-      f.rows[id] = { id: id, sub: sb, lv: lv, txt: clean_(r.txt, 300), status: 'none', note: '', files: [], links: [], folderId: '', folderUrl: '' };
+      f.rows[id] = newRow_(id, sb, lv, r.txt, 'o', 'team', 1);
       added++;
     });
     if (q.deadline) m.deadline = q.deadline;
@@ -288,26 +340,180 @@ function importSync_(q) {
 }
 
 function team_(q) {
-  admin_(q);
   var code = String(q.visit || '') || (idx_()[0] || {}).c || '';
   var v = loadV_(code);
   var m = v.m;
+  teamAuth_(q, m);
   return {
-    ok: 1, visit: m.code, title: m.title || '', deadline: m.deadline, closed: closed_(m),
+    ok: 1, visit: m.code, title: m.title || '', deadline: m.deadline, closed: closed_(m), days: m.days || [],
     facilities: Object.keys(m.facilities).map(function (fid) {
       var f = m.facilities[fid];
       return {
-        fid: fid, name: f.name, folderUrl: f.folderUrl, link: pageLink_(m, f.token),
+        fid: fid, name: f.name, folderUrl: f.folderUrl,
         rows: Object.keys(f.rows).map(function (id) { return rowView_(f.rows[id], true); })
       };
     })
   };
 }
 
-function review_(q) {
-  admin_(q);
+/* صفحة الرئيس: الزيارة الحالية وروابط المنشآت ورمز الفريق والزيارات المؤرشفة */
+function leader_(q) {
+  leaderAuth_(q);
+  var code = String(q.visit || '') || (idx_()[0] || {}).c || '';
+  var out = { ok: 1, visits: idx_(), members: members_(), sync: !!props_().getProperty('SYNC_U'), current: null };
+  if (!code) return out;
+  return withLock_(function () {
+    var v = loadV_(code), m = v.m;
+    if (!m.tc) { m.tc = token_(); saveV_(v); }
+    out.current = {
+      code: m.code, title: m.title || '', deadline: m.deadline, closed: closed_(m), tc: m.tc, days: m.days || [], pageUrl: m.pageUrl || '',
+      facilities: Object.keys(m.facilities).map(function (fid) {
+        var f = m.facilities[fid], rows = Object.keys(f.rows).map(function (id) { return f.rows[id]; });
+        return { fid: fid, name: f.name, folderUrl: f.folderUrl, link: pageLink_(m, f.token), total: rows.length, up: rows.filter(function (r) { return r.files.length || r.links.length; }).length };
+      })
+    };
+    return out;
+  });
+}
+
+function setDays_(q) {
+  leaderAuth_(q);
   return withLock_(function () {
     var v = loadV_(String(q.visit || ''));
+    v.m.days = normDays_(q.days, v.m.days);
+    if (q.deadline !== undefined) v.m.deadline = String(q.deadline || '');
+    saveV_(v);
+    return { ok: 1, days: v.m.days, deadline: v.m.deadline };
+  });
+}
+
+function openDay_(q) {
+  return withLock_(function () {
+    var v = loadV_(String(q.visit || ''));
+    teamAuth_(q, v.m);
+    var d = dayOf_(v.m, String(q.day || ''));
+    if (!d) throw new Error('اليوم غير موجود');
+    d.open = !!q.open;
+    if (d.open && !d.opened) d.opened = new Date().toISOString();
+    saveV_(v);
+    return { ok: 1, days: v.m.days };
+  });
+}
+
+/* المنشأة تكتب ما طُلب منها في معايير اليوم المفتوح */
+function facReq_(q) {
+  var sb = String(q.sub || '').replace(/[^0-9\-]/g, ''), lv = LV_NAME[q.lv] ? q.lv : '', txt = clean_(q.txt, 300);
+  if (!/^[0-9]+-[0-9]+$/.test(sb) || !lv) throw new Error('اختر المعيار الفرعي والمستوى');
+  if (!txt) throw new Error('اكتب الشاهد المطلوب');
+  return withLock_(function () {
+    var h = byToken_(q.token), d = dayOf_(h.v.m, String(q.day || ''));
+    if (!d) throw new Error('اليوم غير موجود');
+    if (dayClosed_(d)) throw new Error('هذا اليوم غير مفتوح أو انتهى موعده');
+    if (d.subs.length && d.subs.indexOf(sb) < 0) throw new Error('هذا المعيار ليس من معايير هذا اليوم');
+    var n = Object.keys(h.f.rows).filter(function (k) { return h.f.rows[k].rd === d.k; }).length;
+    if (n >= 80) throw new Error('بلغت الحد الأعلى لطلبات اليوم');
+    var id = 'x' + token_().slice(0, 9);
+    h.f.rows[id] = newRow_(id, sb, lv, txt, d.k, 'fac', 0);
+    saveV_(h.v);
+    return { ok: 1, id: id };
+  });
+}
+
+function facRmReq_(q) {
+  return withLock_(function () {
+    var h = byToken_(q.token), r = h.f.rows[String(q.row || '')];
+    if (!r || r.src !== 'fac') throw new Error('لا يمكن حذف هذا الطلب');
+    if (r.files.length || r.links.length || r.status === 'ok') throw new Error('احذف ملفات الشاهد أولاً');
+    delete h.f.rows[r.id];
+    saveV_(h.v);
+    return { ok: 1 };
+  });
+}
+
+/* الفريق يضيف شاهداً مباشرة إلى منشأة أو إلى كل المنشآت */
+function teamAddReq_(q) {
+  var sb = String(q.sub || '').replace(/[^0-9\-]/g, ''), lv = LV_NAME[q.lv] ? q.lv : '', txt = clean_(q.txt, 300);
+  if (!/^[0-9]+-[0-9]+$/.test(sb) || !lv || !txt) throw new Error('أكمل المعيار والمستوى والشاهد');
+  return withLock_(function () {
+    var v = loadV_(String(q.visit || '')), m = v.m;
+    teamAuth_(q, m);
+    var rd = String(q.day || 'o');
+    if (rd !== 'o' && !dayOf_(m, rd)) throw new Error('اليوم غير موجود');
+    var n = 0;
+    Object.keys(m.facilities).forEach(function (fid) {
+      if (q.fid && q.fid !== 'all' && q.fid !== fid) return;
+      var id = 'y' + token_().slice(0, 9);
+      m.facilities[fid].rows[id] = newRow_(id, sb, lv, txt, rd, 'team', 1);
+      n++;
+    });
+    if (!n) throw new Error('المنشأة غير موجودة');
+    saveV_(v);
+    return { ok: 1, added: n };
+  });
+}
+
+/* اعتماد طلب كتبته المنشأة، أو تعديل نصه، أو حذفه، أو اعتماد الكل */
+function approve_(q) {
+  return withLock_(function () {
+    var v = loadV_(String(q.visit || '')), m = v.m;
+    teamAuth_(q, m);
+    var f = m.facilities[q.fid];
+    if (!f) throw new Error('المنشأة غير موجودة');
+    if (q.op === 'all') {
+      var n = 0;
+      Object.keys(f.rows).forEach(function (id) {
+        var r = f.rows[id];
+        if (r.ap === 0 && (!q.day || r.rd === q.day) && (!q.sub || r.sub === q.sub)) { r.ap = 1; n++; }
+      });
+      saveV_(v);
+      return { ok: 1, approved: n };
+    }
+    var r = f.rows[String(q.row || '')];
+    if (!r) throw new Error('الشاهد غير موجود');
+    if (q.op === 'ok') { r.ap = 1; if (q.txt) r.txt = clean_(q.txt, 300); }
+    else if (q.op === 'edit') { r.txt = clean_(q.txt, 300) || r.txt; }
+    else if (q.op === 'del') {
+      if (r.files.length || r.links.length) throw new Error('رُفع لهذا الشاهد ملفات، فلا يُحذف');
+      delete f.rows[r.id];
+    } else throw new Error('إجراء غير صالح');
+    saveV_(v);
+    return { ok: 1 };
+  });
+}
+
+/* محضر طلبات اليوم: ملف يُحفظ في مجلد اليوم لدى كل منشأة */
+function closeDay_(q) {
+  return withLock_(function () {
+    var v = loadV_(String(q.visit || '')), m = v.m;
+    teamAuth_(q, m);
+    var rd = String(q.day || ''), d = dayOf_(m, rd);
+    if (!d) throw new Error('اليوم غير موجود');
+    var LVN = LV_NAME, SL = { none: 'لم يُرفع', up: 'تم الرفع', ok: 'تم الرفع', redo: 'مطلوب استكمال' };
+    var saved = 0;
+    Object.keys(m.facilities).forEach(function (fid) {
+      var f = m.facilities[fid];
+      var rows = Object.keys(f.rows).map(function (k) { return f.rows[k]; }).filter(function (r) { return r.rd === rd && r.ap !== 0; });
+      if (!rows.length) return;
+      var up = rows.filter(function (r) { return r.files.length || r.links.length; }).length;
+      var h = '<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>طلبات ' + d.label + '</title></head><body style="font-family:Sakkal Majalla,Tahoma,sans-serif">'
+        + '<h1>طلبات ' + d.label + '</h1><p>' + f.name + ' · زيارة ' + m.code + '</p><p>المطلوب ' + rows.length + ' · المرفوع ' + up + ' · المتبقي ' + (rows.length - up) + (d.dl ? ' · موعد التسليم ' + d.dl : '') + '</p>'
+        + '<table border="1" cellpadding="6" style="border-collapse:collapse"><tr><th>المعيار</th><th>المستوى</th><th>الشاهد</th><th>الحالة</th></tr>'
+        + rows.map(function (r) { return '<tr><td>' + r.sub + '</td><td>' + LVN[r.lv] + '</td><td>' + r.txt + '</td><td>' + SL[(r.files.length || r.links.length) ? r.status : 'none'] + '</td></tr>'; }).join('')
+        + '</table></body></html>';
+      var folder = sub_(DriveApp.getFolderById(f.folderId), clean_(rdName_(m, rd), 40));
+      var old = folder.getFilesByName('محضر طلبات اليوم.html');
+      while (old.hasNext()) old.next().setTrashed(true);
+      folder.createFile('محضر طلبات اليوم.html', h, 'text/html');
+      saved++;
+    });
+    return { ok: 1, saved: saved };
+  });
+}
+
+function review_(q) {
+  return withLock_(function () {
+    var v = loadV_(String(q.visit || ''));
+    teamAuth_(q, v.m);
     var f = v.m.facilities[q.fid], r = f && f.rows[q.row];
     if (!r) throw new Error('الشاهد غير موجود');
     if (q.status !== 'ok' && q.status !== 'redo') throw new Error('حالة غير صالحة');
@@ -319,7 +525,7 @@ function review_(q) {
 }
 
 function rotate_(q) {
-  admin_(q);
+  leaderAuth_(q);
   return withLock_(function () {
     var v = loadV_(String(q.visit || ''));
     var f = v.m.facilities[q.fid];
@@ -327,13 +533,17 @@ function rotate_(q) {
     props_().deleteProperty('TOK_' + f.token);
     f.token = token_();
     props_().setProperty('TOK_' + f.token, v.m.code + '|' + q.fid);
+    var map = {};
+    try { map = JSON.parse(props_().getProperty('FACTOK') || '{}'); } catch (e) {}
+    map[f.name] = f.token;
+    props_().setProperty('FACTOK', JSON.stringify(map));
     saveV_(v);
     return { ok: 1, link: pageLink_(v.m, f.token) };
   });
 }
 
 function setDeadline_(q) {
-  admin_(q);
+  leaderAuth_(q);
   return withLock_(function () {
     var v = loadV_(String(q.visit || ''));
     v.m.deadline = String(q.deadline || '');
@@ -348,16 +558,22 @@ function setDeadline_(q) {
 /* ---------- المنشأة ---------- */
 function portal_(q) {
   var h = byToken_(q.token), m = h.v.m;
+  var days = (m.days || []).filter(function (d) { return d.open; }).map(function (d) {
+    return { k: d.k, label: d.label, dl: d.dl, closed: dayClosed_(d), subs: d.subs };
+  });
+  var openKeys = days.map(function (d) { return d.k; });
   return {
-    ok: 1, visit: m.code, title: m.title || '', facility: h.f.name, deadline: m.deadline, closed: closed_(m),
-    rows: Object.keys(h.f.rows).map(function (id) { return rowView_(h.f.rows[id], false); })
+    ok: 1, visit: m.code, title: m.title || '', facility: h.f.name, deadline: m.deadline, closed: closed_(m), days: days,
+    rows: Object.keys(h.f.rows).map(function (id) { return h.f.rows[id]; })
+      .filter(function (r) { return !r.rd || r.rd === 'o' || openKeys.indexOf(r.rd) >= 0; })
+      .map(function (r) { return rowView_(r, false); })
   };
 }
 
 function editableRow_(h, rowId) {
-  if (closed_(h.v.m)) throw new Error('أُغلق باب رفع الشواهد');
   var r = h.f.rows[rowId];
   if (!r) throw new Error('الشاهد غير موجود');
+  if (closedRd_(h.v.m, r.rd)) throw new Error('أُغلق باب رفع الشواهد');
   if (r.status === 'ok') throw new Error('هذا الشاهد مقبول ولا يمكن تعديله');
   return r;
 }
@@ -389,7 +605,7 @@ function uploadChunk_(q) {
     if (bytes.length > 21 * 1024 * 1024) throw new Error('الملف أكبر من 20 ميغابايت. الصق رابطاً بدلاً منه');
     var mime = String(q.mime || 'application/octet-stream').slice(0, 100);
     var stamp = Utilities.formatDate(new Date(), 'Asia/Riyadh', 'yyyyMMdd-HHmmss');
-    var file = rowFolder_(h.f, r).createFile(Utilities.newBlob(bytes, mime, stamp + ' ' + name));
+    var file = rowFolder_(h.f, r, h.v.m).createFile(Utilities.newBlob(bytes, mime, stamp + ' ' + name));
     files.forEach(function (x) { x.setTrashed(true); });
     r.files.push({ id: file.getId(), name: name, size: bytes.length, url: file.getUrl(), at: new Date().toISOString() });
     if (r.status === 'none' || r.status === 'redo') r.status = 'up';
