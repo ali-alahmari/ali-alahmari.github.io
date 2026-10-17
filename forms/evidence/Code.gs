@@ -526,6 +526,7 @@ function review_(q) {
     var f = v.m.facilities[q.fid], r = f && f.rows[q.row];
     if (!r) throw new Error('الشاهد غير موجود');
     if (q.status !== 'ok' && q.status !== 'redo') throw new Error('حالة غير صالحة');
+    if (!r.cf && !closedRd_(v.m, r.rd)) throw new Error('لم تعتمد المنشأة الرفع بعد. انتظر اعتمادها');
     r.status = q.status;
     if (q.status === 'redo') r.cf = 0;
     r.note = q.status === 'redo' ? (clean_(q.note, 300) || 'يحتاج الشاهد إلى استكمال.') : '';
