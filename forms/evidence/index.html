@@ -451,7 +451,8 @@ function demoData(){DAYS=[{k:'d1',label:'اليوم الأول',dl:'',closed:fal
  applyRd()}
 /* ---- بدء التشغيل ---- */
 $('#taSub').innerHTML=subOpts(Object.keys(SUB));$('#taLv').innerHTML=lvOpts();
-if(MODE==='demo'){demoData();render()}
+if(MODE==='demo'&&LINKERR){$('#seg').hidden=true;ALLV.forEach(function(k){$('#v-'+k).hidden=true});$('#mFac').textContent='الرابط غير صالح';$('#mDl').hidden=true;$('#mProg').hidden=true;$('#keyHd').textContent='تعذر فتح الرابط';$('#keyCard').hidden=false;$('#keyCard').querySelector('.hint').textContent='الرابط الذي فتحته غير مكتمل أو ليس الرابط الأصلي، فلا يمكن عرض بيانات حقيقية. افتح الصفحة من زر «فتح البوابة» في نموذج 22م، أو من رابط الفريق في صفحة الرئيس.';$$('#keyCard .lk').forEach(function(e){e.hidden=true});$('#keyErr').textContent=''}
+else if(MODE==='demo'){demoData();render()}
 else{$('#mFac').textContent='جارٍ التحميل…';$('#seg').hidden=true;ALLV.forEach(function(k){$('#v-'+k).hidden=true});
  if(MODE==='fac'){$('#v-fac').hidden=false;load().then(pollStart).catch(function(e){$('#fList').innerHTML='<div class="card" role="alert"><b>تعذر فتح الرابط.</b><p class="hint">'+esc(e.message)+'</p></div>'})}
  else if(MODE==='team'&&CFG.tc){enterTeam()}
