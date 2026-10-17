@@ -48,6 +48,7 @@ function handle_(q) {
       case 'setSync': return out_(setSync_(q));
       case 'importSync': return out_(importSync_(q));
       case 'publishForm': return out_(publishForm_(q));
+      case 'poll': return out_(poll_(q));
       case 'portal': return out_(portal_(q));
       case 'uploadChunk': return out_(uploadChunk_(q));
       case 'addLink': return out_(addLink_(q));
@@ -564,6 +565,21 @@ function setDeadline_(q) {
     putIdx_(a);
     return { ok: 1, deadline: v.m.deadline };
   });
+}
+
+/* استطلاع خفيف: يرجع وقت آخر تعديل للزيارة فقط */
+function poll_(q) {
+  var code = '';
+  if (q.token) {
+    var t = String(q.token || '');
+    if (!/^[A-Za-z0-9]{10,40}$/.test(t)) throw new Error('الرابط غير صالح');
+    var ref = props_().getProperty('TOK_' + t);
+    if (!ref) throw new Error('الرابط غير صالح أو انتهى');
+    code = ref.split('|')[0];
+  } else code = String(q.visit || '') || (idx_()[0] || {}).c || '';
+  var id = props_().getProperty('VMAN_' + code);
+  if (!id) throw new Error('الزيارة غير موجودة');
+  return { ok: 1, u: DriveApp.getFileById(id).getLastUpdated().getTime() };
 }
 
 /* ---------- المنشأة ---------- */
