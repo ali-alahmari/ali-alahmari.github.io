@@ -218,23 +218,24 @@ function fail(e){toast(e&&e.message?e.message:'تعذر الاتصال. حاول
 function applyRd(){if(RD!=='o'&&!DAYS.filter(function(x){return x.k===RD}).length)RD='o';R=RALL.filter(function(r){return(r.rd||'o')===RD})}
 function load(){
  if(MODE==='fac')return api({action:'portal'}).then(function(j){FAC=j.facility;VISIT='زيارة '+j.visit+(j.title?' · '+j.title:'');DEADLINE=j.deadline;CLOSED=j.closed;DAYS=j.days||[];RALL=j.rows.map(nrm);applyRd();render()});
- var t=function(){return api({action:'team'}).then(function(j){VISIT='زيارة '+j.visit+(j.title?' · '+j.title:'');VCODE=j.visit;DEADLINE=j.deadline;CLOSED=j.closed;DAYS=j.days||[];FACS=j.facilities.map(function(f){f.rows=f.rows.map(nrm);return f});if(curF>=FACS.length)curF=0;pickFac();render()})};
+ var t=loadTeam;
  if(MODE==='lead')return api({action:'leader',visit:VCODE}).then(function(j){LD=j;VISITS=j.visits;MEMBERS=j.members;SYNC=!!j.sync;if(j.current)VCODE=j.current.code;syncUI();buildMat();$('#nvMem').value=MEMBERS.join('\n');if(!$('#nvFac').value&&j.current)$('#nvFac').value=j.current.facilities.map(function(f){return f.name}).join('\n');return VCODE?t():render()});
  return t()}
 
 /* تحديث تلقائي: يسأل كل 5 ثوانٍ عن آخر تعديل ولا يعيد الرسم أثناء الكتابة */
 var LASTU=0,POLLT=0;
 function typing(){var a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&!a.readOnly&&a.type!=='button')return true;
- return !!document.querySelector('[data-rvin],[data-edin],[data-lkin],#taTxt:not(:placeholder-shown),#dfTxt:not(:placeholder-shown)')}
-function pollOnce(){if(document.hidden||PEND>0||typing())return Promise.resolve();
- var b={action:'poll',quiet:1};return api(b).then(function(j){if(!LASTU){LASTU=j.u;return}if(j.u!==LASTU){LASTU=j.u;if(PEND>0||typing())return;return load()}}).catch(function(){})}
-function pollStart(){if(POLLT||(MODE!=='fac'&&MODE!=='team'))return;POLLT=setInterval(pollOnce,5000);setTimeout(pollOnce,800);document.addEventListener('visibilitychange',function(){if(!document.hidden)pollOnce()})}
+ if(document.querySelector('[data-rvin],[data-edin],[data-lkin]'))return true;return ['taTxt','dfTxt'].some(function(i){var e=document.getElementById(i);return e&&e.value.trim()})}
+function pollOnce(){if(document.hidden||PEND>0||typing()||(MODE==='lead'&&!VCODE))return Promise.resolve();
+ var b={action:'poll',quiet:1};return api(b).then(function(j){if(!LASTU){LASTU=j.u;return}if(j.u!==LASTU){LASTU=j.u;if(PEND>0||typing())return;return MODE==='lead'?loadTeam():load()}}).catch(function(){})}
+function pollStart(){if(POLLT||MODE==='demo')return;POLLT=setInterval(pollOnce,5000);setTimeout(pollOnce,800);document.addEventListener('visibilitychange',function(){if(!document.hidden)pollOnce()})}
+function loadTeam(){return api({action:'team'}).then(function(j){VISIT='زيارة '+j.visit+(j.title?' · '+j.title:'');VCODE=j.visit;DEADLINE=j.deadline;CLOSED=j.closed;DAYS=j.days||[];FACS=j.facilities.map(function(f){f.rows=f.rows.map(nrm);return f});if(curF>=FACS.length)curF=0;pickFac();render()})}
 function pickFac(){var f=FACS[curF];if(!f)return;FAC=f.name;RALL=f.rows;applyRd()}
 function enterTeam(){$$('.seg button').forEach(function(x){x.hidden=!(x.dataset.v==='team'||x.dataset.v==='tree')});$('#seg').hidden=false;
  load().then(function(){setView('team');pollStart()}).catch(function(e){$('#mFac').textContent='تعذر الدخول';$('#keyHd').textContent='تعذر دخول الفريق';$('#keyCard').hidden=false;$('#keyErr').textContent='رابط الفريق لم يعد صالحاً، فقد تكون بدأت زيارة جديدة. افتح الزيارة من نموذج 22م، أو اكتب كلمة سر الفريق. ('+(e&&e.message||'')+')'})}
 function doKey(){KEY=$('#keyIn').value;$('#keyErr').textContent='';
- if(MODE==='lead'){load().then(function(){$('#keyCard').hidden=true;$$('.seg button').forEach(function(x){x.hidden=x.dataset.v==='fac'});$('#seg').hidden=false;if(!VCODE)setView('new');else setView('lead')}).catch(function(e){$('#keyErr').textContent=e.message});return}
- api({action:'listVisits'}).then(function(j){VISITS=j.visits;MEMBERS=j.members;SYNC=!!j.sync;$('#keyCard').hidden=true;$$('.seg button').forEach(function(x){x.hidden=!(x.dataset.v==='team'||x.dataset.v==='tree')});$('#seg').hidden=false;if(!VCODE&&VISITS.length)VCODE=VISITS[0].c;if(!VCODE){$('#keyErr').textContent='لا توجد زيارة بعد.';$('#keyCard').hidden=false;return}return load().then(function(){setView('team')})}).catch(function(e){$('#keyErr').textContent=e.message})}
+ if(MODE==='lead'){load().then(function(){$('#keyCard').hidden=true;$$('.seg button').forEach(function(x){x.hidden=x.dataset.v==='fac'});$('#seg').hidden=false;if(!VCODE)setView('new');else setView('lead');pollStart()}).catch(function(e){$('#keyErr').textContent=e.message});return}
+ api({action:'listVisits'}).then(function(j){VISITS=j.visits;MEMBERS=j.members;SYNC=!!j.sync;$('#keyCard').hidden=true;$$('.seg button').forEach(function(x){x.hidden=!(x.dataset.v==='team'||x.dataset.v==='tree')});$('#seg').hidden=false;if(!VCODE&&VISITS.length)VCODE=VISITS[0].c;if(!VCODE){$('#keyErr').textContent='لا توجد زيارة بعد.';$('#keyCard').hidden=false;return}return load().then(function(){setView('team');pollStart()})}).catch(function(e){$('#keyErr').textContent=e.message})}
 /* ---- العرض ---- */
 function stat(a){var Q=a?R.filter(function(r){return r.ap!==0}):R,t=Q.length,u=Q.filter(cntF).length;return{t:t,u:u,ok:Q.filter(function(r){return r.status==='ok'}).length,rd:Q.filter(function(r){return r.status==='redo'}).length,wait:Q.filter(function(r){return r.status==='up'}).length}}
 function pathHTML(r){return'<div class="path" aria-label="مسار المجلد"><span>'+esc(VISIT)+'</span><span>'+esc(FAC.replace(' (مثال)',''))+'</span><span>المعيار '+SUB[r.sub].std.n+'</span><span>'+r.sub+'</span><span>'+LVN[r.lv]+'</span></div>'}
