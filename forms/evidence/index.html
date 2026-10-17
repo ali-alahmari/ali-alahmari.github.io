@@ -204,11 +204,11 @@ var LINKERR='',ALLV=['fac','team','tree','new','lead'];
  catch(e){CFG=null;LINKERR='تعذر قراءة الرابط، فتعمل الصفحة بالوضع التجريبي. اطلب رابطاً جديداً أو انسخه كاملاً.'}})();
 window.addEventListener('DOMContentLoaded',function(){if(LINKERR)setTimeout(function(){toast(LINKERR)},400)});
 function encCfg(o){return btoa(unescape(encodeURIComponent(JSON.stringify(o))))}
-function api(b){if(!CFG||!CFG.u)return Promise.reject(new Error('الرابط غير صالح'));if(MODE==='fac')b.token=CFG.t;else{b.key=KEY;b.tc=CFG.tc||'';if(b.visit===undefined)b.visit=VCODE}
- var bb=BTN;BTN=null;if(bb&&bb.isConnected&&!bb.dataset.t0){bb.dataset.t0=bb.textContent;bb.disabled=true;bb.classList.add('busy');bb.textContent='جارٍ التنفيذ…';BUSYB.push(bb)}
- PEND++;barOn();
+function api(b){var qt=b.quiet;delete b.quiet;if(!CFG||!CFG.u)return Promise.reject(new Error('الرابط غير صالح'));if(MODE==='fac')b.token=CFG.t;else{b.key=KEY;b.tc=CFG.tc||'';if(b.visit===undefined)b.visit=VCODE}
+ var bb=qt?null:BTN;if(!qt)BTN=null;if(bb&&bb.isConnected&&!bb.dataset.t0){bb.dataset.t0=bb.textContent;bb.disabled=true;bb.classList.add('busy');bb.textContent='جارٍ التنفيذ…';BUSYB.push(bb)}
+ if(!qt){PEND++;barOn()}
  var p=fetch(CFG.u,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(b)}).then(function(r){return r.json()}).then(function(j){if(!j.ok)throw new Error(j.error||'تعذر تنفيذ الطلب');return j});
- function done(){PEND--;setTimeout(idle,60)}
+ function done(){if(!qt){PEND--;LASTU=0;setTimeout(idle,60)}}
  p.then(done,done);return p}
 var BTN=null,PEND=0,BUSYB=[];
 function barOn(){var e=document.getElementById('pbar');if(e)e.classList.add('on')}
@@ -221,9 +221,17 @@ function load(){
  var t=function(){return api({action:'team'}).then(function(j){VISIT='زيارة '+j.visit+(j.title?' · '+j.title:'');VCODE=j.visit;DEADLINE=j.deadline;CLOSED=j.closed;DAYS=j.days||[];FACS=j.facilities.map(function(f){f.rows=f.rows.map(nrm);return f});if(curF>=FACS.length)curF=0;pickFac();render()})};
  if(MODE==='lead')return api({action:'leader',visit:VCODE}).then(function(j){LD=j;VISITS=j.visits;MEMBERS=j.members;SYNC=!!j.sync;if(j.current)VCODE=j.current.code;syncUI();buildMat();$('#nvMem').value=MEMBERS.join('\n');if(!$('#nvFac').value&&j.current)$('#nvFac').value=j.current.facilities.map(function(f){return f.name}).join('\n');return VCODE?t():render()});
  return t()}
+
+/* تحديث تلقائي: يسأل كل 5 ثوانٍ عن آخر تعديل ولا يعيد الرسم أثناء الكتابة */
+var LASTU=0,POLLT=0;
+function typing(){var a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&!a.readOnly&&a.type!=='button')return true;
+ return !!document.querySelector('[data-rvin],[data-edin],[data-lkin],#taTxt:not(:placeholder-shown),#dfTxt:not(:placeholder-shown)')}
+function pollOnce(){if(document.hidden||PEND>0||typing())return Promise.resolve();
+ var b={action:'poll',quiet:1};return api(b).then(function(j){if(!LASTU){LASTU=j.u;return}if(j.u!==LASTU){LASTU=j.u;if(PEND>0||typing())return;return load()}}).catch(function(){})}
+function pollStart(){if(POLLT||(MODE!=='fac'&&MODE!=='team'))return;POLLT=setInterval(pollOnce,5000);setTimeout(pollOnce,800);document.addEventListener('visibilitychange',function(){if(!document.hidden)pollOnce()})}
 function pickFac(){var f=FACS[curF];if(!f)return;FAC=f.name;RALL=f.rows;applyRd()}
 function enterTeam(){$$('.seg button').forEach(function(x){x.hidden=!(x.dataset.v==='team'||x.dataset.v==='tree')});$('#seg').hidden=false;
- load().then(function(){setView('team')}).catch(function(e){$('#mFac').textContent='تعذر الدخول';$('#keyHd').textContent='تعذر دخول الفريق';$('#keyCard').hidden=false;$('#keyErr').textContent='رابط الفريق لم يعد صالحاً، فقد تكون بدأت زيارة جديدة. افتح الزيارة من نموذج 22م، أو اكتب كلمة سر الفريق. ('+(e&&e.message||'')+')'})}
+ load().then(function(){setView('team');pollStart()}).catch(function(e){$('#mFac').textContent='تعذر الدخول';$('#keyHd').textContent='تعذر دخول الفريق';$('#keyCard').hidden=false;$('#keyErr').textContent='رابط الفريق لم يعد صالحاً، فقد تكون بدأت زيارة جديدة. افتح الزيارة من نموذج 22م، أو اكتب كلمة سر الفريق. ('+(e&&e.message||'')+')'})}
 function doKey(){KEY=$('#keyIn').value;$('#keyErr').textContent='';
  if(MODE==='lead'){load().then(function(){$('#keyCard').hidden=true;$$('.seg button').forEach(function(x){x.hidden=x.dataset.v==='fac'});$('#seg').hidden=false;if(!VCODE)setView('new');else setView('lead')}).catch(function(e){$('#keyErr').textContent=e.message});return}
  api({action:'listVisits'}).then(function(j){VISITS=j.visits;MEMBERS=j.members;SYNC=!!j.sync;$('#keyCard').hidden=true;$$('.seg button').forEach(function(x){x.hidden=!(x.dataset.v==='team'||x.dataset.v==='tree')});$('#seg').hidden=false;if(!VCODE&&VISITS.length)VCODE=VISITS[0].c;if(!VCODE){$('#keyErr').textContent='لا توجد زيارة بعد.';$('#keyCard').hidden=false;return}return load().then(function(){setView('team')})}).catch(function(e){$('#keyErr').textContent=e.message})}
@@ -444,7 +452,7 @@ function demoData(){DAYS=[{k:'d1',label:'اليوم الأول',dl:'',closed:fal
 $('#taSub').innerHTML=subOpts(Object.keys(SUB));$('#taLv').innerHTML=lvOpts();
 if(MODE==='demo'){demoData();render()}
 else{$('#mFac').textContent='جارٍ التحميل…';$('#seg').hidden=true;ALLV.forEach(function(k){$('#v-'+k).hidden=true});
- if(MODE==='fac'){$('#v-fac').hidden=false;load().catch(function(e){$('#fList').innerHTML='<div class="card" role="alert"><b>تعذر فتح الرابط.</b><p class="hint">'+esc(e.message)+'</p></div>'})}
+ if(MODE==='fac'){$('#v-fac').hidden=false;load().then(pollStart).catch(function(e){$('#fList').innerHTML='<div class="card" role="alert"><b>تعذر فتح الرابط.</b><p class="hint">'+esc(e.message)+'</p></div>'})}
  else if(MODE==='team'&&CFG.tc){enterTeam()}
  else{$('#keyCard').hidden=false;$('#keyHd').textContent=MODE==='lead'?'دخول رئيس الفريق':'دخول فريق المراجعة';$('#mFac').textContent=MODE==='lead'?'رئيس الفريق':'فريق المراجعة'}}
 </script>
