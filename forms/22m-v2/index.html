@@ -21862,7 +21862,7 @@ async function flushEntry(c){if(SY.busy[c]){SY.timers[c]=setTimeout(function(){f
     else{await ref.set(Object.assign(fullEntry(c),data,meta));SY.known[c]=1}
     ok=true}catch(e){handleDbErr(e);Object.keys(data).forEach(function(kk){var cur=SY.pend[c]=SY.pend[c]||{};if(cur[kk]===undefined)cur[kk]=data[kk]});if(SY.can){clearTimeout(SY.timers[c]);SY.timers[c]=setTimeout(function(){flushEntry(c)},5000)}}
   SY.busy[c]=false;if(ok){if(SY.pend[c]&&Object.keys(SY.pend[c]).length)flushEntry(c);else setShare('ok')}}
-function mainPayload(){var s=S.setup;return {facility:s.facility||'',date:s.date||'',days:+s.days||1,dayNotes:(s.dayNotes||[]).map(function(x){return x||''}),viewers:(s.viewers||[]).map(function(v){return {id:v.id,name:v.name||'',org:v.org||''}}),team:s.team.map(function(m){return {id:m.id,name:m.name||'',role:m.role||'',with:m.with||'',tr:+m.tr||0}}),mode:S.mode,assign:S.assign||{},subAssign:S.subAssign||{},stdDay:S.stdDay||{},by:SY.uid||'',at:new Date().toISOString()}}
+function mainPayload(){var s=S.setup;return {facility:s.facility||'',date:s.date||'',days:+s.days||1,dayNotes:(s.dayNotes||[]).map(function(x){return x||''}),viewers:(s.viewers||[]).map(function(v){return {id:v.id,name:v.name||'',org:v.org||''}}),team:s.team.map(function(m){return {id:m.id,name:m.name||'',role:m.role||'',with:m.with||'',tr:+m.tr||0}}),mode:S.mode,assign:S.assign||{},subAssign:S.subAssign||{},stdDay:S.stdDay||{},portalView:ptUrl(s.portalView,PT_RE_O),portalTeam:ptUrl(s.portalTeam,PT_RE_T),by:SY.uid||'',at:new Date().toISOString()}}
 function queueMain(){if(SH.on){shQ('m|setup',null);return}if(!SY.on||!SY.can)return;SY.mainPending=true;clearTimeout(SY.mainT);SY.mainT=setTimeout(flushMain,600);setShare('saving')}
 async function flushMain(){if(SY.mainBusy){SY.mainDirty=true;return}SY.mainBusy=true;var ok=false;
   try{await DB.doc('visit/main').set(mainPayload());ok=true}catch(e){handleDbErr(e);if(SY.can){clearTimeout(SY.mainT);SY.mainT=setTimeout(flushMain,5000)}}
@@ -21874,6 +21874,7 @@ function applyMain(d){var s=S.setup;
   if(Array.isArray(d.dayNotes))s.dayNotes=d.dayNotes.slice();
   if(Array.isArray(d.viewers))s.viewers=d.viewers.map(function(x){return {id:String(x.id),name:String(x.name||''),org:String(x.org||'')}});
   if(Array.isArray(d.team)&&d.team.length)s.team=d.team.map(function(x){return {id:String(x.id),name:String(x.name||''),role:String(x.role||'مقيّم'),with:x.with?String(x.with):'',tr:+x.tr||0}});
+  var _pa=document.activeElement;if(!(_pa&&(_pa.id==='ptLink'||_pa.id==='ptTeam'))){if(typeof d.portalView==='string')s.portalView=ptUrl(d.portalView,PT_RE_O);if(typeof d.portalTeam==='string')s.portalTeam=ptUrl(d.portalTeam,PT_RE_T)}
   if(d.mode)S.mode=d.mode;S.assign=Object.assign({},d.assign||{});S.subAssign=Object.assign({},d.subAssign||{});S.stdDay=Object.assign({},d.stdDay||{});
   var ae=document.activeElement;if(ae&&ae.closest&&ae.closest('#setup')&&/INPUT|SELECT|TEXTAREA/.test(ae.tagName)){SY.remoteMain=true;updAll()}else refreshSetupDom();
   saveNow()}
