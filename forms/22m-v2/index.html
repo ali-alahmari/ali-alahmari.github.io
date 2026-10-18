@@ -370,6 +370,12 @@ button,.btn,[role=button],a.btn,select,summary{touch-action:manipulation}
 .stepbox ol{margin:0;padding-inline-start:1.3rem;display:grid;gap:3px}
 .ed{grid-column:1/-1;font-size:.84rem;color:var(--ink-2)}
 .ed:empty{display:none}
+#app.view [data-f],#app.view [data-sd],#app.view #reqRows .in,#app.view #reqRows textarea{opacity:.85}
+#app.view .rqi-btn,#app.view [data-rqdel],#app.view [data-rvw],#app.view [data-finb],#app.view #reqAdd,#app.view #reqWord,#app.view #pubBox,#app.view #btnData,#app.view #btnFreeze,#app.view #meBox,#app.view #vwT,#app.view #vwBox,#app.view #vwAdd,#app.view .rqi-ft,#app.view #tkSum+div .btn{display:none!important}
+#app.view #memBanner{border-color:var(--crit)!important;background:var(--crit-soft)!important}
+.vtag{display:inline-block;margin-top:6px;padding:4px 12px;border-radius:999px;background:var(--crit-soft);color:var(--crit);font-weight:800;font-size:.92rem;border:1px solid var(--crit)}
+.vn-i{border:1px solid var(--line,#ddd);border-radius:12px;padding:10px 14px;margin:8px 0;background:var(--surface-2)}.vn-i b{display:block;margin-bottom:4px}.vn-i small{color:var(--ink-2)}.vn-i p{margin:4px 0 0;white-space:pre-wrap}
+#vnTxt{width:100%;min-height:90px;box-sizing:border-box;border:1px solid var(--line,#ccc);border-radius:10px;padding:10px;font:inherit}
 #app.ro [data-f],#app.ro #setup .in,#app.ro #setup .btn,#app.ro .qk select,#app.ro .dcard select,#app.ro [data-sd],#app.ro .presets .btn{pointer-events:none;opacity:.65}
 .save.busy i{background:var(--brand-2);animation:pulse 1s infinite}
 @keyframes pulse{50%{opacity:.3}}
@@ -589,6 +595,7 @@ html[data-skin="heritage"] .gd::before{background:linear-gradient(90deg,#C9A24B,
     <h1>نموذج تقويم المعايير للمراجعة</h1>
     <p>الاعتماد المؤسسي لمنشآت التدريب · ٨ معايير رئيسة و٣٧ معياراً فرعياً</p>
     <p style="margin-top:4px;font-weight:700;color:var(--brand)">معدّ التقرير: المهندس/ علي الأحمري</p>
+    <p id="viewTag" hidden><span class="vtag"></span></p>
   </div>
   <div class="top-act">
     <span class="save" id="shareSt" title="عند نشر الصفحة ومشاركتها مع الفريق بصلاحية «مساهم» تُحفظ التعبئة وتظهر لجميع الأعضاء لحظياً."><i></i><span>تعبئة محلية (غير مشتركة)</span></span>
@@ -638,6 +645,10 @@ html[data-skin="heritage"] .gd::before{background:linear-gradient(90deg,#C9A24B,
     <div class="sec-t">أسماء فريق المراجعة</div>
     <div class="team" id="teamBox"></div>
     <div class="presets"><button class="btn sm" id="addMember" type="button">+ إضافة عضو</button><button class="btn sm" id="addObs" type="button">+ إضافة معايش</button><span class="note">عند كتابة الاسم يظهر فوراً أعلى المعايير المسندة له.</span></div>
+
+    <div class="sec-t" id="vwT">مراقب من هيئة تقويم التعليم والتدريب (اطلاع فقط)</div>
+    <div class="team" id="vwBox"></div>
+    <div class="presets" id="vwAdd"><button class="btn sm" id="addView" type="button">+ إضافة مراقب من الهيئة</button><span class="note">يطّلع على كل شيء ولا يعدّل شيئاً، ولا يُحسب في توزيع المعايير. رابطه الشخصي من «مشاركة الفريق»، ويتوقف مع تغيير الرابط في الزيارة الجديدة.</span></div>
 
     <div class="presets" id="meBox" hidden><label class="lbl" for="meSel" style="margin:0">أنا:</label><select class="in" id="meSel" style="width:auto;min-width:200px"></select><span class="note">يُسجَّل اسمك آخر معدِّل لكل معيار تعبئه.</span></div>
     <div class="sec-t">توزيع المعايير على الفريق</div>
@@ -837,6 +848,12 @@ html[data-skin="heritage"] .gd::before{background:linear-gradient(90deg,#C9A24B,
     <h2 class="doc-t">متابعة تعبئة الفريق</h2>
     <div class="wl" id="wl"></div>
   </div>
+  <div class="card" id="vnCard" hidden style="margin-top:16px">
+    <h2 class="doc-t">ملاحظات مراقب الهيئة على سير العمل</h2>
+    <p class="note" id="vnHint"></p>
+    <div id="vnList"></div>
+    <div id="vnForm" hidden><textarea id="vnTxt" placeholder="اكتب ملاحظتك على سير العمل… تصل إلى رئيس الفريق وحده ولا تمسّ التقويم."></textarea><div class="row" style="margin-top:8px"><button class="btn pri" id="vnSend" type="button">إرسال الملاحظة لرئيس الفريق</button><span class="note" id="vnMsg" role="status" aria-live="polite"></span></div></div>
+  </div>
   <div class="card" style="margin-top:16px">
     <h2 class="doc-t">المعايير الحرجة (البرتقالية)</h2>
     <div class="tbl-wrap"><table class="o sum" id="critTable"></table></div>
@@ -888,6 +905,7 @@ html[data-skin="heritage"] .gd::before{background:linear-gradient(90deg,#C9A24B,
     <div class="stepbox">
       <b>ثانياً: إرسال الدعوة للأعضاء</b>
             <div id="shMemBox" hidden><label class="lbl" style="margin-top:10px">رابط شخصي لكل عضو (الأفضل: يثبّت اسم العضو ولا يستطيع تغييره)</label><div id="shMemList"></div><input id="shMemTmp" readonly style="position:absolute;opacity:0;pointer-events:none;height:1px" tabindex="-1"><div class="note">أرسل لكل عضو رابطه فقط. الرابط مرتبط بالعضو نفسه فلا يتأثر بتعديل كتابة اسمه. لا يظهر اسم رئيس الفريق هنا لأن رابطه هو «رابط الرئيس» أدناه (يفتح صلاحياتك من أي جهاز آخر، ولا يُرسل لأحد).</div></div>
+      <div id="shViewBox" hidden><label class="lbl" style="margin-top:10px">رابط مراقب الهيئة (اطلاع فقط، لا يسمح بأي تعديل)</label><div id="shViewList"></div><div class="note" id="shViewNote"></div></div>
       <div id="shLeadBox" hidden><label class="lbl" style="margin-top:10px">رابط الرئيس (احتفظ به لنفسك ولا ترسله لأحد: يتيح بدء زيارة جديدة)</label>
       <div class="row"><input class="in" id="shLead" readonly dir="ltr" style="flex:1"><button class="btn" id="shCopyLead" type="button">نسخ رابط الرئيس</button></div></div>
       <details class="adv" id="shAdv"><summary>روابط عامة للجميع (غير موصى بها: تسمح لأي عضو باختيار أي اسم)</summary>
@@ -21066,7 +21084,7 @@ var SCL={};SCALE.forEach(function(x){SCL[x.v]=x.d});
 
 /* ---------- state ---------- */
 function uid(){return 'm'+Math.random().toString(36).slice(2,8)}
-function fresh(){var m2=uid(),m3=uid();return {setup:{facility:'',date:'',days:2,dayNotes:[],team:[{id:uid(),name:'علي الأحمري',role:'رئيس الفريق'},{id:m2,name:'',role:'مقيّم'},{id:m3,name:'',role:'مقيّم'},{id:uid(),name:'',role:OBS,with:m2,tr:0},{id:uid(),name:'',role:OBS,with:m3,tr:0}]},mode:'A',assign:{},subAssign:{},stdDay:{},f:{},ui:{tab:'form',setupOpen:true,filter:'all',crit:false,collapsed:{2:1,3:1,4:1,5:1,6:1,7:1,8:1}}}}
+function fresh(){var m2=uid(),m3=uid();return {setup:{facility:'',date:'',days:2,dayNotes:[],viewers:[],team:[{id:uid(),name:'علي الأحمري',role:'رئيس الفريق'},{id:m2,name:'',role:'مقيّم'},{id:m3,name:'',role:'مقيّم'},{id:uid(),name:'',role:OBS,with:m2,tr:0},{id:uid(),name:'',role:OBS,with:m3,tr:0}]},mode:'A',assign:{},subAssign:{},stdDay:{},f:{},ui:{tab:'form',setupOpen:true,filter:'all',crit:false,collapsed:{2:1,3:1,4:1,5:1,6:1,7:1,8:1}}}}
 var storeOK=true;
 function load(){try{var t=localStorage.getItem(KEY);if(!t)return null;var o=JSON.parse(t);return norm(o)}catch(e){storeOK=false;return null}}
 function norm(o){var f=fresh();if(!o||typeof o!=='object')return f;
@@ -21252,14 +21270,31 @@ function updOwners(){STDS.forEach(function(s){var id=effStd(s.n),ov={};
     s.subs.forEach(function(sb){var sid=effSub(sb.code),e=$('[data-so="'+sb.code+'"]');if(e)e.innerHTML=(sid&&sid!==id)?'<div class="own-row" style="margin:0"><span class="own-l">المراجع</span>'+chip(sid,true)+'</div>':''});
     var ro=$('[data-ro="'+s.n+'"]');if(ro){var m=mem(id);ro.textContent=m&&m.name.trim()?m.name.trim():(m?'بانتظار الاسم':'غير مسند')}});updObsRows();updTrainee();try{applyRole()}catch(e){}}
 
+/* ---------- مراقب الهيئة (اطلاع فقط) ---------- */
+function viewers(){if(!Array.isArray(S.setup.viewers))S.setup.viewers=[];return S.setup.viewers}
+function viewer(id){for(var i=0;i<viewers().length;i++)if(viewers()[i].id===id)return viewers()[i];return null}
+function renderViewers(){var b=$('#vwBox');if(!b)return;var h='';viewers().forEach(function(v,i){h+='<div class="tm" style="--mc:var(--crit)"><span class="av">👁</span><input class="in" data-vn="'+esc(v.id)+'" placeholder="اسم المراقب" value="'+esc(v.name||'')+'"><input class="in" data-vo="'+esc(v.id)+'" placeholder="الجهة (مثال: هيئة تقويم التعليم والتدريب)" value="'+esc(v.org||'')+'" style="min-width:220px"><button class="btn sm danger" data-vrm="'+esc(v.id)+'" type="button" aria-label="حذف المراقب">حذف</button></div>'});b.innerHTML=h}
+function viewLink(v){var base=location.href.split('#')[0];var o={u:SH.url,r:1,i:v.id,n:(v.name||'').trim(),o:(v.org||'').trim()};if(SH.vkey)o.v=SH.vkey;else o.c=SH.code;return base+'#s='+encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(o)))))}
+function shViewLinks(){var bx=$('#shViewBox'),b=$('#shViewList'),nt=$('#shViewNote');if(!bx||!b)return;bx.hidden=!(SH.on&&SH.seed&&viewers().length);if(bx.hidden)return;var h='';viewers().forEach(function(v){h+='<div class="row" style="margin:4px 0"><b style="flex:1">'+esc((v.name||'').trim()||'مراقب بانتظار الاسم')+(v.org?' <span class="note">('+esc(v.org)+')</span>':'')+'</b><button class="btn" type="button" data-vlink="'+esc(v.id)+'">نسخ رابطه</button></div>'});b.innerHTML=h;
+  nt.textContent=SH.vkey?'الرابط لا يحمل رمز الفريق: القراءة فقط مضمونة من الخادم (Apps Script)، فلا يمرّ أي حفظ منه حتى لو عُدّل الرابط يدوياً.':'كود Apps Script الحالي قديم: الرابط يعمل للاطلاع والقفل من المتصفح فقط. انسخ الكود الجديد من الأعلى وانشره إصداراً جديداً لتصبح الحماية من الخادم أيضاً.'}
+document.addEventListener('click',function(ev){var b=ev.target.closest&&ev.target.closest('[data-vlink]');if(!b)return;var v=viewer(b.getAttribute('data-vlink'));if(!v)return;var t=$('#shMemTmp');t.value=viewLink(v);copyText(t,'تم نسخ رابط المراقب')});
+function shViewSync(){if(!SH.on||!SH.seed||SH.vkey||SH.vrec)return;SH.vrec=1;(async function(){try{var ar=new Uint8Array(12);crypto.getRandomValues(ar);var key=Array.from(ar,function(x){return'abcdefghjkmnpqrstuvwxyz23456789'[x%31]}).join('');
+  var r=await fetch(SH.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({code:SH.code,lead:SH.lead||undefined,setView:key,ops:[]})});var j=await r.json();if(j&&j.ok&&j.view===key){SH.vkey=key;cfgSave();shLinks()}}catch(e){}SH.vrec=0})()}
+function tkView(){var rows='';team().forEach(function(m,i){if(isObs(m))return;var subs=subsOfMem(m),p=pctOf(subs),ns=stdsOfSubs(subs);rows+='<div class="tk-r"><span class="tk-nm">'+esc(m.name.trim()||lbl(i))+'</span><span class="tk-s">'+(ns.length?'المعايير: '+ns.join('، '):'بلا معايير')+'</span><span class="tk-b"><i style="width:'+p+'%"></i></span><b class="num">'+p+'%</b></div>'});
+  var fin=0;STDS.forEach(function(s){if(finalOf(s.n))fin++});return '<div class="tk-p"><b>تقدّم الفريق</b> <span class="note">· اعتمد الرئيس '+fin+' من '+STDS.length+' معايير · المرحلة: '+(frozen()?'ميدانية':'مكتبية')+'</span></div>'+rows}
+function vnRender(){var card=$('#vnCard');if(!card)return;var r=myRole();card.hidden=!(SH.on&&(r==='lead'||r==='view'));if(card.hidden)return;$('#vnForm').hidden=r!=='view';$('#vnHint').textContent=r==='view'?'ملاحظاتك تصل إلى رئيس الفريق وحده، وتُحفظ باسمك وتاريخها، ولا تؤثر في التقويم.':'ملاحظات كتبها مراقب الهيئة أثناء الاطلاع على العمل. لا يراها الأعضاء.';
+  var ids=Object.keys(SH.vn).sort(function(a,b){return (SH.vn[a].at||'').localeCompare(SH.vn[b].at||'')}),h='';ids.forEach(function(id){var o=SH.vn[id],tm='';try{tm=new Date(o.at).toLocaleString('ar-SA-u-ca-gregory-nu-latn',{dateStyle:'medium',timeStyle:'short'})}catch(e){tm=o.at||''}h+='<div class="vn-i"><b>'+esc(o.n||'مراقب الهيئة')+(o.o?' · '+esc(o.o):'')+'</b><small>'+esc(tm)+'</small><p>'+esc(o.txt||'')+'</p></div>'});$('#vnList').innerHTML=h||'<div class="empty">لا ملاحظات بعد.</div>'}
+async function vnSend(){if(myRole()!=='view')return;var ta=$('#vnTxt'),txt=(ta.value||'').trim(),msg=$('#vnMsg');if(!txt){toast('اكتب الملاحظة أولاً');return}var id='n'+Date.now().toString(36),o={n:SH.vname||'مراقب الهيئة',o:SH.vorg||'',at:new Date().toISOString(),txt:txt};msg.textContent='جارٍ الإرسال…';
+  try{var body={ops:[{k:'v2:vn|'+id,v:JSON.stringify(o),b:o.n}]};if(SH.vkey)body.view=SH.vkey;else body.code=SH.code;var r=await fetch(SH.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)});var j=await r.json();if(!j||!j.ok)throw new Error(j&&j.error||'bad');SH.vn[id]=o;ta.value='';msg.textContent='وصلت الملاحظة إلى رئيس الفريق.';vnRender()}catch(e){msg.textContent='تعذّر الإرسال، حاول مرة أخرى.'}}
+
 /* ---------- observers (تحت المعايشة) ---------- */
-function myRole(){if(!SH.on||SH.seed)return 'lead';var m=mem(SH.me);return m&&isObs(m)?'obs':'mem'}
+function myRole(){if(!SH.on||SH.seed)return 'lead';if(SH.view)return 'view';var m=mem(SH.me);return m&&isObs(m)?'obs':'mem'}
 function obsOf(n){var o=team().filter(function(m){return isObs(m)&&+m.tr===+n&&m.with&&effStd(n)===m.with});return o[0]||null}
 function chkKey(n){return STD[n].subs[0].code+'.e.chk'}
 function obsRecent(n,o){var nm=o.name.trim();if(!nm)return false;return STD[n].subs.some(function(sb){var m=SY.meta[sb.code];return m&&m.by===nm&&(Date.now()-new Date(m.at).getTime())<120000})}
 function trState(n){var o=obsOf(n);if(!o)return null;if(S.f[chkKey(n)]==='1')return ['مُراجَع من العضو','p-ok'];if(obsRecent(n,o))return ['المعايش يكتب الآن','p-warn'];var st=stdStats(STD[n]);return (st.ans||st.txt)?['بانتظار مراجعة العضو','p-mid']:['لم يبدأ المعايش','p-na']}
 function canReview(n){if(!SH.on||SH.seed)return true;var m=mem(SH.me);return !!m&&!isObs(m)&&m.id===effStd(n)}
-function canSub(code){var r=myRole();if(r==='lead')return true;var m=mem(SH.me),sb=SUB[code];if(!m||!sb)return false;if(r==='obs'){var o=obsOf(sb.std);return +m.tr===sb.std&&!!o&&o.id===m.id}return effSub(code)===m.id}
+function canSub(code){var r=myRole();if(r==='lead'||r==='view')return true;var m=mem(SH.me),sb=SUB[code];if(!m||!sb)return false;if(r==='obs'){var o=obsOf(sb.std);return +m.tr===sb.std&&!!o&&o.id===m.id}return effSub(code)===m.id}
 function canStd(n){return STD[n]&&STD[n].subs.some(function(sb){return canSub(sb.code)})}
 function updTrainee(){STDS.forEach(function(s){var el=$('[data-tw="'+s.n+'"]');if(!el)return;var o=obsOf(s.n);if(!o){el.innerHTML='';el.style.display='none';return}
   el.style.display='';var st=trState(s.n),own=mem(effStd(s.n)),done=S.f[chkKey(s.n)]==='1';
@@ -21282,6 +21317,7 @@ function subsOfMem(m){return SUBS_ALL.filter(function(sb){return effSub(sb.code)
 function stdsOfSubs(subs){var o={},r=[];subs.forEach(function(sb){if(!o[sb.std]){o[sb.std]=1;r.push(sb.std)}});return r.sort(function(a,b){return a-b})}
 function trainStd(m){var n=+m.tr;return n&&obsOf(n)&&obsOf(n).id===m.id?n:0}
 function myScope(){var r=myRole(),m=mem(SH.me);
+  if(r==='view')return {r:r,name:SH.vname||'مراقب الهيئة',role:'مراقب'+(SH.vorg?' · '+SH.vorg:' من هيئة تقويم التعليم والتدريب'),lab:'اطلاع فقط · إنجاز الفريق',subs:SUBS_ALL,m:null};
   if(r==='lead')return {r:r,name:(m&&m.name.trim())||'رئيس الفريق',role:(m&&m.name.trim())?'رئيس الفريق':'',lab:'إنجاز الفريق',subs:SUBS_ALL,m:m};
   if(!m)return {r:r,name:'لم تختر اسمك بعد',role:'',lab:'اختر اسمك من خانة «أنا»',subs:[],m:null};
   if(r==='obs'){var n=trainStd(m);return {r:r,name:m.name.trim()||'معايش',role:'تحت المعايشة',lab:n?'إنجاز معيار تدريبك':'للاطلاع فقط',subs:n?STD[n].subs:[],m:m,n:n}}
@@ -21314,8 +21350,8 @@ function tkLead(){var rows='',pend=[],ready=[],unas=[],fin=typeof finalOf==='fun
   if(ready.length)d+='<div><b>جاهزة للاعتماد النهائي:</b>'+tkNums(ready)+'</div>';
   if(gm)d+='<div><b>فروق درجتين فأكثر بلا تعليل: '+gm+'</b><button type="button" class="btn sm" data-tab="sum">ملخص الزيارة</button></div>';
   return '<div class="tk-p"><b>تقدّم الفريق</b></div>'+rows+'<div class="tk-p"><b>ينتظر قرارك</b></div><div class="tk-d">'+(d||'<div>لا شيء ينتظر قرارك الآن.</div>')+'</div>'}
-function updTask(){var el=$('#myTask');if(!el)return;var sc=myScope();$('#tkSum').textContent=sc.r==='lead'?'لوحة الرئيس':(sc.r==='obs'?'مهمتي · معايش':'مهمتي');
-  el.innerHTML=sc.r==='lead'?tkLead():(sc.r==='obs'?tkObs(sc):tkMem(sc))}
+function updTask(){var el=$('#myTask');if(!el)return;var sc=myScope();$('#tkSum').textContent=sc.r==='lead'?'لوحة الرئيس':(sc.r==='view'?'لوحة الاطلاع · مراقب الهيئة':(sc.r==='obs'?'مهمتي · معايش':'مهمتي'));
+  el.innerHTML=sc.r==='lead'?tkLead():(sc.r==='view'?tkView():(sc.r==='obs'?tkObs(sc):tkMem(sc)));try{vnRender()}catch(e){}}
 var tkT=0;function schedTask(){clearTimeout(tkT);tkT=setTimeout(function(){try{updMeBar();updTask()}catch(e){}},350)}
 setInterval(function(){try{updMeBar();updTask()}catch(e){}},4000);
 var simOn=false,simCur='';try{simOn=localStorage.getItem('etec22m.simple')==='1'}catch(e){}
@@ -21385,8 +21421,14 @@ document.addEventListener('click',function(ev){var t=ev.target;if(!t.closest)ret
 document.addEventListener('keydown',function(ev){if(ev.key==='Escape')$('#ovChk').hidden=true;if((ev.key==='Enter'||ev.key===' ')&&ev.target&&ev.target.id==='shareSt'){ev.preventDefault();chkOpen()}});
 (function(){var s=$('#shareSt');if(s){s.setAttribute('role','button');s.setAttribute('tabindex','0');s.title='اضغط لفحص الاتصال والحفظ'}})();
 var GDV='v2';
-function gdRole(){var r=myRole();return r==='lead'?'lead':(r==='obs'?'obs':'mem')}
+function gdRole(){var r=myRole();return r==='lead'?'lead':(r==='obs'?'obs':(r==='view'?'view':'mem'))}
 function gdSteps(){var r=gdRole(),V2=GDV==='v2',o=[];
+  if(r==='view'){
+    o.push(['مرحبًا بك مراقبًا من الهيئة','هذه نسخة اطلاع فقط من نموذج تقويم المعايير. ترى كل ما يكتبه الفريق لحظيًا ولا يمكنك تعديل أي خانة، ولا يُحسب حضورك في توزيع المعايير.']);
+    o.push(['١ · ماذا ترى','بيانات الزيارة وتوزيع المعايير على الفريق، وتقويم كل معيار فرعي على المستويات الثلاثة في المرحلتين المكتبية والميدانية، وحالة اعتماد الرئيس لكل معيار، وطلبات الشواهد من المنشأة وحالتها، وشريط تقدّم الفريق في أعلى تبويب النموذج.']);
+    o.push(['٢ · ملاحظاتك','من تبويب «ملخص الزيارة» يمكنك كتابة ملاحظة على سير العمل تصل إلى رئيس الفريق وحده، وتُحفظ باسمك وتاريخها. لا يراها الأعضاء ولا تدخل في التقويم.']);
+    o.push(['٣ · التقارير','يمكنك تنزيل تقرير المراجعة المكتبية أو الميدانية (Word) للاطلاع في أي وقت؛ التنزيل لا يغيّر شيئًا في النموذج.']);
+    return o}
   if(r==='lead'){
     o.push(['مرحبًا بك رئيسًا للفريق','النموذج يحفظ كل ما تكتبه تلقائيًا على جهازك ويزامنه مع ملف Google Sheet الخاص بفريقك. لا يوجد زر «حفظ». يمكنك العودة إلى هذا الدليل في أي وقت من زر «دليل الاستخدام» في أعلى الصفحة.']);
     o.push(['١ · جهّز بيانات الزيارة','أدخل اسم المنشأة وتاريخ بداية الزيارة وعدد الأيام، ثم أسماء أعضاء الفريق وأدوارهم (رئيس الفريق أو مقيّم أو تحت المعايشة). بعدها اختر اسمك من خانة «أنا».']);
@@ -21418,7 +21460,7 @@ function gdSteps(){var r=gdRole(),V2=GDV==='v2',o=[];
   }
   var _c=0,_D='٠١٢٣٤٥٦٧٨٩';o.forEach(function(x,i){if(i&&/^[٠-٩]+ · /.test(x[0])){_c++;x[0]=String(_c).replace(/\d/g,function(d){return _D.charAt(d)})+x[0].replace(/^[٠-٩]+/,'')}});return o}
 var gdI=0,gdFirst=false;
-function gdKey(){return 'etec22m.gd.'+GDV+'.'+(gdRole()==='lead'?'lead':'mem')}
+function gdKey(){return 'etec22m.gd.'+GDV+'.'+(gdRole()==='lead'?'lead':(gdRole()==='view'?'view':'mem'))}
 function gdRender(){var st=gdSteps(),n=st.length;if(gdI>=n)gdI=n-1;var s=st[gdI],last=gdI===n-1;
   $('#gdT').textContent=s[0];$('#gdB').textContent=s[1];$('#gdP').textContent='الخطوة '+(gdI+1)+' من '+n;
   var dots='';for(var i=0;i<n;i++)dots+='<i'+(i===gdI?' class="on"':'')+'></i>';$('#gdD').innerHTML=dots;
@@ -21450,15 +21492,16 @@ function applyMode(mode){var map=computeMap(mode),plan=planAttach(map);S.mode=mo
   team().forEach(function(m){if(isObs(m)){m.with=plan[m.id]||'';var st=m.tr&&map[m.tr]===m.with;if(!st)m.tr=0}});
   renderTeam();updOwners();updFilterSel();applyFilter();renderQuick();renderDist();renderSummary();queueMain();save();$('#pvBox').style.display='none';toast('تم اعتماد التوزيع')}
 var obsOpened=0;
-function applyRole(){var role=myRole(),lim=role!=='lead';
-  try{document.querySelector('#app').classList.toggle('mem',lim);var b=document.querySelector('#memBanner');if(b)b.hidden=!lim;
+function applyRole(){var role=myRole(),lim=role!=='lead',vw=role==='view';
+  try{document.querySelector('#app').classList.toggle('mem',lim);document.querySelector('#app').classList.toggle('view',vw);var vt=document.querySelector('#viewTag');if(vt){vt.hidden=!vw;if(vw)vt.firstChild.textContent='نسخة اطلاع — مراقب الهيئة: '+(SH.vname||'')+(SH.vorg?' · '+SH.vorg:'')}try{renderViewers()}catch(e0){}var b=document.querySelector('#memBanner');if(b)b.hidden=!lim;
     var sb=document.querySelector('#btnShare');if(sb)sb.style.display=lim?'none':'';var nb=document.querySelector('#btnNew');if(nb)nb.style.display=lim?'none':'';var eb=document.querySelector('#btnEnd');if(eb)eb.style.display=lim?'none':'';var pb=document.querySelector('#presetBox');if(pb)pb.style.display=lim?'none':'';var gt=document.querySelector('.tab[data-tab="groups"]');if(gt)gt.style.display=lim?'none':'';if(lim&&S.ui.tab==='groups')showTab('form');
     LEAD_SEL.forEach(function(q){document.querySelectorAll(q).forEach(function(e){e.inert=lim;e.style.opacity=lim?'.7':''})});
     var me=role==='obs'?mem(SH.me):null,n=0;if(me&&me.tr&&obsOf(me.tr)&&obsOf(me.tr).id===me.id)n=+me.tr;if(n&&!obsOpened){obsOpened=1;S.ui.collapsed[n]=0;updStd()}
-    $$('#stds .std').forEach(function(e){var k=+e.getAttribute('data-n'),ro=role==='obs'&&k!==n;e.inert=false;e.style.opacity='';$$('[data-f]',e).forEach(function(f){if(role==='mem'){var sbE=f.closest?f.closest('.sub'):null,c=sbE?sbE.getAttribute('data-code'):null;f.disabled=c?!canSub(c):!canStd(k)}else f.disabled=ro});$$('[data-rvw]',e).forEach(function(f){f.disabled=role==='obs'||(role==='mem'&&!canReview(k))});if(role!=='lead'&&finalOf(k)){$$('[data-f]',e).forEach(function(f){f.disabled=true});$$('[data-rvw]',e).forEach(function(f){f.disabled=true})}e.classList.toggle('ro-std',(role==='mem'&&!canStd(k))||(role!=='lead'&&finalOf(k)))});try{renderReq(false)}catch(e2){}
-    $$('[data-sd]').forEach(function(e){e.disabled=role==='obs'});
+    $$('#stds .std').forEach(function(e){var k=+e.getAttribute('data-n'),ro=(role==='obs'&&k!==n)||vw;e.inert=false;e.style.opacity='';$$('[data-f]',e).forEach(function(f){if(role==='mem'){var sbE=f.closest?f.closest('.sub'):null,c=sbE?sbE.getAttribute('data-code'):null;f.disabled=c?!canSub(c):!canStd(k)}else f.disabled=ro});$$('[data-rvw]',e).forEach(function(f){f.disabled=role==='obs'||(role==='mem'&&!canReview(k))});if(role!=='lead'&&finalOf(k)){$$('[data-f]',e).forEach(function(f){f.disabled=true});$$('[data-rvw]',e).forEach(function(f){f.disabled=true})}e.classList.toggle('ro-std',(role==='mem'&&!canStd(k))||(role!=='lead'&&finalOf(k))||vw)});try{renderReq(false)}catch(e2){}
+    $$('[data-sd]').forEach(function(e){e.disabled=role==='obs'||vw});
     var ttl=document.querySelector('#memTtl'),tx=document.querySelector('#memTxt');
-    if(ttl&&tx){if(role==='obs'){var w=me&&mem(me.with);ttl.textContent='أنت معايش (تحت المعايشة)'+(w&&w.name.trim()?' مع '+w.name.trim():'')+':';tx.textContent=n?'تكتب وترصد الدرجة في «المعيار '+n+'» فقط، ويراجعه العضو المسؤول بعد انتهائك. بقية الصفحة للاطلاع.':'الصفحة للاطلاع فقط حتى يحدد لك رئيس الفريق معيار التدريب.'}
+    if(ttl&&tx){if(vw){ttl.textContent='أنت مراقب من هيئة تقويم التعليم والتدريب (اطلاع فقط):';tx.textContent='ترى كل ما يكتبه الفريق لحظيًا ولا يمكنك تعديل أي خانة. يمكنك كتابة ملاحظة لرئيس الفريق من تبويب «ملخص الزيارة».'}
+      else if(role==='obs'){var w=me&&mem(me.with);ttl.textContent='أنت معايش (تحت المعايشة)'+(w&&w.name.trim()?' مع '+w.name.trim():'')+':';tx.textContent=n?'تكتب وترصد الدرجة في «المعيار '+n+'» فقط، ويراجعه العضو المسؤول بعد انتهائك. بقية الصفحة للاطلاع.':'الصفحة للاطلاع فقط حتى يحدد لك رئيس الفريق معيار التدريب.'}
       else{ttl.textContent='أنت عضو في الفريق:';tx.textContent=mem(SH.me)?'تعدّل معاييرك أنت فقط، وتطّلع على بقية المعايير للقراءة. أما بيانات الزيارة وأسماء الفريق وتوزيع المعايير فيعدّلها رئيس الفريق وحده.':'اختر اسمك من «أنا» في الأعلى ليفتح لك تعديل معاييرك. إلى ذلك الحين الصفحة للاطلاع فقط.'}}}catch(e){}}
 
 function updStd(){STDS.forEach(function(s){var st=stdStats(s);var pc=$('[data-pc="'+s.n+'"]');if(pc)pc.textContent=st.pct+'%';var rb=$('[data-rb="'+s.n+'"]');if(rb)rb.style.width=st.pct+'%';
@@ -21586,7 +21629,7 @@ function pubCopy(){var el=$('#pubLinkOut');el.select();try{navigator.clipboard.w
 
 function rqGet(id,f){return S.f['rq.'+id+'.'+f]||''}
 function rqSet(id,f,v){var k='rq.'+id+'.'+f;S.f[k]=v;queueEntry(k,v)}
-function rqVis(id){if(myRole()==='lead')return true;var sub=rqGet(id,'sub'),sd=+rqGet(id,'std')||0;if(sub&&SUB[sub])return canSub(sub);if(sd)return canStd(sd);return !!SH.me&&rqGet(id,'by')===SH.me}
+function rqVis(id){var _r=myRole();if(_r==='lead'||_r==='view')return true;var sub=rqGet(id,'sub'),sd=+rqGet(id,'std')||0;if(sub&&SUB[sub])return canSub(sub);if(sd)return canStd(sd);return !!SH.me&&rqGet(id,'by')===SH.me}
 function rqVisIds(){return rqIds().filter(rqVis)}
 function rqIds(){var ids={};Object.keys(S.f).forEach(function(k){var m=/^rq\.(r[a-z0-9]+)\.(std|sub|lv|txt|n|del|by|st)$/.exec(k);if(m)ids[m[1]]=1});return Object.keys(ids).filter(function(id){return rqGet(id,'del')!=='1'}).sort(function(a,b){return (+rqGet(a,'n')||0)-(+rqGet(b,'n')||0)})}
 function rqRowHTML(id,i){var sd=rqGet(id,'std'),sb=rqGet(id,'sub'),lv=rqGet(id,'lv');
@@ -21596,13 +21639,13 @@ function rqRowHTML(id,i){var sd=rqGet(id,'std'),sb=rqGet(id,'sub'),lv=rqGet(id,'
   h+='<textarea data-rq="'+id+'.txt" rows="2" placeholder="اكتب الشاهد المطلوب من المنشأة…">'+esc(rqGet(id,'txt'))+'</textarea><select class="in" data-rq="'+id+'.st" aria-label="حالة الشاهد"><option value="">— الحالة —</option><option value="وصل"'+(rqGet(id,'st')==='وصل'?' selected':'')+'>وصل</option><option value="لم يصل"'+(rqGet(id,'st')==='لم يصل'?' selected':'')+'>لم يصل بعد</option></select><button class="btn sm danger" data-rqdel="'+id+'" type="button">حذف</button></div>';return h}
 function renderReq(force){var box=$('#reqRows');if(!box)return;try{rqiRender()}catch(e){}try{pubInit()}catch(e){}var ae=document.activeElement;
   [['reqBranch','branch'],['reqDate','date'],['reqTime','time']].forEach(function(x){var el=$('#'+x[0]);if(el&&el!==ae)el.value=S.f['rq.meta.'+x[1]]||''});
-  var role=myRole(),noName=role!=='lead'&&!mem(SH.me),ids=rqVisIds();$('#reqCount').textContent=ids.length?ids.length+' شاهد مطلوب · وصل '+ids.filter(function(i){return rqGet(i,'st')==='وصل'}).length+' · معلّق '+ids.filter(function(i){return rqGet(i,'st')!=='وصل'}).length+(role==='lead'?'':' (معاييرك فقط)'):'';
+  var role=myRole(),noName=role!=='lead'&&role!=='view'&&!mem(SH.me),ids=rqVisIds();$('#reqCount').textContent=ids.length?ids.length+' شاهد مطلوب · وصل '+ids.filter(function(i){return rqGet(i,'st')==='وصل'}).length+' · معلّق '+ids.filter(function(i){return rqGet(i,'st')!=='وصل'}).length+(role==='lead'?'':' (معاييرك فقط)'):'';
   ['reqBranch','reqDate','reqTime'].forEach(function(i){var el=$('#'+i);if(el)el.disabled=role!=='lead'});
   var ex=$('#reqWord');if(ex){ex.disabled=role==='obs'||noName;ex.title=role==='obs'?'يراجع العضو المسؤول طلبك ثم يصدّره':''}
-  var ad=$('#reqAdd');if(ad)ad.disabled=noName;
+  var ad=$('#reqAdd');if(ad)ad.disabled=noName||role==='view';
   if(!force&&ae&&box.contains(ae))return;
   box.innerHTML=noName?'<div class="empty">اختر اسمك من «أنا» في الأعلى لتظهر لك شواهد معاييرك.</div>':(ids.length?ids.map(rqRowHTML).join(''):'<div class="empty">لم تُضف شواهد بعد. اضغط «+ إضافة شاهد مطلوب».</div>');
-  if(noName)return;$$('#reqRows [data-rq],#reqRows [data-rqdel]').forEach(function(x){x.disabled=false})}
+  if(noName)return;$$('#reqRows [data-rq],#reqRows [data-rqdel]').forEach(function(x){x.disabled=role==='view'})}
 
 /* ---------- inline extra-evidence request per level ---------- */
 var RQI_OPEN={};
@@ -21620,7 +21663,7 @@ document.addEventListener('click',function(ev){var t=ev.target.closest?ev.target
   var key=t.getAttribute('data-rqi-b')||t.getAttribute('data-rqi-add'),kp=key.split('|'),code=kp[0],lv=kp[1];if(!SUB[code]||LVO.indexOf(lv)<0||!rqiOk(code))return;
   if(t.hasAttribute('data-rqi-b')&&RQI_OPEN[key]){RQI_OPEN[key]=0;rqiRender(1);return}
   RQI_OPEN[key]=1;if(t.hasAttribute('data-rqi-add')||!rqiRows(code,lv).length)rqAddFor(code,lv);renderReq(true);rqiRender(1);rqiFocus(code,lv)});
-function rqAdd(){if(myRole()!=='lead'&&!mem(SH.me)){toast('اختر اسمك من «أنا» أولاً');return}
+function rqAdd(){if(myRole()==='view')return;if(myRole()!=='lead'&&!mem(SH.me)){toast('اختر اسمك من «أنا» أولاً');return}
   var ids=rqVisIds(),last=ids.length?ids[ids.length-1]:null,id='r'+Math.random().toString(36).slice(2,7);
   rqSet(id,'n',String(Date.now()));rqSet(id,'by',SH.me||'');if(last){rqSet(id,'std',rqGet(last,'std'));rqSet(id,'sub',rqGet(last,'sub'))}else{var al=STDS.filter(function(x){return canStd(x.n)});if(al.length===1)rqSet(id,'std',String(al[0].n))}rqSet(id,'txt','');save();renderReq(true)}
 function rqRows(){var o=[];rqVisIds().forEach(function(id){var sub=rqGet(id,'sub'),sd=+rqGet(id,'std')||(SUB[sub]?SUB[sub].std:0);if(!sd&&!rqGet(id,'txt').trim())return;o.push({std:sd,sub:sub,lv:rqGet(id,'lv'),txt:rqGet(id,'txt').trim()})});
@@ -21720,6 +21763,7 @@ function buildDocx(mode){var D=window.docx;if(!D)throw new Error('docx');var FLD
   team().forEach(function(m){var ns=[];STDS.forEach(function(st){var c=st.subs.filter(function(sb){return effSub(sb.code)===m.id}).length;if(c)ns.push('المعيار '+st.ord+(c<st.subs.length?' (بعض الفرعية)':''))});
     tr.push([C(m.name.trim()||'—',{w:3600,bold:true,size:23}),C(m.role||'',{w:2000,size:23}),C(isObs(m)?('معايش'+(mem(m.with)?' مع '+(mem(m.with).name.trim()||'—'):'')+(m.tr?' · يتدرب على المعيار '+STD[m.tr].ord:'')):(ns.join(' + ')||'—'),{w:4606,size:23})])});
   kids.push(T([3600,2000,4606],tr));
+  try{var _vw=viewers().filter(function(v){return (v.name||'').trim()});if(_vw.length)kids.push(P('بحضور مراقب من '+(_vw[0].org||'هيئة تقويم التعليم والتدريب').trim()+' للاطلاع ومتابعة العمل: '+_vw.map(function(v){return v.name.trim()}).join('، '),{size:23,bold:true,sa:60,sb:60}))}catch(e){}
   kids.push(H2('أيام الزيارة'));dayTxt.forEach(function(t){kids.push(P(t,{size:23,sa:30}))});
   /* executive summary */
   kids.push(H1('الملخص التنفيذي',true));kids.push(P(FLD?'درجات المراجع في هذا التقرير هي الدرجات الميدانية النهائية، وتُذكر الدرجة المكتبية بجوارها عند تغيّرها مع سبب التغيير.':('درجات المراجع في هذا التقرير هي درجات التقييم المكتبي'+(frozen()?' المحفوظة عند تجميده.':'.')),{size:22,color:'4A5857',sa:100}));
@@ -21780,7 +21824,7 @@ async function exportWord(mode){var b=$('#btnWord');if(!window.docx){toast('تع
   bs.forEach(function(x,i){x.disabled=false;x.textContent=olds[i]})}
 
 /* ---------- shared team mode (db capability) ---------- */
-var SH={on:false,url:'',code:'',lead:'',rec:0,since:0,q:{},tm:null,busy:false,flushing:false,seeded:false,seed:false,me:'',lock:false,err:0,poll:null,known:{}};
+var SH={on:false,url:'',code:'',lead:'',rec:0,view:false,vname:'',vorg:'',vid:'',vkey:'',vrec:0,vn:{},since:0,q:{},tm:null,busy:false,flushing:false,seeded:false,seed:false,me:'',lock:false,err:0,poll:null,known:{}};
 var DEF={};
 var DB=null,SY={on:false,can:true,uid:null,user:null,known:{},pend:{},busy:{},timers:{},mainT:null,mainBusy:false,mainDirty:false,mainPending:false,firstEnt:false,remoteMain:false,meta:{},admin:false};
 function setShare(st){applyRole();var el=$('#shareSt');if(!el)return;el.classList.remove('off','busy');var tx=el.lastChild;
@@ -21789,7 +21833,7 @@ function setShare(st){applyRole();var el=$('#shareSt');if(!el)return;el.classLis
   var lab=SH.on?'مشترك (Google Sheet)':'مشترك مع الفريق';
   if(st==='saving'){el.classList.add('busy');tx.textContent=lab+' — جارٍ المزامنة…';return}
   if(st==='err'){el.classList.add('off');tx.textContent=SH.on&&SH.ek==='code'?lab+' — الرمز السري تغيّر: اطلب من الرئيس رابطًا جديدًا':lab+' — تعذّر الاتصال بالـSheet (تحقق من النشر «أي شخص» ومن الرابط)، سنعيد المحاولة';return}
-  tx.textContent=lab+' — متصل'}
+  tx.textContent=lab+(SH.view?' — اطلاع فقط (مراقب الهيئة)':' — متصل')}
 function applyRO(){SY.can=false;$('#app').classList.add('ro');$('#roBanner').hidden=false;setShare()}
 function handleDbErr(e){var c=e&&e.code;if(c==='invalid_argument'||c==='revoked'){applyRO()}else if(c==='quota_exceeded'){toast('امتلأت سعة التخزين المشترك')}else setShare('err')}
 function parseKey(k){var p=k.split('.');return {code:p[0],lv:p[1],f:p[2]}}
@@ -21802,16 +21846,17 @@ async function flushEntry(c){if(SY.busy[c]){SY.timers[c]=setTimeout(function(){f
     else{await ref.set(Object.assign(fullEntry(c),data,meta));SY.known[c]=1}
     ok=true}catch(e){handleDbErr(e);Object.keys(data).forEach(function(kk){var cur=SY.pend[c]=SY.pend[c]||{};if(cur[kk]===undefined)cur[kk]=data[kk]});if(SY.can){clearTimeout(SY.timers[c]);SY.timers[c]=setTimeout(function(){flushEntry(c)},5000)}}
   SY.busy[c]=false;if(ok){if(SY.pend[c]&&Object.keys(SY.pend[c]).length)flushEntry(c);else setShare('ok')}}
-function mainPayload(){var s=S.setup;return {facility:s.facility||'',date:s.date||'',days:+s.days||1,dayNotes:(s.dayNotes||[]).map(function(x){return x||''}),team:s.team.map(function(m){return {id:m.id,name:m.name||'',role:m.role||'',with:m.with||'',tr:+m.tr||0}}),mode:S.mode,assign:S.assign||{},subAssign:S.subAssign||{},stdDay:S.stdDay||{},by:SY.uid||'',at:new Date().toISOString()}}
+function mainPayload(){var s=S.setup;return {facility:s.facility||'',date:s.date||'',days:+s.days||1,dayNotes:(s.dayNotes||[]).map(function(x){return x||''}),viewers:(s.viewers||[]).map(function(v){return {id:v.id,name:v.name||'',org:v.org||''}}),team:s.team.map(function(m){return {id:m.id,name:m.name||'',role:m.role||'',with:m.with||'',tr:+m.tr||0}}),mode:S.mode,assign:S.assign||{},subAssign:S.subAssign||{},stdDay:S.stdDay||{},by:SY.uid||'',at:new Date().toISOString()}}
 function queueMain(){if(SH.on){shQ('m|setup',null);return}if(!SY.on||!SY.can)return;SY.mainPending=true;clearTimeout(SY.mainT);SY.mainT=setTimeout(flushMain,600);setShare('saving')}
 async function flushMain(){if(SY.mainBusy){SY.mainDirty=true;return}SY.mainBusy=true;var ok=false;
   try{await DB.doc('visit/main').set(mainPayload());ok=true}catch(e){handleDbErr(e);if(SY.can){clearTimeout(SY.mainT);SY.mainT=setTimeout(flushMain,5000)}}
   SY.mainBusy=false;if(SY.mainDirty){SY.mainDirty=false;flushMain()}else if(ok){SY.mainPending=false;setShare('ok')}}
 function pushAll(){if(!SH.on&&(!SY.on||!SY.can))return;queueMain();Object.keys(S.f).forEach(function(k){var v=S.f[k];if(v!=null&&String(v)!=='')queueEntry(k,v)})}
-function refreshSetupDom(){SY.remoteMain=false;$('#facility').value=S.setup.facility||'';$('#vdate').value=S.setup.date||'';$('#vdays').value=String(S.setup.days||2);renderDays();renderTeam();updAll()}
+function refreshSetupDom(){SY.remoteMain=false;$('#facility').value=S.setup.facility||'';$('#vdate').value=S.setup.date||'';$('#vdays').value=String(S.setup.days||2);renderDays();renderTeam();try{renderViewers();shViewLinks()}catch(e){}updAll()}
 function applyMain(d){var s=S.setup;
   if(typeof d.facility==='string')s.facility=d.facility;if(typeof d.date==='string')s.date=d.date;if(d.days)s.days=+d.days;
   if(Array.isArray(d.dayNotes))s.dayNotes=d.dayNotes.slice();
+  if(Array.isArray(d.viewers))s.viewers=d.viewers.map(function(x){return {id:String(x.id),name:String(x.name||''),org:String(x.org||'')}});
   if(Array.isArray(d.team)&&d.team.length)s.team=d.team.map(function(x){return {id:String(x.id),name:String(x.name||''),role:String(x.role||'مقيّم'),with:x.with?String(x.with):'',tr:+x.tr||0}});
   if(d.mode)S.mode=d.mode;S.assign=Object.assign({},d.assign||{});S.subAssign=Object.assign({},d.subAssign||{});S.stdDay=Object.assign({},d.stdDay||{});
   var ae=document.activeElement;if(ae&&ae.closest&&ae.closest('#setup')&&/INPUT|SELECT|TEXTAREA/.test(ae.tagName)){SY.remoteMain=true;updAll()}else refreshSetupDom();
@@ -21848,16 +21893,16 @@ async function wipeShared(){if(!SY.on||!SY.admin){S=fresh();saveNow();bootAll();
 
 
 /* ---------- Google Sheet team sync (no accounts needed) ---------- */
-var GS_TPL="// نموذج 22م - خدمة مزامنة الفريق (Google Apps Script)\n// الصق هذا الكود كما هو في محرر Apps Script المرتبط بملف Google Sheet.\nvar TEAM_CODE = '__CODE__';   // رمز الفريق السري (يجب أن يطابق الرمز في الصفحة؛ اتركه فارغاً إن لم تستخدم رمزاً)\nvar SHEET_NAME = 'data';\n\nfunction sheet_() {\n  var ss = SpreadsheetApp.getActiveSpreadsheet();\n  var s = ss.getSheetByName(SHEET_NAME);\n  if (!s) {\n    s = ss.insertSheet(SHEET_NAME);\n    s.getRange('A:B').setNumberFormat('@');\n    s.appendRow(['key', 'value', 't', 'by']);\n  }\n  return s;\n}\nfunction out_(o) {\n  return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);\n}\nfunction code_() {\n  return PropertiesService.getScriptProperties().getProperty('code') || TEAM_CODE;\n}\nfunction lastT_() {\n  return Number(PropertiesService.getScriptProperties().getProperty('lastT') || 0);\n}\nfunction doGet(e) {\n  var p = (e && e.parameter) || {};\n  var cc = code_();\n  if (cc && p.code !== cc) return out_({ error: 'code' });\n  if (p.action === 'ping') return out_({ ok: true, t: lastT_() });\n  var since = Number(p.since || 0), last = lastT_();\n  if (last <= since) return out_({ t: last, rows: [] });\n  var v = sheet_().getDataRange().getValues(), rows = [];\n  for (var i = 1; i < v.length; i++) {\n    if (Number(v[i][2]) > since) rows.push([v[i][0], v[i][1], Number(v[i][2]), v[i][3]]);\n  }\n  return out_({ t: last, rows: rows });\n}\nfunction doPost(e) {\n  var body = {};\n  try { body = JSON.parse(e.postData.contents); } catch (err) { return out_({ error: 'bad' }); }\n  var cc = code_();\n  if (cc && body.code !== cc) return out_({ error: 'code' });\n  var lock = LockService.getScriptLock();\n  lock.waitLock(20000);\n  try {\n    var s = sheet_(), n = s.getLastRow(), idx = {};\n    if (body.archive) {   // أرشفة الزيارة الحالية في ورقة جديدة ثم تفريغ القيم\n      var ss = SpreadsheetApp.getActiveSpreadsheet();\n      var base = String(body.archive).replace(/[\\[\\]\\*\\?:\\/\\\\]/g, ' ').slice(0, 90), nm = base, c = 1;\n      while (ss.getSheetByName(nm)) { c++; nm = base + ' (' + c + ')'; }\n      s.copyTo(ss).setName(nm);\n      var tt = Math.max(Date.now(), lastT_() + 1);\n      if (n > 1) {\n        var blank = [];\n        for (var r = 0; r < n - 1; r++) blank.push(['', tt, '']);\n        s.getRange(2, 2, n - 1, 3).setValues(blank);\n      }\n      PropertiesService.getScriptProperties().setProperty('lastT', String(tt));\n      if (body.newCode) PropertiesService.getScriptProperties().setProperty('code', String(body.newCode));\n      return out_({ ok: true, t: tt, code: body.newCode ? String(body.newCode) : undefined });\n    }\n    if (n > 1) {\n      var keys = s.getRange(2, 1, n - 1, 1).getValues();\n      for (var i = 0; i < keys.length; i++) idx[keys[i][0]] = i + 2;\n    }\n    var t = lastT_();\n    (body.ops || []).forEach(function (op) {\n      t = Math.max(Date.now(), t + 1);\n      var val = String(op.v == null ? '' : op.v).slice(0, 45000);\n      var row = idx[op.k];\n      if (!row) { n++; row = n; idx[op.k] = n; }\n      s.getRange(row, 1, 1, 4).setValues([[String(op.k), val, t, String(op.b || '')]]);\n    });\n    PropertiesService.getScriptProperties().setProperty('lastT', String(t));\n    return out_({ ok: true, t: t });\n  } finally {\n    lock.releaseLock();\n  }\n}\n";
+var GS_TPL="// نموذج 22م - خدمة مزامنة الفريق (Google Apps Script)\n// الصق هذا الكود كما هو في محرر Apps Script المرتبط بملف Google Sheet، ثم «نشر» ← «إدارة عمليات النشر» ← إصدار جديد.\n// الإصدار 3: يضيف دور «مراقب الهيئة» (مفتاح قراءة فقط view) مع الإبقاء على كل ما سبق (الرمز السري، مفتاح الرئيس، الأرشفة).\nvar TEAM_CODE = '__CODE__';   // رمز الفريق السري (يجب أن يطابق الرمز في الصفحة؛ اتركه فارغاً إن لم تستخدم رمزاً)\nvar SHEET_NAME = 'data';\n\nfunction sheet_() {\n  var ss = SpreadsheetApp.getActiveSpreadsheet();\n  var s = ss.getSheetByName(SHEET_NAME);\n  if (!s) {\n    s = ss.insertSheet(SHEET_NAME);\n    s.getRange('A:B').setNumberFormat('@');\n    s.appendRow(['key', 'value', 't', 'by']);\n  }\n  return s;\n}\nfunction out_(o) {\n  return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);\n}\nfunction props_() { return PropertiesService.getScriptProperties(); }\nfunction code_() { return props_().getProperty('code') || TEAM_CODE; }\nfunction lead_() { return props_().getProperty('lead') || ''; }\nfunction view_() { return props_().getProperty('vkey') || ''; }      // مفتاح القراءة فقط لمراقب الهيئة\nfunction lastT_() { return Number(props_().getProperty('lastT') || 0); }\n\nfunction doGet(e) {\n  var p = (e && e.parameter) || {};\n  var cc = code_(), lk = lead_(), vk = view_();\n  // استرجاع الرمز الحالي برابط الرئيس بعد تغييره\n  if (p.action === 'recover') {\n    if (lk && p.lead === lk) return out_({ ok: true, code: cc });\n    return out_({ error: 'lead' });\n  }\n  var okCode = !cc || p.code === cc;\n  var okView = !!vk && p.view === vk;          // مراقب الهيئة: قراءة فقط\n  if (!okCode && !okView) return out_({ error: 'code' });\n  if (p.action === 'ping') return out_({ ok: true, t: lastT_(), view: okView && !okCode ? 1 : 0 });\n  var since = Number(p.since || 0), last = lastT_();\n  if (last <= since) return out_({ t: last, rows: [] });\n  var v = sheet_().getDataRange().getValues(), rows = [];\n  for (var i = 1; i < v.length; i++) {\n    if (Number(v[i][2]) > since) rows.push([v[i][0], v[i][1], Number(v[i][2]), v[i][3]]);\n  }\n  return out_({ t: last, rows: rows });\n}\n\nfunction doPost(e) {\n  var body = {};\n  try { body = JSON.parse(e.postData.contents); } catch (err) { return out_({ error: 'bad' }); }\n  var cc = code_(), vk = view_();\n  var byCode = !cc || body.code === cc;\n  var byView = !!vk && body.view === vk && !byCode;   // دخول بمفتاح المراقب فقط\n  if (!byCode && !byView) return out_({ error: 'code' });\n  var lock = LockService.getScriptLock();\n  lock.waitLock(20000);\n  try {\n    // ---- أوامر الرئيس (تحتاج رمز الفريق) ----\n    if (byCode && body.setLead) {              // مفتاح الرئيس (لاسترجاع الرمز بعد تغييره)\n      props_().setProperty('lead', String(body.setLead));\n      return out_({ ok: true, t: lastT_() });\n    }\n    if (byCode && body.setView) {              // إنشاء مفتاح القراءة فقط لمراقب الهيئة\n      props_().setProperty('vkey', String(body.setView));\n      return out_({ ok: true, t: lastT_(), view: String(body.setView) });\n    }\n    var s = sheet_(), n = s.getLastRow(), idx = {};\n    if (byCode && body.archive) {              // أرشفة الزيارة الحالية في ورقة جديدة ثم تفريغ القيم\n      var ss = SpreadsheetApp.getActiveSpreadsheet();\n      var base = String(body.archive).replace(/[\\[\\]\\*\\?:\\/\\\\]/g, ' ').slice(0, 90), nm = base, c = 1;\n      while (ss.getSheetByName(nm)) { c++; nm = base + ' (' + c + ')'; }\n      s.copyTo(ss).setName(nm);\n      var tt = Math.max(Date.now(), lastT_() + 1);\n      if (n > 1) {\n        var blank = [];\n        for (var r = 0; r < n - 1; r++) blank.push(['', tt, '']);\n        s.getRange(2, 2, n - 1, 3).setValues(blank);\n      }\n      props_().setProperty('lastT', String(tt));\n      if (body.newCode) {                       // رابط جديد: يتغير رمز الفريق ويسقط مفتاح المراقب القديم معه\n        props_().setProperty('code', String(body.newCode));\n        props_().deleteProperty('vkey');\n      }\n      return out_({ ok: true, t: tt, code: body.newCode ? String(body.newCode) : undefined });\n    }\n    // ---- كتابة القيم ----\n    if (n > 1) {\n      var keys = s.getRange(2, 1, n - 1, 1).getValues();\n      for (var i = 0; i < keys.length; i++) idx[keys[i][0]] = i + 2;\n    }\n    var t = lastT_(), ops = body.ops || [];\n    if (byView) {                               // المراقب لا يكتب إلا ملاحظاته (v2:vn|…) ولا شيء غيرها\n      ops = ops.filter(function (op) { return String(op.k || '').indexOf('v2:vn|') === 0; });\n      if (!ops.length) return out_({ error: 'readonly' });\n    }\n    ops.forEach(function (op) {\n      t = Math.max(Date.now(), t + 1);\n      var val = String(op.v == null ? '' : op.v).slice(0, 45000);\n      var row = idx[op.k];\n      if (!row) { n++; row = n; idx[op.k] = n; }\n      s.getRange(row, 1, 1, 4).setValues([[String(op.k), val, t, String(op.b || '')]]);\n    });\n    props_().setProperty('lastT', String(t));\n    return out_({ ok: true, t: t });\n  } finally {\n    lock.releaseLock();\n  }\n}\n";
 var CFGK='etec22m.sync2';
 function cfgLoad(){try{return JSON.parse(localStorage.getItem(CFGK)||'null')}catch(e){return null}}
-function cfgSave(){try{localStorage.setItem(CFGK,JSON.stringify({u:SH.url,c:SH.code,k:SH.lead,me:SH.me,seed:SH.seed,lock:SH.lock}))}catch(e){}}
+function cfgSave(){try{localStorage.setItem(CFGK,JSON.stringify({u:SH.url,c:SH.code,k:SH.lead,me:SH.me,seed:SH.seed,lock:SH.lock,view:SH.view,vname:SH.vname,vorg:SH.vorg,vid:SH.vid,vkey:SH.vkey}))}catch(e){}}
 function cfgClear(){try{localStorage.removeItem(CFGK)}catch(e){}}
 function encShare(){return btoa(unescape(encodeURIComponent(JSON.stringify({u:SH.url,c:SH.code}))))}
 function decShare(s){try{s=String(s||'').trim();var m=/[#&?]s=([^&\s]+)/.exec(s);if(m)s=decodeURIComponent(m[1]);var o=JSON.parse(decodeURIComponent(escape(atob(s))));return(o&&typeof o.u==='string'&&/^https:\/\//.test(o.u))?o:null}catch(e){return null}}
-function shUrl(q){return SH.url+(SH.url.indexOf('?')<0?'?':'&')+q+(SH.code?'&code='+encodeURIComponent(SH.code):'')+(SH.lead?'&lead='+encodeURIComponent(SH.lead):'')}
+function shUrl(q){return SH.url+(SH.url.indexOf('?')<0?'?':'&')+q+(SH.code?'&code='+encodeURIComponent(SH.code):'')+(SH.view&&SH.vkey?'&view='+encodeURIComponent(SH.vkey):'')+(SH.lead?'&lead='+encodeURIComponent(SH.lead):'')}
 function shMeName(){var m=mem(SH.me);return m&&m.name.trim()?m.name.trim():''}
-function shQ(k,v){if(!SH.on)return;if(!SH.seeded&&!SH.seed)return;SH.q[k]=v;clearTimeout(SH.tm);SH.tm=setTimeout(shFlush,800);setShare('saving')}
+function shQ(k,v){if(!SH.on||SH.view)return;if(!SH.seeded&&!SH.seed)return;SH.q[k]=v;clearTimeout(SH.tm);SH.tm=setTimeout(shFlush,800);setShare('saving')}
 async function shFlush(){if(SH.flushing){SH.tm=setTimeout(shFlush,500);return}var keys=Object.keys(SH.q);if(!keys.length||!SH.on)return;SH.flushing=true;
   var snap={},ops=keys.map(function(k){var v=SH.q[k];snap[k]=v;if(v===null)v=JSON.stringify(mainPayload());return {k:'v2:'+k,v:v,b:shMeName()}});
   try{var r=await fetch(SH.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({code:SH.code,lead:SH.lead||undefined,ops:ops})});var j=await r.json();if(!j||!j.ok)throw new Error(j&&j.error||'bad');
@@ -21867,12 +21912,14 @@ async function shPull(){if(!SH.on||SH.busy)return;SH.busy=true;
   try{var r=await fetch(shUrl('action=pull&since='+SH.since));var j=await r.json();if(!j||j.error)throw new Error(j&&j.error||'bad');var chg={};
     (j.rows||[]).forEach(function(row){var k=String(row[0]);if(k.indexOf('v2:')!==0)return;k=k.slice(3);var v=String(row[1]==null?'':row[1]),t=+row[2],b=String(row[3]||'');SH.known[k]=1;
       if(k==='m|setup'){if(SH.q[k]===undefined&&!SH.flushing){try{applyMain(JSON.parse(v))}catch(e){}}}
+      else if(k.slice(0,3)==='vn|'){try{var _o=JSON.parse(v);if(_o&&_o.txt){SH.vn[k.slice(3)]=_o;chg.vn=1}}catch(e){}}
       else if(k.slice(0,5)==='f|rq.'){if(SH.q[k]!==undefined)return;var rk3=k.slice(2);if((S.f[rk3]||'')!==v){S.f[rk3]=v;chg.rq=1;chg.xp=1}}
       else if(k.slice(0,2)==='f|'){if(SH.q[k]!==undefined)return;var p=parseKey(k.slice(2));if(!SUB[p.code])return;if(applyField(p.code,p.lv,p.f,v))chg[p.code]=1;SY.meta[p.code]={by:b,at:new Date(t).toISOString()}}});
     SH.since=Math.max(SH.since,+j.t||0);
+    if(chg.vn){delete chg.vn;try{vnRender()}catch(e){}}
     if(chg.rq){delete chg.rq;renderReq(false);renderPhase();renderFin();applyRole();SUBS_ALL.forEach(updSubChips);if(chg.xp){delete chg.xp;try{renderSummary()}catch(e){}}saveNow()}
     Object.keys(chg).forEach(function(c){updSubChips(SUB[c])});if(Object.keys(chg).length){lazySummary();saveNow()}renderEditors();
-    if(!SH.seeded){SH.seeded=true;if(SH.seed){if(!SH.known['m|setup'])shQ('m|setup',null);Object.keys(S.f).forEach(function(k){var v=S.f[k];if(v!=null&&String(v)!==''&&!SH.known['f|'+k])shQ('f|'+k,v)})}}
+    if(!SH.seeded){SH.seeded=true;if(SH.seed&&!SH.view){if(!SH.known['m|setup'])shQ('m|setup',null);Object.keys(S.f).forEach(function(k){var v=S.f[k];if(v!=null&&String(v)!==''&&!SH.known['f|'+k])shQ('f|'+k,v)})}}
     SH.err=0;if(!Object.keys(SH.q).length)setShare('ok')}
   catch(e){SH.err++;SH.ek=(e&&e.message==='code')?'code':'net';setShare('err')}
   SH.busy=false}
@@ -21881,21 +21928,21 @@ function shLeadSync(){if(!SH.on||!SH.seed||SH.rec)return;SH.rec=1;(async functio
     var r=await fetch(SH.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({code:SH.code,setLead:key})});var j=await r.json();if(j&&j.ok){SH.lead=key;cfgSave();shLinks()}}
   else{var r2=await fetch(SH.url+'?action=recover&lead='+encodeURIComponent(SH.lead));var j2=await r2.json();if(j2&&j2.ok&&j2.code&&j2.code!==SH.code){SH.code=j2.code;cfgSave();SH.err=0;shLinks();shPull()}}
   }catch(e){}SH.rec=0})()}
-function shStart(){if(!SH.on)return;shLeadSync();clearInterval(SH.poll);SH.poll=setInterval(function(){if(!document.hidden)shPull()},8000);setShare('ok');shPull()}
+function shStart(){if(!SH.on)return;shLeadSync();try{shViewSync()}catch(e){}clearInterval(SH.poll);SH.poll=setInterval(function(){if(!document.hidden)shPull()},8000);setShare('ok');shPull()}
 document.addEventListener('visibilitychange',function(){if(!document.hidden&&SH.on)shPull()});window.addEventListener('hashchange',function(){if(/[#&]s=/.test(location.hash))location.reload()});
 function shBackupReset(){try{localStorage.setItem('etec22m.backup.'+Date.now(),JSON.stringify(S))}catch(e){}var ui=S.ui;S=fresh();S.ui=ui;saveNow()}
 function shInit(){var c=cfgLoad(),o=decShare(location.hash);
-  if(o){if(!c||c.u!==o.u)shBackupReset();SH.url=o.u;SH.code=o.c||'';SH.lead=o.k||((c&&c.u===o.u)?(c.k||''):'');SH.me=(c&&c.u===o.u)?(c.me||''):'';SH.lock=(c&&c.u===o.u)?!!c.lock:false;if(o.m){SH.me=String(o.m);SH.lock=true}SH.seed=!!o.l;if(SH.seed)SH.lock=false;SH.on=true;cfgSave();try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}}
-  else if(c&&c.u){SH.url=c.u;SH.code=c.c||'';SH.lead=c.k||'';SH.me=c.me||'';SH.seed=!!c.seed;SH.lock=!!c.lock&&!c.seed;SH.on=true}}
+  if(o){if(!c||c.u!==o.u)shBackupReset();SH.url=o.u;SH.code=o.c||'';SH.lead=o.k||((c&&c.u===o.u)?(c.k||''):'');SH.me=(c&&c.u===o.u)?(c.me||''):'';SH.lock=(c&&c.u===o.u)?!!c.lock:false;if(o.m){SH.me=String(o.m);SH.lock=true}SH.seed=!!o.l;if(SH.seed)SH.lock=false;SH.view=!!o.r;if(SH.view){SH.seed=false;SH.me='';SH.lock=true;SH.lead='';SH.vname=String(o.n||'');SH.vorg=String(o.o||'');SH.vid=String(o.i||'');SH.vkey=String(o.v||'');SH.code=o.v?'':(o.c||'')}else{SH.vkey=(c&&c.u===o.u)?(c.vkey||''):''}SH.on=true;cfgSave();try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}}
+  else if(c&&c.u){SH.url=c.u;SH.code=c.c||'';SH.lead=c.k||'';SH.me=c.me||'';SH.seed=!!c.seed;SH.lock=!!c.lock&&!c.seed;SH.view=!!c.view;SH.vname=c.vname||'';SH.vorg=c.vorg||'';SH.vid=c.vid||'';SH.vkey=c.vkey||'';if(SH.view){SH.seed=false;SH.me='';SH.lead=''}SH.on=true}}
 function shMsg(t,bad){var e=$('#shMsg');e.textContent=t;e.style.color=bad?'var(--bad)':'var(--ok)'}
-var LEAD_SEL=['#p-groups .presets','#pvBox','#addObs','#setup .grid.g3','#daysBox','#teamBox','#addMember','#quickBox','#presetBox','#distGrid'];
-function shLinks(){applyRole();if(!SH.on){shMemLinks();$('#shLink').value='';$('#shTok').value='';$('#shLeadBox').hidden=true;return}var base=location.href.split('#')[0];$('#shTok').value=encShare();$('#shLink').value=base+'#s='+encodeURIComponent(encShare());$('#shLeadBox').hidden=!SH.seed;shMemLinks();if(SH.seed){var tl=btoa(unescape(encodeURIComponent(JSON.stringify({u:SH.url,c:SH.code,l:1,k:SH.lead||undefined}))));$('#shLead').value=base+'#s='+encodeURIComponent(tl)}}
+var LEAD_SEL=['#p-groups .presets','#pvBox','#addObs','#setup .grid.g3','#daysBox','#teamBox','#addMember','#quickBox','#presetBox','#distGrid','#vwBox','#vwAdd'];
+function shLinks(){applyRole();if(!SH.on){shMemLinks();$('#shLink').value='';$('#shTok').value='';$('#shLeadBox').hidden=true;return}var base=location.href.split('#')[0];$('#shTok').value=encShare();$('#shLink').value=base+'#s='+encodeURIComponent(encShare());$('#shLeadBox').hidden=!SH.seed;shMemLinks();try{shViewLinks()}catch(e){}if(SH.seed){var tl=btoa(unescape(encodeURIComponent(JSON.stringify({u:SH.url,c:SH.code,l:1,k:SH.lead||undefined}))));$('#shLead').value=base+'#s='+encodeURIComponent(tl)}}
 function memLink(id){var base=location.href.split('#')[0];var t=btoa(unescape(encodeURIComponent(JSON.stringify({u:SH.url,c:SH.code,m:id}))));return base+'#s='+encodeURIComponent(t)}
 function shMemLinks(){var b=$('#shMemList');if(!b)return;var bx=$('#shMemBox');bx.hidden=!(SH.on&&SH.seed);if(bx.hidden)return;var h='',n=0;team().forEach(function(m,i){if(!m.name.trim()||m.role==='رئيس الفريق')return;n++;h+='<div class="row" style="margin:4px 0"><b style="flex:1">'+esc(m.name.trim())+(isObs(m)?' <span class="note">(تحت المعايشة)</span>':'')+'</b><button class="btn" type="button" data-mlink="'+esc(m.id)+'">نسخ رابطه</button></div>'});b.innerHTML=h||'<span class="note">أضف أسماء الأعضاء في جدول الفريق أولاً، وستظهر هنا أزرار روابطهم.</span>'}
 document.addEventListener('click',function(ev){var b=ev.target.closest&&ev.target.closest('[data-mlink]');if(!b)return;var t=$('#shMemTmp');t.value=memLink(b.getAttribute('data-mlink'));copyText(t,'تم نسخ رابط العضو')});
 function shFillGs(){var c=($('#shCode').value||'').replace(/[\\'"\s]/g,'');$('#gsCode').value=GS_TPL.replace('__CODE__',c)}
-function renderMe(){var b=$('#meBox');b.hidden=!SH.on;if(!SH.on){whoCheck();return}if(SH.lock&&!SH.seed&&SH.me){var lm=mem(SH.me);b.innerHTML='<b>أنت: '+esc(lm?(lm.name.trim()||'عضو'):'…')+'</b><span class="note">الاسم مثبَّت على هذا الرابط.</span>';whoCheck();return}var h='<option value="">— اختر اسمك —</option>';team().forEach(function(m,i){h+='<option value="'+m.id+'"'+(m.id===SH.me?' selected':'')+'>'+esc(lbl(i))+'</option>'});$('#meSel').innerHTML=h;whoCheck()}
-function whoCheck(){var o=$('#ovWho');if(!o)return;var need=SH.on&&!SH.seed&&!SH.lock&&!SH.me;var named=team().filter(function(m){return m.name.trim()});if(!need||!named.length){o.hidden=true;return}var ws=$('#whoSel'),pv=ws.value,h='<option value="">— اختر اسمك —</option>';team().forEach(function(m,i){if(m.name.trim())h+='<option value="'+esc(m.id)+'">'+esc(m.name.trim())+'</option>'});if(ws.getAttribute('data-h')!==h){ws.innerHTML=h;ws.setAttribute('data-h',h);ws.value=pv}o.hidden=false}
+function renderMe(){var b=$('#meBox');b.hidden=!SH.on;if(!SH.on){whoCheck();return}if(SH.view){b.innerHTML='<b>أنت: '+esc(SH.vname||'مراقب الهيئة')+'</b><span class="note">مراقب الهيئة — اطلاع فقط.</span>';whoCheck();return}if(SH.lock&&!SH.seed&&SH.me){var lm=mem(SH.me);b.innerHTML='<b>أنت: '+esc(lm?(lm.name.trim()||'عضو'):'…')+'</b><span class="note">الاسم مثبَّت على هذا الرابط.</span>';whoCheck();return}var h='<option value="">— اختر اسمك —</option>';team().forEach(function(m,i){h+='<option value="'+m.id+'"'+(m.id===SH.me?' selected':'')+'>'+esc(lbl(i))+'</option>'});$('#meSel').innerHTML=h;whoCheck()}
+function whoCheck(){var o=$('#ovWho');if(!o)return;var need=SH.on&&!SH.seed&&!SH.view&&!SH.lock&&!SH.me;var named=team().filter(function(m){return m.name.trim()});if(!need||!named.length){o.hidden=true;return}var ws=$('#whoSel'),pv=ws.value,h='<option value="">— اختر اسمك —</option>';team().forEach(function(m,i){if(m.name.trim())h+='<option value="'+esc(m.id)+'">'+esc(m.name.trim())+'</option>'});if(ws.getAttribute('data-h')!==h){ws.innerHTML=h;ws.setAttribute('data-h',h);ws.value=pv}o.hidden=false}
 async function shConnect(url,code,seed){SH.url=url.trim();SH.code=code||'';
   if(!/^https:\/\/script\.google\.com\//.test(SH.url)){SH.url='';shMsg('الرابط غير صحيح: يجب أن يبدأ بـ https://script.google.com ',true);return false}
   try{var r=await fetch(shUrl('action=ping'));var j=await r.json();if(j&&j.error==='code'){shMsg('الرمز السري لا يطابق الرمز داخل الكود. حدّث الكود وانشره من جديد.',true);return false}if(!j||!j.ok)throw new Error('bad')}
@@ -21912,7 +21959,8 @@ async function newVisit(){var rotated=0;var go=$('#nvGo');go.disabled=true;var m
     if(SH.on){var rot=$('#nvRot').checked,nc='';if(rot){var ar=new Uint8Array(9);crypto.getRandomValues(ar);nc=Array.from(ar,function(x){return'abcdefghjkmnpqrstuvwxyz23456789'[x%31]}).join('')}var rr=await fetch(SH.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({code:SH.code,lead:SH.lead||undefined,archive:label.slice(0,80),newCode:nc||undefined,ops:[]})});var jj=await rr.json();if(!jj||!jj.ok)throw new Error('archive');if(rot){if(jj.code===nc){SH.code=nc;cfgSave();rotated=1}else rotated=-1}}
     else if(SY.on&&DB&&SY.admin){var qs=await DB.collection('entries').get();for(var i=0;i<qs.docs.length;i++){await DB.collection('entries').doc(qs.docs[i].id).delete()}SY.known={};SY.meta={}}
     var keep=$('#nvTeam').checked;S=fresh();S.ui=old.ui;S.ui.collapsed=fresh().ui.collapsed;
-    if(keep){S.setup.team=old.setup.team;S.setup.days=old.setup.days;S.mode=old.mode;S.assign=old.assign;S.subAssign={}}
+    if(keep){S.setup.team=old.setup.team;S.setup.days=old.setup.days;S.mode=old.mode;S.assign=old.assign;S.subAssign={};S.setup.viewers=old.setup.viewers||[]}
+    if(rotated===1){SH.vkey='';cfgSave();try{shViewSync()}catch(e){}}
     SH.q={};SY.pend={};DEF={};saveNow();bootAll();queueMain();
     $('#ov3').hidden=true;toast('بدأت زيارة جديدة'+(SH.on?' وأُرشفت السابقة في ورقة جديدة داخل Google Sheet':''));
     if(rotated===1){shLinks();$('#shUrl').value=SH.url;$('#shCode').value=SH.code;shMsg('أُنشئ رابط جديد للفريق الجديد. انسخه وأرسله لأعضاء هذه الزيارة فقط؛ الروابط القديمة لم تعد تعمل.');$('#ov2').hidden=false}
@@ -21930,6 +21978,7 @@ document.addEventListener('input',function(ev){var e=ev.target;
   if(e.id==='fSearch'){applyFilter();return}
   if(e.hasAttribute('data-tn')){var m=mem(e.getAttribute('data-tn'));if(m){m.name=e.value;updOwners();renderQuick();renderDist();updFilterSel();renderSetupSum();renderSummary();queueMain();save()}return}
   if(e.hasAttribute('data-day')){S.setup.dayNotes[+e.getAttribute('data-day')]=e.value;queueMain();save()}
+  if(e.hasAttribute('data-vn')||e.hasAttribute('data-vo')){var vv=viewer(e.getAttribute('data-vn')||e.getAttribute('data-vo'));if(vv){if(e.hasAttribute('data-vn'))vv.name=e.value;else vv.org=e.value;try{shViewLinks()}catch(e3){}queueMain();save()}}
 });
 document.addEventListener('change',function(ev){var e=ev.target;
   if(e.hasAttribute&&e.hasAttribute('data-rq')&&e.tagName==='SELECT'){var rk2=e.getAttribute('data-rq'),p2=rk2.split('.');rqSet(p2[0],p2[1],e.value);if(p2[1]==='std'){rqSet(p2[0],'sub','');renderReq(true)}if(p2[1]==='st')renderReq(false);save();return}
@@ -21957,6 +22006,7 @@ document.addEventListener('click',function(ev){var t=ev.target,e=t.closest?t.clo
   if(e.hasAttribute('data-finb')){doFinal(+e.getAttribute('data-finb'));return}
   if(e.hasAttribute('data-rqdel')){rqSet(e.getAttribute('data-rqdel'),'del','1');save();renderReq(true);return}
   if(e.hasAttribute('data-rvw')){var rn=+e.getAttribute('data-rvw');if(!canReview(rn)){toast('اعتماد المراجعة للعضو المسؤول عن المعيار');return}var rk=chkKey(rn),rv=S.f[rk]==='1'?'0':'1';S.f[rk]=rv;queueEntry(rk,rv);updTrainee();renderSummary();save();toast(rv==='1'?'اعتُمدت مراجعتك للمعيار':'أُلغي اعتماد المراجعة');return}
+  if(e.hasAttribute('data-vrm')){if(myRole()==='lead'){var vid=e.getAttribute('data-vrm');S.setup.viewers=viewers().filter(function(v){return v.id!==vid});renderViewers();shViewLinks();queueMain();save()}return}
   if(e.hasAttribute('data-rm')){if(team().length>1){var id=e.getAttribute('data-rm');S.setup.team=team().filter(function(m){return m.id!==id});Object.keys(S.subAssign).forEach(function(k){if(S.subAssign[k]===id)delete S.subAssign[k]});renderTeam();updAll();queueMain();save()}return}
   if(e.hasAttribute('data-tg')){var n=e.getAttribute('data-tg');S.ui.collapsed[n]=S.ui.collapsed[n]?0:1;updStd();if(!S.ui.collapsed[n])$$('textarea[data-f]',$('#std-'+n)).forEach(autosize);save();return}
   if(e.hasAttribute('data-rail')){ev.preventDefault();var n2=e.getAttribute('data-rail');S.ui.collapsed[n2]=0;updStd();$$('textarea[data-f]',$('#std-'+n2)).forEach(autosize);var el=$('#std-'+n2);var rm=window.matchMedia('(prefers-reduced-motion: reduce)').matches;el.scrollIntoView({behavior:rm?'auto':'smooth',block:'start'});return}
@@ -21970,6 +22020,8 @@ document.addEventListener('click',function(ev){var t=ev.target,e=t.closest?t.clo
     case 'pubForget':pubForget();break;
     case 'pubCopy':pubCopy();break;
     case 'pubTeam':pubTeamOpen();break;
+    case 'addView':if(myRole()==='lead'&&viewers().length<3){viewers().push({id:uid(),name:'',org:'هيئة تقويم التعليم والتدريب'});renderViewers();shViewLinks();queueMain();save()}break;
+    case 'vnSend':vnSend();break;
     case 'addObs':if(team().length<8){team().push({id:uid(),name:'',role:OBS,with:'',tr:0});renderTeam();updAll();queueMain();save()}break;
     case 'addMember':if(team().length<8){team().push({id:uid(),name:'',role:'مقيّم'});renderTeam();updAll();queueMain();save()}break;
     case 'expAll':STDS.forEach(function(s){S.ui.collapsed[s.n]=0});updStd();$$('textarea[data-f]').forEach(autosize);save();break;
@@ -22016,7 +22068,7 @@ function facKind(){var m=/^(?:ال)?(معهد|كلية|مركز|أكاديمية
 (function(){var fe=$('#facility');if(!fe)return;var keep='',ph=fe.placeholder;fe.addEventListener('focus',function(){keep=fe.value;if(keep){fe.placeholder=keep;fe.value=''}});fe.addEventListener('blur',function(){if(!fe.value&&keep)fe.value=keep;fe.placeholder=ph})})();
 function bootAll(){
   $('#facility').value=S.setup.facility||'';$('#vdate').value=S.setup.date||'';$('#vdays').value=String(S.setup.days||2);
-  renderDays();renderTeam();
+  renderDays();renderTeam();try{renderViewers()}catch(e){}
   var closed=!S.ui.setupOpen;$('#setup').classList.toggle('closed',closed);$('#setupToggle').textContent=closed?'فتح':'طيّ';$('#setupToggle').setAttribute('aria-expanded',closed?'false':'true');
   fillValues();$('#fCrit').checked=!!S.ui.crit;
   updAll();renderReq(true);showTab(S.ui.tab||'form')}
