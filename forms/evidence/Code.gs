@@ -59,6 +59,7 @@ function handle_(q) {
       case 'rotate': return out_(rotate_(q));
       case 'setDeadline': return out_(setDeadline_(q));
       case 'leader': return out_(leader_(q));
+      case 'newView': return out_(newView_(q));
       case 'setDays': return out_(setDays_(q));
       case 'openDay': return out_(openDay_(q));
       case 'facReq': return out_(facReq_(q));
@@ -95,6 +96,17 @@ function leaderAuth_(q) {
 function teamAuth_(q, m) {
   if (m && m.tc && keyEq_(m.tc, q.tc)) return;
   admin_(q);
+}
+/* مراقب الهيئة: رمز اطلاع فقط (vc) لكل زيارة. يقبله استدعاء team (القراءة) وحده، وترفضه كل إجراءات الكتابة */
+function isViewer_(q, m) { return !!(m && m.vc && keyEq_(m.vc, q.vc)); }
+function newView_(q) {
+  leaderAuth_(q);
+  return withLock_(function () {
+    var v = loadV_(String(q.visit || ''));
+    v.m.vc = token_();
+    saveV_(v);
+    return { ok: 1, vc: v.m.vc };
+  });
 }
 function clean_(s, n) {
   return String(s == null ? '' : s).replace(/[\\\/:*?"<>|\u0000-\u001f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, n || 80);
@@ -220,7 +232,7 @@ function createVisit_(q) {
     var root = DriveApp.getFolderById(props_().getProperty('ROOT_FOLDER_ID'));
     var title = clean_(q.title, 60);
     var vf = sub_(root, 'زيارة ' + code);
-    var m = { code: code, title: title, created: new Date().toISOString(), deadline: q.deadline || '', pageUrl: String(q.pageUrl || ''), tc: token_(), days: normDays_(q.days, []), facilities: {} };
+    var m = { code: code, title: title, created: new Date().toISOString(), deadline: q.deadline || '', pageUrl: String(q.pageUrl || ''), tc: token_(), vc: token_(), days: normDays_(q.days, []), facilities: {} };
     var res = [], nrows = 0;
     fas.forEach(function (fa, i) {
       var fid = 'f' + (i + 1), fname = clean_(fa.name, 80) || ('منشأة ' + (i + 1));
@@ -347,9 +359,10 @@ function team_(q) {
   var code = String(q.visit || '') || (idx_()[0] || {}).c || '';
   var v = loadV_(code);
   var m = v.m;
-  teamAuth_(q, m);
+  var viewOnly = isViewer_(q, m);
+  if (!viewOnly) teamAuth_(q, m);
   return {
-    ok: 1, visit: m.code, title: m.title || '', deadline: m.deadline, closed: closed_(m), days: m.days || [],
+    ok: 1, view: viewOnly ? 1 : 0, visit: m.code, title: m.title || '', deadline: m.deadline, closed: closed_(m), days: m.days || [],
     facilities: Object.keys(m.facilities).map(function (fid) {
       var f = m.facilities[fid];
       return {
@@ -368,9 +381,9 @@ function leader_(q) {
   if (!code) return out;
   return withLock_(function () {
     var v = loadV_(code), m = v.m;
-    if (!m.tc) { m.tc = token_(); saveV_(v); }
+    if (!m.tc || !m.vc) { if (!m.tc) m.tc = token_(); if (!m.vc) m.vc = token_(); saveV_(v); }
     out.current = {
-      code: m.code, title: m.title || '', deadline: m.deadline, closed: closed_(m), tc: m.tc, days: m.days || [], pageUrl: m.pageUrl || '',
+      code: m.code, title: m.title || '', deadline: m.deadline, closed: closed_(m), tc: m.tc, vc: m.vc, days: m.days || [], pageUrl: m.pageUrl || '',
       facilities: Object.keys(m.facilities).map(function (fid) {
         var f = m.facilities[fid], rows = Object.keys(f.rows).map(function (id) { return f.rows[id]; });
         return { fid: fid, name: f.name, folderUrl: f.folderUrl, link: pageLink_(m, f.token), total: rows.length, up: rows.filter(function (r) { return r.files.length || r.links.length; }).length };
