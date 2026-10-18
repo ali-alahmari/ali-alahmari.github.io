@@ -143,7 +143,7 @@ function facToken_(name) {
   return map[name];
 }
 function newRow_(id, sb, lv, txt, rd, src, ap) {
-  return { id: id, sub: sb, lv: lv, txt: clean_(txt, 300), status: 'none', note: '', files: [], links: [], folderId: '', folderUrl: '', rd: rd || 'o', src: src || 'team', ap: ap === 0 ? 0 : 1 };
+  return { id: id, sub: sb, lv: lv, txt: clean_(txt, 300), status: 'none', note: '', files: [], links: [], folderId: '', folderUrl: '', rd: rd || 'o', src: src || 'team', ap: ap === 0 ? 0 : 1, at: new Date().toISOString() };
 }
 function normDays_(a, prev) {
   var out = [];
@@ -166,7 +166,8 @@ function rowView_(r, admin) {
     note: (admin || r.status === 'redo') ? (r.note || '') : '',
     files: r.files.map(function (f) { return admin ? { name: f.name, size: f.size, url: f.url, at: f.at } : { name: f.name, size: f.size }; }),
     links: r.links.slice(),
-    folderUrl: admin ? r.folderUrl : undefined
+    folderUrl: admin ? r.folderUrl : undefined,
+    at: admin ? (r.at || '') : undefined, cfAt: admin ? (r.cfAt || '') : undefined
   };
 }
 
@@ -529,7 +530,7 @@ function review_(q) {
     if (q.status !== 'ok' && q.status !== 'redo') throw new Error('حالة غير صالحة');
     if (!r.cf && !closedRd_(v.m, r.rd)) throw new Error('لم تعتمد المنشأة الرفع بعد. انتظر اعتمادها');
     r.status = q.status;
-    if (q.status === 'redo') r.cf = 0;
+    if (q.status === 'redo') { r.cf = 0; r.cfAt = ''; }
     r.note = q.status === 'redo' ? (clean_(q.note, 300) || 'يحتاج الشاهد إلى استكمال.') : '';
     saveV_(v);
     return { ok: 1 };
@@ -660,6 +661,7 @@ function confirm_(q) {
     var h = byToken_(q.token), r = editableRow_(h, String(q.row || ''));
     if (!r.files.length && !r.links.length) throw new Error('ارفع ملفاً أو رابطاً أولاً');
     r.cf = 1;
+    r.cfAt = new Date().toISOString();
     saveV_(h.v);
     return { ok: 1 };
   });

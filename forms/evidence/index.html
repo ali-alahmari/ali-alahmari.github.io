@@ -122,7 +122,7 @@ button,.btn,[role=button],select,summary{touch-action:manipulation}
 </nav>
 <main id="main">
 <section class="panel" id="v-fac" aria-label="منظور المنشأة">
-  <div id="rounds"></div><div class="card" id="dlNote" role="note" style="margin-bottom:14px" hidden></div><div id="dayForm"></div>
+  <div id="rounds"></div><div class="card" id="dlNote" role="note" style="margin-bottom:14px" hidden></div><div id="fSum"></div><div id="dayForm"></div>
   <div class="card" style="margin-bottom:14px"><strong>تقدمك في رفع الشواهد</strong><div class="bar" aria-hidden="true"><i id="fBar"></i></div><p class="hint" id="fTxt" style="margin:8px 0 0"></p></div>
   <div class="chips" id="chips" role="group" aria-label="تصفية حسب المعيار"></div>
   <div id="fList"></div>
@@ -141,7 +141,7 @@ button,.btn,[role=button],select,summary{touch-action:manipulation}
     <div class="nvg"><label for="taSub">المعيار الفرعي</label><select class="sel" id="taSub"></select><label for="taLv">المستوى</label><select class="sel" id="taLv"></select><label for="taTxt">الشاهد المطلوب</label><input id="taTxt" maxlength="300" placeholder="اكتب الشاهد المطلوب"></div>
     <div class="chips" id="taSg" aria-label="اقتراحات"></div><div class="lk"><button class="btn pri" type="button" id="taGo">إضافة</button></div><div class="err" id="taErr" role="alert"></div></div>
 </section>
-<section class="panel" id="v-lead" aria-label="صفحة الرئيس" hidden><div id="ldBody"></div></section>
+<section class="panel" id="v-lead" aria-label="صفحة الرئيس" hidden><div id="ldLate"></div><div id="ldBody"></div></section>
 <section class="panel" id="v-new" aria-label="زيارة جديدة" hidden>
   <div class="card"><h2 style="font-size:1.3rem">بدء زيارة جديدة</h2>
     <p class="hint">تُؤرشف الزيارة الحالية وتبقى ملفاتها في Drive. روابط المنشآت الدائمة تبقى صالحة وتفتح الزيارة الجديدة، ويتغير رابط الفريق فيفقد الفريق السابق الدخول.</p>
@@ -232,6 +232,7 @@ function typing(){var a=document.activeElement;if(a&&/^(INPUT|TEXTAREA)$/.test(a
  if([].some.call(document.querySelectorAll('[data-rvin],[data-edin],[data-lkin]'),function(e){return e.value.trim()}))return true;return ['taTxt','dfTxt'].some(function(i){var e=document.getElementById(i);return e&&e.value.trim()})}
 function pollOnce(){if(document.hidden||PEND>0||typing()||(MODE==='lead'&&!VCODE))return Promise.resolve();
  var b={action:'poll',quiet:1};return api(b).then(function(j){if(!LASTU){LASTU=j.u;return}if(j.u!==LASTU){LASTU=j.u;if(PEND>0||typing())return;return MODE==='lead'?loadTeam():load()}}).catch(function(){})}
+setInterval(function(){if(document.hidden)return;if(MODE==='lead')renderLate();if(MODE==='fac'||MODE==='demo')renderFSum()},60000);
 function pollStart(){if(POLLT||MODE==='demo')return;POLLT=setInterval(pollOnce,5000);setTimeout(pollOnce,800);document.addEventListener('visibilitychange',function(){if(!document.hidden)pollOnce()})}
 function loadTeam(){return baseLoad(function(){return api({action:'team'})}).then(function(j){keepUI();VISIT='زيارة '+j.visit+(j.title?' · '+j.title:'');VCODE=j.visit;DEADLINE=j.deadline;CLOSED=j.closed;DAYS=j.days||[];FACS=j.facilities.map(function(f){f.rows=f.rows.map(nrm);return f});if(curF>=FACS.length)curF=0;pickFac();render()})}
 function pickFac(){var f=FACS[curF];if(!f)return;FAC=f.name;RALL=f.rows;applyRd()}
@@ -259,7 +260,7 @@ function sgDraw(box,target,lv){var e=$('#'+box);if(!e)return;e.innerHTML=(SUG[lv
 function subOpts(list){return list.map(function(c){return'<option value="'+c+'">'+c+' — '+esc(SUB[c].b.t.slice(0,60))+'</option>'}).join('')}
 function lvOpts(){return['e','p','f'].map(function(l){return'<option value="'+l+'">'+LVN[l]+'</option>'}).join('')}
 function renderFac(){var s=stat(false);$('#fBar').style.setProperty('--p',s.t?s.u/s.t:0);$('#fTxt').textContent='رُفع '+s.u+' من '+s.t+' شاهداً'+(s.rd?'، ويوجد '+s.rd+' مطلوب استكماله':'')+'.';
- var rl=[{k:'o',label:'الطلب المكتبي'}].concat(DAYS.filter(function(x){return MODE==='demo'||x.open!==false}).map(function(x){return{k:x.k,label:x.label}}));$('#rounds').innerHTML=rl.length>1?roundsHTML(rl):'';
+ var rl=[{k:'o',label:'الطلب المكتبي'}].concat(DAYS.filter(function(x){return MODE==='demo'||x.open!==false}).map(function(x){return{k:x.k,label:x.label}}));rl.forEach(function(x){var n=facLeft(RALL.filter(function(r){return(r.rd||'o')===x.k})).n;if(n)x.label+=' · متبقٍ '+n});$('#rounds').innerHTML=rl.length>1?roundsHTML(rl):'';renderFSum();
  var dc=dayCur(),canReq=RD!=='o'&&dc&&!roundClosed(),fk=RD+'|'+canReq;
  if($('#dayForm').dataset.k!==fk){$('#dayForm').dataset.k=fk;var subs=canReq?((dc.subs&&dc.subs.length)?dc.subs.filter(function(c){return SUB[c]}):Object.keys(SUB)):[];
   $('#dayForm').innerHTML=canReq?'<div class="card" style="margin-bottom:14px"><h2 style="font-size:1.3rem">ما الذي طلبه الفريق في النقاش؟</h2><p class="hint">اختر المعيار والمستوى واكتب الشاهد المطلوب. يمكنك رفعه فوراً دون انتظار اعتماد الفريق.</p><div class="nvg"><label for="dfSub">المعيار الفرعي</label><select class="sel" id="dfSub">'+subOpts(subs)+'</select><label for="dfLv">المستوى</label><select class="sel" id="dfLv">'+lvOpts()+'</select><label for="dfTxt">الشاهد المطلوب</label><input id="dfTxt" maxlength="300" placeholder="اكتب ما طلبه الفريق"></div><div class="chips" id="dfSg" aria-label="اقتراحات"></div><div class="lk"><button class="btn pri" type="button" id="dfGo">إضافة الطلب</button></div><div class="err" id="dfErr" role="alert"></div></div>':'';
@@ -294,7 +295,7 @@ function renderTeam(){var s=stat(true),pend=R.filter(function(r){return r.ap===0
  else{$('#fOpen').hidden=true}
  var ak=RD+'|'+$$('#taSub option').length;if($('#tAdd').dataset.k!==ak){$('#tAdd').dataset.k=ak;sgDraw('taSg','taTxt',$('#taLv').value)}}
 function renderTree(){var h='<details open><summary>'+esc(VISIT)+'</summary><details open><summary>'+esc(FAC.replace(' (مثال)',''))+'</summary>';STDS.forEach(function(x){var rs=R.filter(function(r){return SUB[r.sub].std.n===x.n});if(!rs.length)return;var n=rs.reduce(function(a,r){return a+cntF(r)},0);h+='<details><summary>المعيار '+x.n+' · '+esc(x.title)+'<span class="cnt">'+n+'</span></summary>';x.subs.forEach(function(b){var ss=R.filter(function(r){return r.sub===b.c});if(!ss.length)return;h+='<details><summary>'+b.c+'</summary>';ss.forEach(function(r){h+='<div class="leaf">'+LVN[r.lv]+' · '+esc(r.txt)+' · '+cntF(r)+' ملف'+(r.files.length?' : '+r.files.map(function(f){return esc(f.name)}).join('، '):'')+'</div>'});h+='</details>'});h+='</details>'});$('#tree').innerHTML=h+'</details></details>'}
-function render(){renderFac();renderTeam();renderTree();if(MODE==='lead')renderLead()}
+function render(){renderFac();renderTeam();renderTree();if(MODE==='lead'){renderLead();renderLate()}}
 /* ---- الإجراءات ---- */
 function b64(blob){return new Promise(function(ok,no){var fr=new FileReader();fr.onload=function(){ok(String(fr.result).split(',')[1]||'')};fr.onerror=no;fr.readAsDataURL(blob)})}
 function setErr(r,m){r.err=m;var e=$('[data-err="'+r.id+'"]');if(e)e.textContent=m}
@@ -342,6 +343,8 @@ document.addEventListener('click',function(e){var b=e.target.closest('button');i
  if(b.id==='syImp'){doSyncImport();return}
  if(b.id==='syClr'){doSyncClear();return}
  if(d.cpl!==undefined){var li=$('[data-lin="'+d.cpl+'"]');try{navigator.clipboard.writeText(li.value).then(function(){toast('نُسخ الرابط')},function(){li.select();toast('حدّد الرابط وانسخه')})}catch(x){li.select();toast('حدّد الرابط وانسخه')}return}
+ if(d.cpm!==undefined){var ta=$('[data-msg="'+d.cpm+'"]');try{navigator.clipboard.writeText(ta.value).then(function(){toast('نُسخت الرسالة')},function(){ta.select();toast('حدّد الرسالة وانسخها')})}catch(x){ta.select();toast('حدّد الرسالة وانسخها')}return}
+ if(d.wam!==undefined){var tb=$('[data-msg="'+d.wam+'"]');window.open('https://wa.me/?text='+encodeURIComponent(tb.value),'_blank','noopener');return}
  if(d.rotf){if(!confirm('سيتوقف رابط هذه المنشأة الدائم فوراً ويُنشأ رابط جديد تُرسله لها. هل تريد المتابعة؟'))return;api({action:'rotate',fid:d.rotf}).then(load).then(function(){toast('أُنشئ رابط جديد')}).catch(fail);return}
  if(d.arch){VCODE=d.arch;curF=0;RD='o';load().then(function(){setView('team')}).catch(fail);return}
  if(b.id==='ldSave'){doLeadSave();return}
@@ -444,6 +447,45 @@ function renderLead(){var c=LD&&LD.current,o=$('#ldBody');if(!c){o.innerHTML='<d
  +'<div class="card" style="margin-top:14px"><h2 style="font-size:1.3rem">المواعيد وأيام الزيارة الميدانية</h2><div class="nvg"><label for="ldDl">آخر موعد لرفع الطلب المكتبي</label><input id="ldDl" type="datetime-local" value="'+toLocal(c.deadline)+'"></div><h3 style="font-size:1.1rem;margin:14px 0 4px">أيام الزيارة الميدانية</h3><div id="ldDays"></div><div class="lk" style="flex-wrap:wrap"><button class="btn sm" type="button" id="dayAdd">إضافة يوم</button><button class="btn sm warn" type="button" id="dayDel">حذف آخر يوم</button><button class="btn pri" type="button" id="ldSave">حفظ</button></div><p class="hint">فتح كل يوم للمنشأة يتم من نموذج 22م أو من منظور الفريق.</p></div>'
  +'<div class="card" style="margin-top:14px"><h2 style="font-size:1.3rem">الزيارات السابقة</h2>'+(LD.visits.filter(function(v){return v.c!==c.code}).map(function(v){return'<div class="lk"><span style="flex:1;align-self:center">'+esc(v.t?v.t+' · ':'')+'<bdi dir="ltr">'+esc(v.c)+'</bdi></span><button class="btn sm" type="button" data-arch="'+esc(v.c)+'">فتح</button></div>'}).join('')||'<p class="hint">لا توجد زيارات سابقة.</p>')+'</div>';
  drawDays(c.days.map(function(d){return{label:d.label,dl:d.dl,subs:d.subs||[]}}))}
+/* ---- المتابعة والتأخر والتذكير ---- */
+var TEAM_LATE_H=12;
+function hrsW(n){return n===1?'ساعة':n===2?'ساعتين':n<=10?n+' ساعات':n+' ساعة'}
+function leftIn(ms){var m=Math.floor(ms/60000);if(m<60)return'أقل من ساعة';var h=Math.floor(m/60);if(h<24)return'نحو '+hrsW(h);var d=Math.floor(h/24),hh=h%24,dw=d===1?'يوم':d===2?'يومين':d<=10?d+' أيام':d+' يوماً';return dw+(hh?' و'+hrsW(hh):'')}
+function fmtDT(iso){return new Date(iso).toLocaleString('ar-SA-u-nu-latn',{dateStyle:'full',timeStyle:'short'})}
+function facLeft(rows){var o={none:0,redo:0,unc:0};rows.forEach(function(r){if(r.locked||r.cf)return;if(r.status==='redo')o.redo++;else if(!cntF(r))o.none++;else o.unc++});o.n=o.none+o.redo+o.unc;return o}
+function renderFSum(){var dc=dayCur(),dl=RD==='o'?DEADLINE:(dc&&dc.dl);
+ if(!R.length||roundClosed()){setH('#fSum','');return}
+ var L=facLeft(R),ms=dl?new Date(dl).getTime()-Date.now():0,near=L.n&&dl&&ms>0&&ms<86400000,oth=[];
+ [{k:'o',label:'الطلب المكتبي'}].concat(DAYS.map(function(x){return{k:x.k,label:x.label}})).forEach(function(x){if(x.k===RD)return;var n=facLeft(RALL.filter(function(r){return(r.rd||'o')===x.k})).n;if(n)oth.push([x.k,x.label,n])});
+ var p=[];if(L.none)p.push('لم يُرفع: '+L.none);if(L.redo)p.push('مطلوب استكماله: '+L.redo);if(L.unc)p.push('مرفوع ولم تعتمدوا رفعه: '+L.unc);
+ setH('#fSum','<div class="card" style="margin-bottom:14px;'+(near?'border-color:var(--warn);background:var(--warn-s)':(L.n?'':'background:var(--ok-s)'))+'"><b>'+(L.n?(near?'اقترب موعد الإغلاق. ':'')+'المتبقي عليكم في هذا الطلب':'أكملتم هذا الطلب، ولا يوجد شيء متبقٍ')+'</b>'+(L.n?'<p style="margin:6px 0 0">'+p.join('. ')+'.</p>':'')+(dl&&ms>0?'<p class="hint" style="margin:6px 0 0">بقي '+leftIn(ms)+' على إغلاق الرفع.</p>':'')+(oth.length?'<div class="lk" style="flex-wrap:wrap"><span class="hint" style="align-self:center;margin:0">ويوجد متبقٍ في طلب آخر:</span>'+oth.map(function(x){return'<button class="btn sm" type="button" data-rnd="'+x[0]+'">'+esc(x[1])+' · '+x[2]+'</button>'}).join('')+'</div>':'')+'</div>')}
+function lateStats(rows,key){var s={k:key,total:0,none:0,redo:0,unc:0,wait:0,ok:0,pend:0,waitSince:0,pendSince:0};rows.forEach(function(r){if((r.rd||'o')!==key)return;if(r.ap===0){s.pend++;var t=Date.parse(r.at||'');if(t&&(!s.pendSince||t<s.pendSince))s.pendSince=t;return}s.total++;if(r.status==='ok'){s.ok++;return}if(r.status==='redo'){s.redo++;return}if(!cntF(r)){s.none++;return}if(!r.cf){s.unc++;return}s.wait++;var u=Date.parse(r.cfAt||'');if(u&&(!s.waitSince||u<s.waitSince))s.waitSince=u});s.rem=s.none+s.redo+s.unc;return s}
+function lateBadges(s,rd,now){var b=[],dl=rd.dl?new Date(rd.dl).getTime():0,H=TEAM_LATE_H*3600000;
+ if(rd.open===false)return[['none','لم يُفتح بعد']];
+ if(dl&&now>dl&&s.rem)b.push(['redo','تأخرت المنشأة']);
+ else if(dl&&now<dl&&dl-now<86400000&&s.rem)b.push(['up','يقترب الموعد']);
+ if((s.wait&&s.waitSince&&now-s.waitSince>H)||(s.pend&&s.pendSince&&now-s.pendSince>H))b.push(['redo','تأخر الفريق']);
+ if(!b.length)b.push(s.total&&s.ok===s.total&&!s.pend?['ok','مكتمل']:['none','جارٍ']);
+ return b}
+function facMsg(f,rs){var L=[];rs.forEach(function(x){if(x.rd.open===false||!x.s.rem)return;var p=[];if(x.s.none)p.push('لم يُرفع '+x.s.none);if(x.s.redo)p.push('مطلوب استكماله '+x.s.redo);if(x.s.unc)p.push('لم يُعتمد رفعه '+x.s.unc);L.push(x.rd.label+': '+p.join('، ')+(x.rd.dl?'. آخر موعد: '+fmtDT(x.rd.dl):''))});
+ return L.length?'السلام عليكم ورحمة الله وبركاته\nتذكير بخصوص بوابة الشواهد، المنشأة: '+f.name+'\n'+L.join('\n')+'\nرابط البوابة: '+f.link+'\nشاكرين تعاونكم.':''}
+function teamMsg(f,rs,tl){var L=[];rs.forEach(function(x){var p=[];if(x.s.wait)p.push('ينتظر مراجعتكم '+x.s.wait);if(x.s.pend)p.push('طلبات المنشأة تنتظر اعتمادكم '+x.s.pend);if(p.length)L.push(x.rd.label+': '+p.join('، '))});
+ return L.length?'السلام عليكم ورحمة الله وبركاته\nتذكير لفريق المراجعة، المنشأة: '+f.name+'\n'+L.join('\n')+'\nرابط الفريق: '+tl+'\nشاكرين تعاونكم.':''}
+function msgBox(id,title,txt,op){return txt?'<details data-k="'+id+'"'+(op[id]?' open':'')+' style="margin-top:10px"><summary style="font-weight:700;cursor:pointer">'+title+'</summary><textarea readonly rows="6" data-msg="'+id+'" aria-label="'+title+'" style="width:100%;margin-top:8px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--sf);color:var(--ink);font:inherit">'+esc(txt)+'</textarea><div class="lk" style="flex-wrap:wrap"><button class="btn" type="button" data-cpm="'+id+'">نسخ الرسالة</button><button class="btn pri" type="button" data-wam="'+id+'">فتح واتساب</button></div></details>':''}
+function renderLate(){var c=LD&&LD.current;if(MODE!=='lead'||!c||!FACS.length){setH('#ldLate','');return}
+ var now=Date.now(),op={},tl=location.origin+location.pathname+'#t='+encCfg({u:CFG.u,v:c.code,tc:c.tc});
+ $$('#ldLate details[open]').forEach(function(d){op[d.dataset.k]=1});
+ var h='<div class="card" style="margin-bottom:14px"><h2 style="font-size:1.3rem">المتابعة والتأخر</h2><p class="hint">تتحدث الأرقام تلقائياً. يُعد الفريق متأخراً إذا بقي شاهد أو طلب من المنشأة دون مراجعة أكثر من '+TEAM_LATE_H+' ساعة، وتُحسب المدة من اعتماد المنشأة للرفع أو من كتابتها للطلب. ما سُجّل قبل هذا التحديث لا تظهر مدته.</p>';
+ FACS.forEach(function(f,i){var lf=c.facilities.filter(function(x){return x.fid===f.fid})[0],fl={name:f.name,link:lf?lf.link:''};
+  var rounds=[{k:'o',label:'الطلب المكتبي',dl:DEADLINE,open:true}].concat(DAYS.map(function(x){return{k:x.k,label:x.label,dl:x.dl,open:x.open}})),rs=[];
+  rounds.forEach(function(rd){var s=lateStats(f.rows,rd.k);if(rd.k!=='o'&&rd.open===false&&!s.total&&!s.pend)return;rs.push({rd:rd,s:s})});
+  h+='<div style="margin-top:14px"><h3 style="font-size:1.1rem;margin:0 0 4px">'+esc(f.name)+'</h3>';
+  rs.forEach(function(x){var s=x.s,bd=lateBadges(s,x.rd,now);
+   h+='<div class="slot"><div class="slot-h"><b>'+esc(x.rd.label)+'</b><span style="display:flex;gap:6px;flex-wrap:wrap">'+bd.map(function(b){return'<span class="st '+b[0]+'">'+b[1]+'</span>'}).join('')+'</span></div>'+(x.rd.dl?'<p class="hint" style="margin:6px 0 0">آخر موعد: '+esc(fmtDT(x.rd.dl))+'</p>':'')
+   +'<div class="kpis" style="margin:8px 0 0">'+[[s.none,'لم يُرفع'],[s.redo,'مطلوب استكماله'],[s.unc,'مرفوع ولم تعتمد المنشأة رفعه'],[s.wait,'ينتظر مراجعة الفريق'],[s.pend,'طلبات المنشأة تنتظر اعتماد الفريق']].map(function(k){return'<div class="kpi"><b>'+k[0]+'</b><span>'+k[1]+'</span></div>'}).join('')+'</div>'
+   +(s.waitSince?'<p class="hint" style="margin:6px 0 0">أقدم شاهد ينتظر المراجعة منذ '+leftIn(now-s.waitSince)+'.</p>':'')+(s.pendSince?'<p class="hint" style="margin:6px 0 0">أقدم طلب من المنشأة ينتظر الاعتماد منذ '+leftIn(now-s.pendSince)+'.</p>':'')+'</div>'});
+  h+=msgBox('fm'+i,'رسالة تذكير للمنشأة',fl.link?facMsg(fl,rs):'',op)+msgBox('tm'+i,'رسالة تذكير للفريق',teamMsg(fl,rs,tl),op)+'</div>'});
+ setH('#ldLate',h+'</div>')}
 function doLeadSave(){var days=readDays();api({action:'setDays',days:days,deadline:toIso($('#ldDl').value)}).then(function(){$('#ldBody').dataset.v='';return load()}).then(function(){toast('حُفظت المواعيد والأيام')}).catch(fail)}
 /* ---- بيانات النموذج التجريبي ---- */
 function demoData(){DAYS=[{k:'d1',label:'اليوم الأول',dl:'',closed:false,open:true,subs:['1-1','2-1','3-1']}];
