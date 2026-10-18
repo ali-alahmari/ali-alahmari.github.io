@@ -371,7 +371,7 @@ button,.btn,[role=button],a.btn,select,summary{touch-action:manipulation}
 .ed{grid-column:1/-1;font-size:.84rem;color:var(--ink-2)}
 .ed:empty{display:none}
 #app.view [data-f],#app.view [data-sd],#app.view #reqRows .in,#app.view #reqRows textarea{opacity:.85}
-#app.view .rqi-btn,#app.view [data-rqdel],#app.view [data-rvw],#app.view [data-finb],#app.view #reqAdd,#app.view #reqWord,#app.view #pubBox,#app.view #btnData,#app.view #btnFreeze,#app.view #meBox,#app.view #vwT,#app.view #vwBox,#app.view #vwAdd,#app.view .rqi-ft,#app.view #tkSum+div .btn{display:none!important}
+#app.view .rqi-btn,#app.view [data-rqdel],#app.view [data-rvw],#app.view [data-finb],#app.view #reqAdd,#app.view #reqWord,#app.view #pubBox,#app.view #btnData,#app.view #btnFreeze,#app.view #meBox,#app.view #vwT,#app.view #vwBox,#app.view #vwAdd,#app.view #ptBox,#app.view .rqi-ft,#app.view #tkSum+div .btn{display:none!important}
 #app.view #memBanner{border-color:var(--crit)!important;background:var(--crit-soft)!important}
 .vtag{display:inline-block;margin-top:6px;padding:4px 12px;border-radius:999px;background:var(--crit-soft);color:var(--crit);font-weight:800;font-size:.92rem;border:1px solid var(--crit)}
 .vn-i{border:1px solid var(--line,#ddd);border-radius:12px;padding:10px 14px;margin:8px 0;background:var(--surface-2)}.vn-i b{display:block;margin-bottom:4px}.vn-i small{color:var(--ink-2)}.vn-i p{margin:4px 0 0;white-space:pre-wrap}
@@ -600,6 +600,7 @@ html[data-skin="heritage"] .gd::before{background:linear-gradient(90deg,#C9A24B,
   <div class="top-act">
     <span class="save" id="shareSt" title="عند نشر الصفحة ومشاركتها مع الفريق بصلاحية «مساهم» تُحفظ التعبئة وتظهر لجميع الأعضاء لحظياً."><i></i><span>تعبئة محلية (غير مشتركة)</span></span>
     <span class="save" id="saveSt"><i></i><span>جاهز</span></span>
+    <a class="btn" id="btnPortal" href="#" target="_blank" rel="noopener noreferrer" hidden title="يفتح بوابة شواهد المنشأة بصلاحية اطلاع فقط">بوابة الشواهد</a>
     <button class="btn" id="btnShare" type="button">مشاركة الفريق</button>
     <button class="btn pri" id="btnWord" type="button">تقرير المراجعة المكتبية (Word)</button>
     <button class="btn pri" id="btnWordF" type="button">تقرير المراجعة الميدانية (Word)</button>
@@ -649,6 +650,7 @@ html[data-skin="heritage"] .gd::before{background:linear-gradient(90deg,#C9A24B,
     <div class="sec-t" id="vwT">مراقب من هيئة تقويم التعليم والتدريب (اطلاع فقط)</div>
     <div class="team" id="vwBox"></div>
     <div class="presets" id="vwAdd"><button class="btn sm" id="addView" type="button">+ إضافة مراقب من الهيئة</button><span class="note">يطّلع على كل شيء ولا يعدّل شيئاً، ولا يُحسب في توزيع المعايير. رابطه الشخصي من «مشاركة الفريق»، ويتوقف مع تغيير الرابط في الزيارة الجديدة.</span></div>
+    <div class="presets" id="ptBox"><label class="lbl" for="ptLink" style="margin:0">رابط بوابة الشواهد (اطلاع فقط)</label><input class="in" id="ptLink" type="url" dir="ltr" placeholder="الصق رابط مراقب الهيئة من بوابة الشواهد (يحتوي #o=)" style="flex:1;min-width:260px"><span class="note" id="ptNote">يظهر زر «بوابة الشواهد» لكل من يفتح النموذج، ويفتح البوابة بصلاحية اطلاع فقط. لا تلصق هنا رابط القائد أو الفريق.</span></div>
 
     <div class="presets" id="meBox" hidden><label class="lbl" for="meSel" style="margin:0">أنا:</label><select class="in" id="meSel" style="width:auto;min-width:200px"></select><span class="note">يُسجَّل اسمك آخر معدِّل لكل معيار تعبئه.</span></div>
     <div class="sec-t">توزيع المعايير على الفريق</div>
@@ -21270,6 +21272,13 @@ function updOwners(){STDS.forEach(function(s){var id=effStd(s.n),ov={};
     s.subs.forEach(function(sb){var sid=effSub(sb.code),e=$('[data-so="'+sb.code+'"]');if(e)e.innerHTML=(sid&&sid!==id)?'<div class="own-row" style="margin:0"><span class="own-l">المراجع</span>'+chip(sid,true)+'</div>':''});
     var ro=$('[data-ro="'+s.n+'"]');if(ro){var m=mem(id);ro.textContent=m&&m.name.trim()?m.name.trim():(m?'بانتظار الاسم':'غير مسند')}});updObsRows();updTrainee();try{applyRole()}catch(e){}}
 
+/* ---------- زر بوابة الشواهد (رابط اطلاع فقط) ---------- */
+var PT_RE=/^https:\/\/ali-alahmari\.github\.io\/forms\/evidence\/#o=[A-Za-z0-9_\-+\/=%.]+$/;
+function ptUrl(v){v=String(v||'').trim();return PT_RE.test(v)?v:''}
+function renderPortal(){try{var a=$('#btnPortal'),i=$('#ptLink'),n=$('#ptNote');var raw=String(S.setup.portalView||'').trim(),u=ptUrl(raw);
+  if(a){a.hidden=!u;if(u)a.setAttribute('href',u);else a.setAttribute('href','#')}
+  if(i&&i!==document.activeElement&&i.value!==raw)i.value=raw;
+  if(n){n.style.color=(raw&&!u)?'var(--crit)':'';if(raw&&!u)n.textContent='الرابط غير صالح. يجب أن يكون رابط مراقب الهيئة من البوابة ويحتوي #o= ولا يقبل غيره.'}}catch(e){}}
 /* ---------- مراقب الهيئة (اطلاع فقط) ---------- */
 function viewers(){if(!Array.isArray(S.setup.viewers))S.setup.viewers=[];return S.setup.viewers}
 function viewer(id){for(var i=0;i<viewers().length;i++)if(viewers()[i].id===id)return viewers()[i];return null}
@@ -21855,7 +21864,7 @@ async function flushMain(){if(SY.mainBusy){SY.mainDirty=true;return}SY.mainBusy=
   try{await DB.doc('visit/main').set(mainPayload());ok=true}catch(e){handleDbErr(e);if(SY.can){clearTimeout(SY.mainT);SY.mainT=setTimeout(flushMain,5000)}}
   SY.mainBusy=false;if(SY.mainDirty){SY.mainDirty=false;flushMain()}else if(ok){SY.mainPending=false;setShare('ok')}}
 function pushAll(){if(!SH.on&&(!SY.on||!SY.can))return;queueMain();Object.keys(S.f).forEach(function(k){var v=S.f[k];if(v!=null&&String(v)!=='')queueEntry(k,v)})}
-function refreshSetupDom(){SY.remoteMain=false;$('#facility').value=S.setup.facility||'';$('#vdate').value=S.setup.date||'';$('#vdays').value=String(S.setup.days||2);renderDays();renderTeam();try{renderViewers();shViewLinks()}catch(e){}updAll()}
+function refreshSetupDom(){SY.remoteMain=false;try{renderPortal()}catch(e){}$('#facility').value=S.setup.facility||'';$('#vdate').value=S.setup.date||'';$('#vdays').value=String(S.setup.days||2);renderDays();renderTeam();try{renderViewers();shViewLinks()}catch(e){}updAll()}
 function applyMain(d){var s=S.setup;
   if(typeof d.facility==='string')s.facility=d.facility;if(typeof d.date==='string')s.date=d.date;if(d.days)s.days=+d.days;
   if(Array.isArray(d.dayNotes))s.dayNotes=d.dayNotes.slice();
@@ -21938,7 +21947,7 @@ function shInit(){var c=cfgLoad(),o=decShare(location.hash);
   if(o){if(!c||c.u!==o.u)shBackupReset();SH.url=o.u;SH.code=o.c||'';SH.lead=o.k||((c&&c.u===o.u)?(c.k||''):'');SH.me=(c&&c.u===o.u)?(c.me||''):'';SH.lock=(c&&c.u===o.u)?!!c.lock:false;if(o.m){SH.me=String(o.m);SH.lock=true}SH.seed=!!o.l;if(SH.seed)SH.lock=false;SH.view=!!o.r;if(SH.view){SH.seed=false;SH.me='';SH.lock=true;SH.lead='';SH.vname=String(o.n||'');SH.vorg=String(o.o||'');SH.vid=String(o.i||'');SH.vkey=String(o.v||'');SH.code=o.v?'':(o.c||'')}else{SH.vkey=(c&&c.u===o.u)?(c.vkey||''):''}SH.on=true;cfgSave();try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}}
   else if(c&&c.u){SH.url=c.u;SH.code=c.c||'';SH.lead=c.k||'';SH.me=c.me||'';SH.seed=!!c.seed;SH.lock=!!c.lock&&!c.seed;SH.view=!!c.view;SH.vname=c.vname||'';SH.vorg=c.vorg||'';SH.vid=c.vid||'';SH.vkey=c.vkey||'';if(SH.view){SH.seed=false;SH.me='';SH.lead=''}SH.on=true}}
 function shMsg(t,bad){var e=$('#shMsg');e.textContent=t;e.style.color=bad?'var(--bad)':'var(--ok)'}
-var LEAD_SEL=['#p-groups .presets','#pvBox','#addObs','#setup .grid.g3','#daysBox','#teamBox','#addMember','#quickBox','#presetBox','#distGrid','#vwBox','#vwAdd'];
+var LEAD_SEL=['#p-groups .presets','#pvBox','#addObs','#setup .grid.g3','#daysBox','#teamBox','#addMember','#quickBox','#presetBox','#distGrid','#vwBox','#vwAdd','#ptLink'];
 function shLinks(){applyRole();if(!SH.on){shMemLinks();$('#shLink').value='';$('#shTok').value='';$('#shLeadBox').hidden=true;return}var base=location.href.split('#')[0];$('#shTok').value=encShare();$('#shLink').value=base+'#s='+encodeURIComponent(encShare());$('#shLeadBox').hidden=!SH.seed;shMemLinks();try{shViewLinks()}catch(e){}if(SH.seed){var tl=btoa(unescape(encodeURIComponent(JSON.stringify({u:SH.url,c:SH.code,l:1,k:SH.lead||undefined}))));$('#shLead').value=base+'#s='+encodeURIComponent(tl)}}
 function memLink(id){var base=location.href.split('#')[0];var t=btoa(unescape(encodeURIComponent(JSON.stringify({u:SH.url,c:SH.code,m:id}))));return base+'#s='+encodeURIComponent(t)}
 function shMemLinks(){var b=$('#shMemList');if(!b)return;var bx=$('#shMemBox');bx.hidden=!(SH.on&&SH.seed);if(bx.hidden)return;var h='',n=0;team().forEach(function(m,i){if(!m.name.trim()||m.role==='رئيس الفريق')return;n++;h+='<div class="row" style="margin:4px 0"><b style="flex:1">'+esc(m.name.trim())+(isObs(m)?' <span class="note">(تحت المعايشة)</span>':'')+'</b><button class="btn" type="button" data-mlink="'+esc(m.id)+'">نسخ رابطه</button></div>'});b.innerHTML=h||'<span class="note">أضف أسماء الأعضاء في جدول الفريق أولاً، وستظهر هنا أزرار روابطهم.</span>'}
@@ -21977,6 +21986,7 @@ document.addEventListener('input',function(ev){var e=ev.target;
   if(e.hasAttribute&&e.hasAttribute('data-rq')&&e.tagName!=='SELECT'){var rk=e.getAttribute('data-rq'),pp=rk.split('.');rqSet(pp[0],pp[1],e.value);save();var rc=$('#reqCount');return}
   if(e.id==='shCode'){shFillGs();return}
   if(e.hasAttribute&&e.hasAttribute('data-f')){var k=e.getAttribute('data-f');S.f[k]=e.value;if(e.tagName==='TEXTAREA')autosize(e);else updHint(e);light(k.split('.')[0]);queueEntry(k,e.value);if(/\.why$/.test(k)){var wb=e.closest('.why');if(wb)wb.classList.toggle('miss',!e.value.trim())}obsTouch(k.split('.')[0]);save();return}
+  if(e.id==='ptLink'){if(myRole()==='lead'){S.setup.portalView=e.value.trim();renderPortal();queueMain();save()}return}
   if(e.id==='facility'){S.setup.facility=e.value;renderSetupSum();queueMain();save();return}
   if(e.id==='fSearch'){applyFilter();return}
   if(e.hasAttribute('data-tn')){var m=mem(e.getAttribute('data-tn'));if(m){m.name=e.value;updOwners();renderQuick();renderDist();updFilterSel();renderSetupSum();renderSummary();queueMain();save()}return}
@@ -22071,7 +22081,7 @@ function facKind(){var m=/^(?:ال)?(معهد|كلية|مركز|أكاديمية
 (function(){var fe=$('#facility');if(!fe)return;var keep='',ph=fe.placeholder;fe.addEventListener('focus',function(){keep=fe.value;if(keep){fe.placeholder=keep;fe.value=''}});fe.addEventListener('blur',function(){if(!fe.value&&keep)fe.value=keep;fe.placeholder=ph})})();
 function bootAll(){
   $('#facility').value=S.setup.facility||'';$('#vdate').value=S.setup.date||'';$('#vdays').value=String(S.setup.days||2);
-  renderDays();renderTeam();try{renderViewers()}catch(e){}
+  renderDays();renderTeam();try{renderViewers()}catch(e){}renderPortal();
   var closed=!S.ui.setupOpen;$('#setup').classList.toggle('closed',closed);$('#setupToggle').textContent=closed?'فتح':'طيّ';$('#setupToggle').setAttribute('aria-expanded',closed?'false':'true');
   fillValues();$('#fCrit').checked=!!S.ui.crit;
   updAll();renderReq(true);showTab(S.ui.tab||'form')}
