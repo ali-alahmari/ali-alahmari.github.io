@@ -463,6 +463,7 @@ body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opa
 
 /* inputs */
 .in,.fld select,.fld textarea,.rq-row textarea,.rqi-row textarea,.gapx textarea,.rec select,.rec textarea{padding:.55rem .8rem;background:var(--surface);border:1.5px solid color-mix(in srgb,var(--line) 82%,var(--ink-2) 18%);border-radius:12px;transition:border-color .16s ease-out,box-shadow .16s ease-out,background-color .16s ease-out}
+#app textarea.rbad{border-color:var(--crit);background:var(--crit-soft)}
 select.in,.fld select,.rec select,.std-side select,.tm select{-webkit-appearance:none;appearance:none;background-image:var(--chev);background-repeat:no-repeat;background-position:left .8rem center;background-size:1em;padding-inline-start:.9rem;padding-inline-end:2.3rem}
 .std-side select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")}
 .in:focus,.fld select:focus,.fld textarea:focus{box-shadow:0 0 0 4px color-mix(in srgb,var(--brand) 20%,transparent)}
@@ -21282,15 +21283,16 @@ function updRecAdv(n){var s=STD[n];if(!s)return;var el=stdComp(s);
     var add=$('[data-radd="'+c+'"]');if(add)add.hidden=shown>=RMAX;
     var box=$('[data-rw="'+c+'"]');if(!box)return;
     sp.rec.forEach(function(l){if(rs.some(function(q){return q.t==='توصية'&&q.l===l.k&&q.x}))h+=O('✓ توصية مسجّلة في ('+esc(l.name)+').');else h+=W('إنذار: «موضع توصية» — الدرجة 1 أو 2 في ('+esc(l.name)+'). أضف بند «توصية» بمستوى «'+esc(l.name)+'» واكتبها.')});
-    rs.forEach(function(r){var p='بند '+r.i+': ';
+    rs.forEach(function(r){var p='بند '+r.i+': ',bad=false;
       if(!r.t){if(r.l||r.x)h+=W(p+'اختر النوع: توصية أو إشادة أو مقترح.');return}
       if(!r.l)h+=W(p+'حدد مستوى الجودة.');
       if(!r.x)h+=W(p+'لم تكتب النص.');
-      if(r.x&&!startsOK(r.t,r.x))h+=W(p+'يجب أن يبدأ نص '+esc(r.t)+' بالصيغة الإلزامية في الدليل: «'+esc(OPEN[r.t].trim())+'».');
-      if(r.x&&r.x.indexOf('…')>=0)h+=W(p+'أكمل الفراغات المحددة بـ «…» في النص.');
+      if(r.x&&!startsOK(r.t,r.x))bad=true,h+=W(p+'يجب أن يبدأ نص '+esc(r.t)+' بالصيغة الإلزامية في الدليل: «'+esc(OPEN[r.t].trim())+'».');
+      if(r.x&&r.x.indexOf('…')>=0)bad=true,h+=W(p+'أكمل الفراغات المحددة بـ «…» في النص.');
       if(r.l==='a'&&r.t!=='إشادة')h+=W(p+'المستوى «شامل» للإشادة فقط.');
       if(r.t==='توصية'&&r.l&&r.l!=='a'&&!sp.rec.some(function(l){return l.k===r.l}))h+=I(p+'لا توجد درجة 1 أو 2 في هذا المستوى، فالتوصية اختيارية.');
-      if(r.t==='إشادة'){if(!sp.praise)h+=W(p+'لا تصح الإشادة: تتطلب درجة 5 في كل المستويات المقيّمة لهذا المعيار الفرعي.');else if(!el.ok)h+=W(p+'لا يمكن وضع إشادة: المعيار الرئيس غير مؤهل — '+esc(el.why.join('، '))+'.')}});
+      if(r.t==='إشادة'){if(!sp.praise)bad=true,h+=W(p+'لا تصح الإشادة: تتطلب درجة 5 في كل المستويات المقيّمة لهذا المعيار الفرعي.');else if(!el.ok)bad=true,h+=W(p+'لا يمكن وضع إشادة: المعيار الرئيس غير مؤهل — '+esc(el.why.join('، '))+'.')}
+      var tx=$('[data-f="'+c+'.r'+r.i+'.x"]');if(tx)tx.classList.toggle('rbad',!!r.x&&bad)});
     var ex=num(sp.x.rev.e),px=num(sp.x.rev.p),fx=num(sp.x.rev.f);
     if(fx!=null&&((ex!=null&&ex<3)||(px!=null&&px<3)))h+=W('تنبيه: الوجود أو التطبيق أقل من 3، والدليل V2.8 لا يقيّم الفاعلية في هذه الحالة. تبقى درجتك محفوظة، لكنها لا تدخل في الدرجة النهائية'+(finLv(sp.x.rev)!=null?'، وتُحتسب النهائية '+finLv(sp.x.rev)+' من الأدنى بين الوجود والتطبيق.':'.'));
     var nrec=rs.filter(function(q){return q.t==='توصية'}).length;
