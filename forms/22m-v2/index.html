@@ -21916,7 +21916,7 @@ async function exportWord(mode){var b=$('#btnWord');if(!window.docx){toast('تع
   bs.forEach(function(x,i){x.disabled=false;x.textContent=olds[i]})}
 
 /* ---------- shared team mode (db capability) ---------- */
-var SH={on:false,url:'',code:'',lead:'',rec:0,view:false,vname:'',vorg:'',vid:'',vkey:'',vrec:0,vn:{},since:0,q:{},tm:null,busy:false,flushing:false,seeded:false,seed:false,me:'',lock:false,err:0,poll:null,known:{}};
+var SH={on:false,url:'',code:'',lead:'',rec:0,view:false,vname:'',vorg:'',vid:'',vkey:'',vrec:0,vn:{},since:0,q:{},tm:null,busy:false,flushing:false,seeded:false,seed:false,me:'',lock:false,err:0,poll:null,known:{},kt:{}};
 var DEF={};
 var DB=null,SY={on:false,can:true,uid:null,user:null,known:{},pend:{},busy:{},timers:{},mainT:null,mainBusy:false,mainDirty:false,mainPending:false,firstEnt:false,remoteMain:false,meta:{},admin:false};
 function setShare(st){applyRole();var el=$('#shareSt');if(!el)return;el.classList.remove('off','busy');var tx=el.lastChild;
@@ -21930,7 +21930,24 @@ function applyRO(){SY.can=false;$('#app').classList.add('ro');$('#roBanner').hid
 function handleDbErr(e){var c=e&&e.code;if(c==='invalid_argument'||c==='revoked'){applyRO()}else if(c==='quota_exceeded'){toast('امتلأت سعة التخزين المشترك')}else setShare('err')}
 function parseKey(k){var p=k.split('.');return {code:p[0],lv:p[1],f:p[2]}}
 function fullEntry(code){var o={};LV.forEach(function(l){['org','ev','desc','rev','notes','q'].forEach(function(f){var v=S.f[code+'.'+l.k+'.'+f];if(v!=null&&String(v)!=='')o[l.k+'_'+f]=v})});for(var i=1;i<=RMAX;i++)['t','l','x'].forEach(function(f){var v=S.f[code+'.r'+i+'.'+f];if(v!=null&&String(v)!=='')o['r'+i+'_'+f]=v});return o}
-function queueEntry(k,v){if(SH.on){shQ('f|'+k,v);return}if(k.slice(0,3)==='rq.')return;if(!SY.on||!SY.can)return;var p=parseKey(k),c=p.code;(SY.pend[c]=SY.pend[c]||{})[p.lv+'_'+p.f]=v;clearTimeout(SY.timers[c]);SY.timers[c]=setTimeout(function(){flushEntry(c)},700);setShare('saving')}
+/* تعديلات لم تصل إلى الفريق بعد (انقطاع، إغلاق الصفحة، فصل المزامنة): تبقى على الجهاز وتُرسَل عند إعادة الاتصال بالفريق نفسه */
+var PENDK='etec22m.pend';
+function pendLoad(){try{var o=JSON.parse(localStorage.getItem(PENDK)||'null');return(o&&o.u&&o.f)?o:null}catch(e){return null}}
+function pendSave(o){try{if(o)localStorage.setItem(PENDK,JSON.stringify(o));else localStorage.removeItem(PENDK)}catch(e){}}
+function pendPut(k,v){var o=pendLoad(),u=SH.on?SH.url:(o&&o.u);if(!u)return;if(!o||o.u!==u)o={u:u,f:{}};o.f[k]={v:v,at:Date.now()};pendSave(o)}
+function pendSent(keys,snap){var o=pendLoad();if(!o||o.u!==SH.url)return;keys.forEach(function(k){var e=o.f[k.slice(2)];if(k.slice(0,2)==='f|'&&e&&e.v===snap[k])delete o.f[k.slice(2)]});pendSave(o)}
+function pendMark(){if(!SH.url)return;var o=pendLoad();if(!o||o.u!==SH.url)o={u:SH.url,f:{}};Object.keys(SH.q).forEach(function(k){if(k.slice(0,2)==='f|'&&SH.q[k]!=null)o.f[k.slice(2)]={v:SH.q[k],at:Date.now()}});pendSave(o)}
+function pendReplay(){var o=pendLoad();if(!o||o.u!==SH.url)return;var n=0,old=0,rq=0;
+  Object.keys(o.f).forEach(function(k){var e=o.f[k],sk='f|'+k;
+    if((SH.kt[sk]||0)>e.at){old++;return}
+    if((S.f[k]||'')===e.v)return;
+    if(k.slice(0,3)==='rq.'){S.f[k]=e.v;rq=1}
+    else{var p=parseKey(k);if(!SUB[p.code])return;S.f[k]=e.v;var el=document.getElementById('f-'+p.code+'-'+p.lv+'-'+p.f);if(el){el.value=e.v;if(el.tagName==='TEXTAREA')autosize(el);else updHint(el)}updSubChips(SUB[p.code])}
+    shQ(sk,e.v);n++});
+  o.f={};Object.keys(SH.q).forEach(function(k){if(k.slice(0,2)==='f|'&&SH.q[k]!=null)o.f[k.slice(2)]={v:SH.q[k],at:Date.now()}});pendSave(o);
+  if(rq){try{renderReq(false)}catch(e){}try{renderPhase();renderFin();applyRole()}catch(e){}}
+  if(n||old){lazySummary();saveNow();toast(n?('تم إرسال '+n+' خانة كتبتها قبل إعادة الاتصال'+(old?' ('+old+' خانة عدّلها زميل بعدك فبقيت نسخته)':'')):(old+' خانة عدّلها زميل بعدك فبقيت نسخته'))}}
+function queueEntry(k,v){if(SH.on){shQ('f|'+k,v);return}pendPut(k,v);if(k.slice(0,3)==='rq.')return;if(!SY.on||!SY.can)return;var p=parseKey(k),c=p.code;(SY.pend[c]=SY.pend[c]||{})[p.lv+'_'+p.f]=v;clearTimeout(SY.timers[c]);SY.timers[c]=setTimeout(function(){flushEntry(c)},700);setShare('saving')}
 async function flushEntry(c){if(SY.busy[c]){SY.timers[c]=setTimeout(function(){flushEntry(c)},400);return}
   var data=SY.pend[c];if(!data||!Object.keys(data).length)return;SY.pend[c]={};SY.busy[c]=true;
   var meta={by:SY.uid||'',at:new Date().toISOString()},ref=DB.collection('entries').doc('e'+c),ok=false;
@@ -21997,15 +22014,15 @@ function encShare(){return btoa(unescape(encodeURIComponent(JSON.stringify({u:SH
 function decShare(s){try{s=String(s||'').trim();var m=/[#&?]s=([^&\s]+)/.exec(s);if(m)s=decodeURIComponent(m[1]);var o=JSON.parse(decodeURIComponent(escape(atob(s))));return(o&&typeof o.u==='string'&&/^https:\/\//.test(o.u))?o:null}catch(e){return null}}
 function shUrl(q){return SH.url+(SH.url.indexOf('?')<0?'?':'&')+q+(SH.code?'&code='+encodeURIComponent(SH.code):'')+(SH.view&&SH.vkey?'&view='+encodeURIComponent(SH.vkey):'')+(SH.lead?'&lead='+encodeURIComponent(SH.lead):'')}
 function shMeName(){var m=mem(SH.me);return m&&m.name.trim()?m.name.trim():''}
-function shQ(k,v){if(!SH.on||SH.view)return;if(!SH.seeded&&!SH.seed)return;SH.q[k]=v;clearTimeout(SH.tm);SH.tm=setTimeout(shFlush,800);setShare('saving')}
+function shQ(k,v){if(!SH.on||SH.view)return;if(!SH.seeded&&!SH.seed)return;SH.q[k]=v;if(k.slice(0,2)==='f|')pendPut(k.slice(2),v);clearTimeout(SH.tm);SH.tm=setTimeout(shFlush,800);setShare('saving')}
 async function shFlush(){if(SH.flushing){SH.tm=setTimeout(shFlush,500);return}var keys=Object.keys(SH.q);if(!keys.length||!SH.on)return;SH.flushing=true;
   var snap={},ops=keys.map(function(k){var v=SH.q[k];snap[k]=v;if(v===null)v=JSON.stringify(mainPayload());return {k:'v2:'+k,v:v,b:shMeName()}});
   try{var r=await fetch(SH.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({code:SH.code,lead:SH.lead||undefined,ops:ops})});var j=await r.json();if(!j||!j.ok)throw new Error(j&&j.error||'bad');
-    keys.forEach(function(k){if(SH.q[k]===snap[k])delete SH.q[k]});SH.err=0;SH.flushing=false;if(Object.keys(SH.q).length)shFlush();else setShare('ok')}
+    var sent=[];keys.forEach(function(k){if(SH.q[k]===snap[k]){delete SH.q[k];sent.push(k)}});pendSent(sent,snap);SH.err=0;SH.flushing=false;if(Object.keys(SH.q).length)shFlush();else setShare('ok')}
   catch(e){SH.flushing=false;SH.err++;SH.ek=(e&&e.message==='code')?'code':'net';setShare('err');clearTimeout(SH.tm);SH.tm=setTimeout(shFlush,Math.min(30000,3000*SH.err))}}
 async function shPull(){if(!SH.on||SH.busy)return;SH.busy=true;
   try{var r=await fetch(shUrl('action=pull&since='+SH.since));var j=await r.json();if(!j||j.error)throw new Error(j&&j.error||'bad');var chg={};
-    (j.rows||[]).forEach(function(row){var k=String(row[0]);if(k.indexOf('v2:')!==0)return;k=k.slice(3);var v=String(row[1]==null?'':row[1]),t=+row[2],b=String(row[3]||'');SH.known[k]=1;
+    (j.rows||[]).forEach(function(row){var k=String(row[0]);if(k.indexOf('v2:')!==0)return;k=k.slice(3);var v=String(row[1]==null?'':row[1]),t=+row[2],b=String(row[3]||'');SH.known[k]=1;SH.kt[k]=t;
       if(k==='m|setup'){if(SH.q[k]===undefined&&!SH.flushing){try{applyMain(JSON.parse(v))}catch(e){}}}
       else if(k.slice(0,3)==='vn|'){try{var _o=JSON.parse(v);if(_o&&_o.txt){SH.vn[k.slice(3)]=_o;chg.vn=1}}catch(e){}}
       else if(k.slice(0,5)==='f|rq.'){if(SH.q[k]!==undefined)return;var rk3=k.slice(2);if((S.f[rk3]||'')!==v){S.f[rk3]=v;chg.rq=1;chg.xp=1}}
@@ -22014,7 +22031,7 @@ async function shPull(){if(!SH.on||SH.busy)return;SH.busy=true;
     if(chg.vn){delete chg.vn;try{vnRender()}catch(e){}}
     if(chg.rq){delete chg.rq;renderReq(false);renderPhase();renderFin();applyRole();SUBS_ALL.forEach(updSubChips);if(chg.xp){delete chg.xp;try{renderSummary()}catch(e){}}saveNow()}
     Object.keys(chg).forEach(function(c){updSubChips(SUB[c])});if(Object.keys(chg).length){lazySummary();saveNow()}renderEditors();
-    if(!SH.seeded){SH.seeded=true;if(SH.seed&&!SH.view){if(!SH.known['m|setup'])shQ('m|setup',null);Object.keys(S.f).forEach(function(k){var v=S.f[k];if(v!=null&&String(v)!==''&&!SH.known['f|'+k])shQ('f|'+k,v)})}}
+    if(!SH.seeded){SH.seeded=true;if(!SH.view)pendReplay();if(SH.seed&&!SH.view){if(!SH.known['m|setup'])shQ('m|setup',null);Object.keys(S.f).forEach(function(k){var v=S.f[k];if(v!=null&&String(v)!==''&&!SH.known['f|'+k])shQ('f|'+k,v)})}}
     SH.err=0;if(!Object.keys(SH.q).length)setShare('ok')}
   catch(e){SH.err++;SH.ek=(e&&e.message==='code')?'code':'net';setShare('err')}
   SH.busy=false}
@@ -22155,7 +22172,7 @@ document.addEventListener('click',function(ev){var t=ev.target,e=t.closest?t.clo
     case 'shCopyTok':copyText($('#shTok'),'تم نسخ الرمز');break;
     case 'shTest':shMsg('جارٍ الاختبار…');shConnect($('#shUrl').value,($('#shCode').value||'').replace(/[\\'"\s]/g,''),true).then(function(ok){if(ok)shMsg('تم الربط. انسخ رابط المشاركة أدناه وأرسله للفريق.')});break;
     case 'shJoin':var o=decShare($('#shJoinIn').value);if(!o){shMsg('الرمز أو الرابط غير صالح.',true);break}shBackupReset();shConnect(o.u,o.c||'',false).then(function(ok){if(ok){bootAll();shMsg('تم الانضمام. ستظهر بيانات الفريق خلال ثوانٍ.');toast('تم الانضمام إلى الفريق')}});break;
-    case 'memOff':case 'shOff':SH.on=false;clearInterval(SH.poll);cfgClear();SH.q={};renderMe();shLinks();setShare();shMsg('تم فصل المزامنة عن هذا الجهاز. بقيت نسخة التعبئة على جهازك.');break;
+    case 'memOff':case 'shOff':pendMark();SH.on=false;clearInterval(SH.poll);cfgClear();SH.q={};renderMe();shLinks();setShare();shMsg('تم فصل المزامنة عن هذا الجهاز. ما تكتبه الآن محفوظ على جهازك، وسيُرسَل للفريق تلقائياً عند فتح رابطك من جديد.');break;
     case 'dReset':if(e.getAttribute('data-sure')){wipeShared();$('#ov').hidden=true;toast('تم مسح البيانات');e.removeAttribute('data-sure');e.textContent='مسح كل البيانات'}else{e.setAttribute('data-sure','1');e.textContent='اضغط مرة أخرى للتأكيد'}break;
   }
 });
