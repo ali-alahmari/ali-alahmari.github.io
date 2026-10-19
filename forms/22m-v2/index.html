@@ -21183,10 +21183,18 @@ function autosize(t){if(nativeGrow||!t.offsetParent)return;t.style.height='auto'
 
 /* ---------- stats ---------- */
 function num(v){if(!v||v==='NA')return null;var n=parseInt(v,10);return isNaN(n)?null:n}
+function finLv(rev){var e=num(rev.e),p=num(rev.p),f=num(rev.f);
+  if(e===1||p===1)return 1;
+  if(!rev.e||!rev.p)return null;
+  var k=[e,p].filter(function(v){return v!=null});if(!k.length)return null;
+  var m=Math.min.apply(null,k);if(m<3)return m;
+  if(f!=null)return f;
+  return rev.f==='NA'?m:null}
 function subStats(sb){var r={rev:{},org:{},ans:0,txt:0,gaps:0,vals:[]};
   LV.forEach(function(l){var o=S.f[sb.code+'.'+l.k+'.org'],v=S.f[sb.code+'.'+l.k+'.rev'];r.rev[l.k]=v||'';r.org[l.k]=o||'';if(v)r.ans++;var nv=num(v),no=num(o);if(nv!=null)r.vals.push(nv);if(nv!=null&&no!=null&&Math.abs(nv-no)>=2)r.gaps++;
     ['ev','desc','notes','q'].forEach(function(f){if((S.f[sb.code+'.'+l.k+'.'+f]||'').trim())r.txt++})});
-  r.avg=r.vals.length?r.vals.reduce(function(a,b){return a+b},0)/r.vals.length:null;
+  r.raw=r.vals.length?r.vals.reduce(function(a,b){return a+b},0)/r.vals.length:null;
+  r.avg=finLv(r.rev);
   r.na=LV.every(function(l){return r.rev[l.k]==='NA'});return r}
 function gapMiss(){var n=0,tot=0;SUBS_ALL.forEach(function(sb){LV.forEach(function(l){var nv=num(S.f[sb.code+'.'+l.k+'.rev']),no=num(S.f[sb.code+'.'+l.k+'.org']);if(nv!=null&&no!=null&&Math.abs(nv-no)>=2){tot++;if(!(S.f[sb.code+'.'+l.k+'.why']||'').trim())n++}})});return {miss:n,tot:tot}}
 function recList(){var o=[];SUBS_ALL.forEach(function(sb){subRecs(sb.code).forEach(function(r){if(r.t||r.x)o.push({code:sb.code,std:sb.std,type:r.t||'ملاحظة',level:RLV[r.l]||'',text:r.x})})});return o}
@@ -21234,7 +21242,7 @@ function doFreeze(){if(myRole()!=='lead')return;
     SUBS_ALL.forEach(function(sb){LV.forEach(function(l){var k=sb.code+'.'+l.k+'.dsk',v=S.f[sb.code+'.'+l.k+'.rev']||'-';S.f[k]=v;queueEntry(k,v)})});rqSet('meta','frozen',new Date().toISOString())}
   save();updAll();toast(frozen()?'بدأت المرحلة الميدانية':'أُلغي التجميد')}
 function subSpot(sb){var x=subStats(sb),rec=[],n=0;LV.forEach(function(l){var v=num(x.rev[l.k]);if(v==null)return;n++;if(v<=2)rec.push(l)});
-  var pr=x.vals.length>0&&LV.every(function(l){var v=x.rev[l.k];return !v||v==='NA'||num(v)===5});return {rec:rec,praise:pr}}
+  var pr=x.vals.length>0&&LV.every(function(l){var v=x.rev[l.k];return !v||v==='NA'||num(v)===5});return {rec:rec,praise:pr,x:x}}
 function stdComp(s){var st=stdStats(s),b=status(st.avg,st),rec=0,recE=0;s.subs.forEach(function(sb){var sp=subSpot(sb);if(sp.rec.length){rec++;if(sp.rec.some(function(l){return l.k==='e'}))recE++}});
   var lab=b[0],cls=b[1];if(lab==='الامتثال الكامل'&&rec>0){lab='الامتثال الجوهري';cls='p-warn'}
   var why=[];if(st.avg==null)why.push('لم يُقيَّم بعد');else{if(lab!=='الامتثال الكامل')why.push('حالة الامتثال «'+lab+'»');if(rec)why.push(rec+' موضع توصية');if(recE)why.push('منها '+recE+' مرتبط بالوجود')}
@@ -21267,6 +21275,8 @@ function updRecAdv(n){var s=STD[n];if(!s)return;var el=stdComp(s);
       if(r.l==='a'&&r.t!=='إشادة')h+=W(p+'المستوى «شامل» للإشادة فقط.');
       if(r.t==='توصية'&&r.l&&r.l!=='a'&&!sp.rec.some(function(l){return l.k===r.l}))h+=I(p+'لا توجد درجة 1 أو 2 في هذا المستوى، فالتوصية اختيارية.');
       if(r.t==='إشادة'){if(!sp.praise)h+=W(p+'لا تصح الإشادة: تتطلب درجة 5 في كل المستويات المقيّمة لهذا المعيار الفرعي.');else if(!el.ok)h+=W(p+'لا يمكن وضع إشادة: المعيار الرئيس غير مؤهل — '+esc(el.why.join('، '))+'.')}});
+    var ex=num(sp.x.rev.e),px=num(sp.x.rev.p),fx=num(sp.x.rev.f);
+    if(fx!=null&&((ex!=null&&ex<3)||(px!=null&&px<3)))h+=W('تنبيه: الوجود أو التطبيق أقل من 3، والدليل V2.8 لا يقيّم الفاعلية في هذه الحالة. تبقى درجتك محفوظة، لكنها لا تدخل في الدرجة النهائية'+(finLv(sp.x.rev)!=null?'، وتُحتسب النهائية '+finLv(sp.x.rev)+' من الأدنى بين الوجود والتطبيق.':'.'));
     var nrec=rs.filter(function(q){return q.t==='توصية'}).length;
     if(nrec>1)h+=I('تذكير بقاعدة الدليل الإرشادي V2.8: «تدمج الفجوات في توصية واحدة بحيث لا يُمنح المعيار الفرعي الواحد أكثر من توصية واحدة». عندك '+nrec+' توصيات في هذا المعيار الفرعي، فادمجها في توصية واحدة واربطها بمستويات الجودة ذات العلاقة. هذا تذكير ولا يمنع الحفظ.');
     if(sp.praise&&!rs.some(function(q){return q.t==='إشادة'})){if(el.ok)h+=O('★ تنبيه: «موضع إشادة» (درجة 5) والمعيار مؤهل — يمكنك إضافة بند «إشادة».');else h+=I('درجة 5 لكن لا يمكن وضع إشادة: المعيار الرئيس غير مؤهل — '+esc(el.why.join('، '))+'.')}
@@ -21276,7 +21286,7 @@ function updSubChips(sb){var x=subStats(sb),h='';
     if(d){if(frozen()&&dv){d.hidden=false;d.className='dsk'+(c&&!c.same?' chg':'');d.textContent='مكتبي: '+lbl2(dv)+(c&&!c.same?'  ←  ميداني: '+lbl2(c.to):'')}else d.hidden=true}
     if(w){var need=!!c&&!c.same;w.hidden=!need;w.classList.toggle('miss',need&&!(S.f[sb.code+'.'+l.k+'.chg']||'').trim())}});
   LV.forEach(function(l){var v=x.rev[l.k];h+='<span class="mini">'+l.name+' <em class="'+rcls(v)+'">'+(v?(v==='NA'?'—':v):'·')+'</em></span>'});
-  if(x.avg!=null)h+='<span class="mini">المتوسط <em class="'+rcls(String(Math.round(x.avg)))+'">'+x.avg.toFixed(1)+'</em></span>';
+  if(x.avg!=null)h+='<span class="mini" title="تُحسب بقاعدة الدليل V2.8: الأدنى من الوجود والتطبيق إن قلّ أحدهما عن 3، وإلا درجة الفاعلية">الدرجة النهائية <em class="'+rcls(String(Math.round(x.avg)))+'">'+x.avg.toFixed(1)+'</em></span>';
   var el=$('[data-sc="'+sb.code+'"]');if(el)el.innerHTML=h;updRecAdv(sb.std);
   LV.forEach(function(l){var g=$('[data-gap="'+sb.code+'.'+l.k+'"]');if(!g)return;var nv=num(x.rev[l.k]),no=num(x.org[l.k]);var w=$('[data-why="'+sb.code+'.'+l.k+'"]'),gp=nv!=null&&no!=null&&Math.abs(nv-no)>=2;if(gp){g.hidden=false;g.textContent='فرق '+Math.abs(nv-no)+' درجات عن رأي المنشأة'}else g.hidden=true;if(w){w.hidden=!gp;w.classList.toggle('miss',gp&&!(S.f[sb.code+'.'+l.k+'.why']||'').trim())}})}
 function updOwners(){STDS.forEach(function(s){var id=effStd(s.n),ov={};
