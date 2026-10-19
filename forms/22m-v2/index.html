@@ -372,6 +372,8 @@ button,.btn,[role=button],a.btn,select,summary{touch-action:manipulation}
 .ed:empty{display:none}
 #app.view [data-f],#app.view [data-sd],#app.view #reqRows .in,#app.view #reqRows textarea{opacity:.85}
 #app.view .rqi-btn,#app.view [data-rqdel],#app.view [data-rvw],#app.view [data-finb],#app.view #reqAdd,#app.view #reqWord,#app.view #pubBox,#app.view #btnData,#app.view #btnFreeze,#app.view #meBox,#app.view #vwT,#app.view #vwBox,#app.view #vwAdd,#app.view #ptBox,#app.view .rqi-ft,#app.view #tkSum+div .btn{display:none!important}
+#app.mem:not(.view) #teamT,#app.mem:not(.view) #teamBox,#app.mem:not(.view) #addRow,#app.mem:not(.view) #vwT,#app.mem:not(.view) #vwBox,#app.mem:not(.view) #vwAdd,#app.mem:not(.view) #ptBox,#app.mem:not(.view) #distT,#app.mem:not(.view) #quickBox,#app.mem:not(.view) #presetBox,#app.mem:not(.view) #pvBox{display:none!important}
+#app.mem:not(.view) #reqWord,#app.mem:not(.view) #reqPub,#app.mem:not(.view) #pubBox>*:not(:first-child){display:none!important}
 #app.view #memBanner{border-color:var(--crit)!important;background:var(--crit-soft)!important}
 .vtag{display:inline-block;margin-top:6px;padding:4px 12px;border-radius:999px;background:var(--crit-soft);color:var(--crit);font-weight:800;font-size:.92rem;border:1px solid var(--crit)}
 .vn-i{border:1px solid var(--line,#ddd);border-radius:12px;padding:10px 14px;margin:8px 0;background:var(--surface-2)}.vn-i b{display:block;margin-bottom:4px}.vn-i small{color:var(--ink-2)}.vn-i p{margin:4px 0 0;white-space:pre-wrap}
@@ -643,9 +645,9 @@ html[data-skin="heritage"] .gd::before{background:linear-gradient(90deg,#C9A24B,
     <div class="sec-t">أيام الزيارة</div>
     <div class="days" id="daysBox"></div>
 
-    <div class="sec-t">أسماء فريق المراجعة</div>
+    <div class="sec-t" id="teamT">أسماء فريق المراجعة</div>
     <div class="team" id="teamBox"></div>
-    <div class="presets"><button class="btn sm" id="addMember" type="button">+ إضافة عضو</button><button class="btn sm" id="addObs" type="button">+ إضافة معايش</button><span class="note">عند كتابة الاسم يظهر فوراً أعلى المعايير المسندة له.</span></div>
+    <div class="presets" id="addRow"><button class="btn sm" id="addMember" type="button">+ إضافة عضو</button><button class="btn sm" id="addObs" type="button">+ إضافة معايش</button><span class="note">عند كتابة الاسم يظهر فوراً أعلى المعايير المسندة له.</span></div>
 
     <div class="sec-t" id="vwT">مراقب من هيئة تقويم التعليم والتدريب (اطلاع فقط)</div>
     <div class="team" id="vwBox"></div>
@@ -653,7 +655,7 @@ html[data-skin="heritage"] .gd::before{background:linear-gradient(90deg,#C9A24B,
     <div class="presets" id="ptBox"><label class="lbl" for="ptLink" style="margin:0">رابط بوابة الشواهد (اطلاع فقط)</label><input class="in" id="ptLink" type="url" dir="ltr" placeholder="الصق رابط مراقب الهيئة من بوابة الشواهد (يحتوي #o=)" style="flex:1;min-width:260px"><label class="lbl" for="ptTeam" style="margin:0">رابط بوابة الشواهد للفريق</label><input class="in" id="ptTeam" type="url" dir="ltr" placeholder="الصق رابط الفريق من البوابة (يحتوي #t=)" style="flex:1;min-width:260px"><button class="btn sm" id="ptAuto" type="button">جلب الرابطين من البوابة</button><span class="note" id="ptNote">يظهر زر «بوابة الشواهد» لكل من يفتح النموذج: الفريق يفتح برابط الفريق، ومراقب الهيئة برابط الاطلاع فقط. لا تلصق هنا رابط القائد (#l=) أبدًا.</span></div>
 
     <div class="presets" id="meBox" hidden><label class="lbl" for="meSel" style="margin:0">أنا:</label><select class="in" id="meSel" style="width:auto;min-width:200px"></select><span class="note">يُسجَّل اسمك آخر معدِّل لكل معيار تعبئه.</span></div>
-    <div class="sec-t">توزيع المعايير على الفريق</div>
+    <div class="sec-t" id="distT">توزيع المعايير على الفريق</div>
     <div class="quick" id="quickBox"></div>
     <div class="presets" id="presetBox">
       <button class="btn sm" data-preset="A" type="button">١ · نموذج الفريق (الافتراضي): ١+٣ · ٢+٦+٧ · ٤+٥+٨</button>
