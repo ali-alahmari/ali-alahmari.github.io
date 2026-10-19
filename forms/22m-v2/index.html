@@ -103,6 +103,7 @@ body{margin:0;background:var(--bg);color:var(--ink)}
 @media (max-width:640px){.tm{grid-template-columns:42px minmax(0,1fr) auto}.tm .in.role{grid-column:2/3}}
 @media (max-width:640px){.tm{grid-template-columns:38px minmax(0,1fr) auto}.tm>*{min-width:0}.tm-ob{margin:0 0 8px!important}.tm-ob .in{min-width:0;flex:1 1 150px}}
 .mebar .num,.tk-r .num,.tk-c .num{direction:ltr;unicode-bidi:isolate}
+.tm-em{display:flex;margin:-2px 50px 8px 0}.tm-em .in{flex:1;max-width:420px;min-width:0;direction:ltr;text-align:left}#app.mem .tm-em,#app.view .tm-em{display:none!important}
 .tm-ob{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;margin:-2px 50px 8px 0;font-size:.95rem;color:var(--ink-2)}.tm-ob .in{width:auto;min-width:190px}
 .pv{margin-top:12px;border:2px solid var(--brand);background:var(--surface-2);border-radius:14px;padding:14px 16px}.pv h3{margin:0 0 6px}.pv p{margin:4px 0 10px;color:var(--ink-2)}.pv table{width:100%;border-collapse:collapse;margin:8px 0}.pv th,.pv td{border:1px solid var(--line);padding:6px 10px;text-align:right}.pv th{background:var(--surface)}.pv .ok{color:var(--ok);font-weight:800}.pv .wn{color:var(--bad);font-weight:800}
 .rq-row{display:grid;grid-template-columns:34px minmax(240px,1.8fr) minmax(260px,2.2fr) 120px minmax(0,2.4fr) 118px auto;gap:8px;align-items:start;margin:8px 0;padding:10px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px}.rq-row textarea{min-height:2.6rem;width:100%;border:1.5px solid var(--line);border-radius:10px;padding:.5rem .7rem;background:var(--surface)}.rq-row .rn{width:30px;height:30px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-weight:800}@media (max-width:900px){.rq-row{grid-template-columns:minmax(0,1fr)}}
@@ -654,7 +655,7 @@ html[data-skin="heritage"] .gd::before{background:linear-gradient(90deg,#C9A24B,
     <div class="sec-t" id="vwT">مراقب من هيئة تقويم التعليم والتدريب (اطلاع فقط)</div>
     <div class="team" id="vwBox"></div>
     <div class="presets" id="vwAdd"><button class="btn sm" id="addView" type="button">+ إضافة مراقب من الهيئة</button><span class="note">يطّلع على كل شيء ولا يعدّل شيئاً، ولا يُحسب في توزيع المعايير. رابطه الشخصي من «مشاركة الفريق»، ويتوقف مع تغيير الرابط في الزيارة الجديدة.</span></div>
-    <div class="presets" id="ptBox"><label class="lbl" for="ptLink" style="margin:0">رابط بوابة الشواهد (اطلاع فقط)</label><input class="in" id="ptLink" type="url" dir="ltr" placeholder="الصق رابط مراقب الهيئة من بوابة الشواهد (يحتوي #o=)" style="flex:1;min-width:260px"><label class="lbl" for="ptTeam" style="margin:0">رابط بوابة الشواهد للفريق</label><input class="in" id="ptTeam" type="url" dir="ltr" placeholder="الصق رابط الفريق من البوابة (يحتوي #t=)" style="flex:1;min-width:260px"><button class="btn sm" id="ptAuto" type="button">جلب الرابطين من البوابة</button><span class="note" id="ptNote">يظهر زر «بوابة الشواهد» لكل من يفتح النموذج: الفريق يفتح برابط الفريق، ومراقب الهيئة برابط الاطلاع فقط. لا تلصق هنا رابط القائد (#l=) أبدًا.</span></div>
+    <div class="presets" id="ptBox"><label class="lbl" for="ptLink" style="margin:0">رابط بوابة الشواهد (اطلاع فقط)</label><input class="in" id="ptLink" type="url" dir="ltr" placeholder="الصق رابط مراقب الهيئة من بوابة الشواهد (يحتوي #o=)" style="flex:1;min-width:260px"><label class="lbl" for="ptTeam" style="margin:0">رابط بوابة الشواهد للفريق</label><input class="in" id="ptTeam" type="url" dir="ltr" placeholder="الصق رابط الفريق من البوابة (يحتوي #t=)" style="flex:1;min-width:260px"><button class="btn sm" id="ptAuto" type="button">جلب الرابطين من البوابة</button><button class="btn sm" id="ptShare" type="button">مشاركة ملفات البوابة مع بريدات الفريق</button><span class="note" id="ptNote">يظهر زر «بوابة الشواهد» لكل من يفتح النموذج: الفريق يفتح برابط الفريق، ومراقب الهيئة برابط الاطلاع فقط. لا تلصق هنا رابط القائد (#l=) أبدًا.</span></div>
 
     <div class="presets" id="meBox" hidden><label class="lbl" for="meSel" style="margin:0">أنا:</label><select class="in" id="meSel" style="width:auto;min-width:200px"></select><span class="note">يُسجَّل اسمك آخر معدِّل لكل معيار تعبئه.</span></div>
     <div class="sec-t" id="distT">توزيع المعايير على الفريق</div>
@@ -21144,6 +21145,7 @@ function renderDays(){var n=+S.setup.days||1,h='';
   $('#daysBox').innerHTML=h}
 function renderTeam(){var h='';team().forEach(function(m,i){
   h+='<div class="tm" style="--mc:var(--m'+(i%6)+')"><span class="av">'+(i+1)+'</span><input class="in" id="tn'+i+'" data-tn="'+m.id+'" placeholder="اسم '+(i===0?'رئيس الفريق':'العضو '+(i+1))+'" value="'+esc(m.name)+'"><select class="in role" data-tr="'+m.id+'" aria-label="الصفة">'+ROLES.map(function(r){return '<option'+(r===m.role?' selected':'')+'>'+r+'</option>'}).join('')+'</select><button class="btn sm danger" data-rm="'+m.id+'" type="button" '+(team().length<2?'disabled':'')+' aria-label="حذف العضو">حذف</button></div>';
+  h+=emRow(m.id);
   if(isObs(m))h+='<div class="tm-ob"><span>يرافق:</span><select class="in" data-ow="'+m.id+'"></select><span>يتدرب على:</span><select class="in" data-otr="'+m.id+'"></select></div>'});
   $('#teamBox').innerHTML=h;updObsRows()}
 function renderQuick(){var act=document.activeElement&&document.activeElement.id,h='';
@@ -21294,7 +21296,7 @@ function vwNotice(){var el=$('#vwNotice');if(!el)return;var r=myRole(),nm=viewer
 function renderViewers(){try{vwNotice()}catch(e){}var b=$('#vwBox');if(!b)return;var vs0=viewers();
   var same=b.children.length===vs0.length&&vs0.every(function(v,i){var n=b.children[i].querySelector('[data-vn]');return n&&n.getAttribute('data-vn')===v.id});
   if(same){vs0.forEach(function(v,i){var a=b.children[i].querySelector('[data-vn]'),o=b.children[i].querySelector('[data-vo]');if(a&&a!==document.activeElement&&a.value!==(v.name||''))a.value=v.name||'';if(o&&o!==document.activeElement&&o.value!==(v.org||''))o.value=v.org||''});return}
-  var h='';viewers().forEach(function(v,i){h+='<div class="tm" style="--mc:var(--crit)"><span class="av">👁</span><input class="in" data-vn="'+esc(v.id)+'" placeholder="اسم المراقب" value="'+esc(v.name||'')+'"><input class="in" data-vo="'+esc(v.id)+'" placeholder="الجهة (مثال: هيئة تقويم التعليم والتدريب)" value="'+esc(v.org||'')+'" style="min-width:220px"><button class="btn sm danger" data-vrm="'+esc(v.id)+'" type="button" aria-label="حذف المراقب">حذف</button></div>'});b.innerHTML=h}
+  var h='';viewers().forEach(function(v,i){h+='<div class="vw-it"><div class="tm" style="--mc:var(--crit)"><span class="av">👁</span><input class="in" data-vn="'+esc(v.id)+'" placeholder="اسم المراقب" value="'+esc(v.name||'')+'"><input class="in" data-vo="'+esc(v.id)+'" placeholder="الجهة (مثال: هيئة تقويم التعليم والتدريب)" value="'+esc(v.org||'')+'" style="min-width:220px"><button class="btn sm danger" data-vrm="'+esc(v.id)+'" type="button" aria-label="حذف المراقب">حذف</button></div>'+emRow(v.id)+'</div>'});b.innerHTML=h}
 function viewLink(v){var base=location.href.split('#')[0];var o={u:SH.url,r:1,i:v.id,n:(v.name||'').trim(),o:(v.org||'').trim()};if(SH.vkey)o.v=SH.vkey;else o.c=SH.code;return base+'#s='+encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(o)))))}
 function shViewLinks(){var bx=$('#shViewBox'),b=$('#shViewList'),nt=$('#shViewNote');if(!bx||!b)return;bx.hidden=!(SH.on&&SH.seed&&viewers().length);if(bx.hidden)return;var h='';viewers().forEach(function(v){h+='<div class="row" style="margin:4px 0"><b style="flex:1">'+esc((v.name||'').trim()||'مراقب بانتظار الاسم')+(v.org?' <span class="note">('+esc(v.org)+')</span>':'')+'</b><button class="btn" type="button" data-vlink="'+esc(v.id)+'">نسخ رابطه</button></div>'});b.innerHTML=h;
   nt.textContent=SH.vkey?'الرابط لا يحمل رمز الفريق: القراءة فقط مضمونة من الخادم (Apps Script)، فلا يمرّ أي حفظ منه حتى لو عُدّل الرابط يدوياً.':'كود Apps Script الحالي قديم: الرابط يعمل للاطلاع والقفل من المتصفح فقط. انسخ الكود الجديد من الأعلى وانشره إصداراً جديداً لتصبح الحماية من الخادم أيضاً.'}
@@ -21618,6 +21620,19 @@ function mergeImport(txt){try{var I=parseImp(txt),n=0;
 var LVN={e:'الوجود',p:'الممارسة',f:'الفاعلية'},LVO=['e','p','f'];
 /* ---- النشر على بوابة شواهد المنشأة (يعمل بضغطة زر؛ لا يمس بقية النموذج) ---- */
 var PUB={page:'https://ali-alahmari.github.io/forms/evidence/'};
+/* بريد الأعضاء والمراقبين لفتح ملفات البوابة: يُحفظ على جهاز الرئيس فقط، ولا يدخل في بيانات الفريق المتزامنة */
+var EM_K='etec22m.emails',EM_RE=/^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]+$/;
+function emAll(){try{return JSON.parse(localStorage.getItem(EM_K)||'{}')||{}}catch(e){return {}}}
+function emGet(id){return myRole()==='lead'?(emAll()[id]||''):''}
+function emSet(id,v){if(myRole()!=='lead')return;var o=emAll();v=String(v||'').trim();if(v)o[id]=v;else delete o[id];try{localStorage.setItem(EM_K,JSON.stringify(o))}catch(e){}}
+function emClear(){try{localStorage.removeItem(EM_K)}catch(e){}}
+function emRow(id){if(myRole()!=='lead')return '';var v=emGet(id);return '<div class="tm-em"><input class="in" type="email" dir="ltr" inputmode="email" autocomplete="off" data-em="'+esc(id)+'" value="'+esc(v)+'" placeholder="البريد (اختياري)" aria-label="بريد Google لفتح ملفات البوابة" aria-invalid="'+(v&&!EM_RE.test(v.toLowerCase())?'true':'false')+'"></div>'}
+function emList(){if(myRole()!=='lead')return [];var o=emAll(),ids=team().map(function(m){return m.id}).concat(viewers().map(function(v){return v.id})),seen={},out=[];ids.forEach(function(id){var e=String(o[id]||'').trim().toLowerCase();if(EM_RE.test(e)&&!seen[e]){seen[e]=1;out.push(e)}});return out}
+async function emShare(url,key){var em=emList();if(!em.length)return {n:0};var r=await pubPost(url,{action:'setMembers',key:key,emails:em});if(!r.ok)throw new Error(r.error||'تعذّرت مشاركة المجلد');return {n:(r.members||[]).length,failed:r.failed||[]}}
+function emMsg(r){return r.failed&&r.failed.length?'تعذرت المشاركة مع: '+r.failed.join('، '):'شورك مجلد الشواهد مع '+r.n+' بريد'}
+async function emShareNow(){if(myRole()!=='lead')return;var url=pubLS('url'),key=pubLS('key');if(!url||!key){try{$('#pubSet').open=true}catch(e){}toast('احفظ إعداد الربط بالبوابة أولاً (في قسم النشر)');return}
+  if(!emList().length){toast('اكتب بريداً واحداً على الأقل بجانب اسم عضو');return}
+  var b=$('#ptShare');if(b)b.disabled=true;try{var r=await emShare(url,key);toast(emMsg(r))}catch(e){toast(String(e&&e.message||e)==='Failed to fetch'?'تعذّر الاتصال بالبوابة':String(e.message||e))}if(b)b.disabled=false}
 function pubLS(k,v){try{if(v===undefined)return localStorage.getItem('ev22.'+k)||'';if(v===null)localStorage.removeItem('ev22.'+k);else localStorage.setItem('ev22.'+k,v)}catch(e){return ''}}
 function pubExec(x){x=String(x||'').trim();var m=/#[tl]=([A-Za-z0-9+\/=_-]+)/.exec(x);if(m){try{var o=JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/-/g,'+').replace(/_/g,'/')))));x=o&&o.u||''}catch(e){return ''}}
   return /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_\-]+\/exec$/.test(x)?x:''}
@@ -21651,13 +21666,14 @@ async function pubSend(){
   if(!rows.length){pubMsg('أكمل شاهداً واحداً على الأقل (المعيار الفرعي ونص الشاهد)',1);return}
   var d=(S.f['rq.meta.date']||'').trim(),dl=/^\d{4}-\d{2}-\d{2}$/.test(d)?new Date(d+'T23:59:00+03:00').toISOString():'';
   var b=$('#reqPub');b.disabled=true;pubMsg('جارٍ النشر…');
-  try{var r=await pubPost(url,{action:'publishForm',key:key,name:name,rows:rows,deadline:dl,pageUrl:PUB.page,visit:S.f['rq.meta.pvisit']||'',title:name});
+  try{var emN='';try{var er=await emShare(url,key);if(er.n||(er.failed&&er.failed.length))emN=' · '+emMsg(er)}catch(e0){emN=' · تعذرت مشاركة المجلد مع البريدات، استخدم «مشاركة ملفات البوابة مع بريدات الفريق»'}
+    var r=await pubPost(url,{action:'publishForm',key:key,name:name,rows:rows,deadline:dl,pageUrl:PUB.page,visit:S.f['rq.meta.pvisit']||'',title:name});
     if(!r.ok)throw new Error(r.error||'تعذّر النشر');
     rqSet('meta','pvisit',r.visit);rqSet('meta','plink',r.link);if(r.tc){rqSet('meta','ptc',r.tc);rqSet('meta','pexec',url)}save();pubTeamShow();
     $('#pubOut').hidden=false;$('#pubLinkOut').value=r.link;
     var pm=r.created?('تم إنشاء الزيارة ونشر '+r.rows+' شاهد'):('تم التحديث: '+r.added+' شاهد جديد، المجموع '+r.rows);
     try{await ptFetch(url,key,r.visit);pm+=' · وُضع رابطا الفريق والمراقب تلقائياً'}catch(e2){pm+=' · لم يُجلب رابطا البوابة تلقائياً، استخدم «جلب الرابطين من البوابة»'}
-    pubMsg(pm)}
+    pubMsg(pm+emN)}
   catch(e){pubMsg(String(e&&e.message||e)==='Failed to fetch'?'تعذّر الاتصال بالبوابة، تحقق من الإنترنت':String(e.message||e),1)}
   b.disabled=false}
 function pubSave(){var u=pubExec($('#pubUrl').value);if(!u){pubMsg('الرابط غير صالح، الصق رابط الفريق الدائم من صفحة البوابة',1);return}
@@ -22002,6 +22018,7 @@ async function newVisit(){var rotated=0;var go=$('#nvGo');go.disabled=true;var m
     else if(SY.on&&DB&&SY.admin){var qs=await DB.collection('entries').get();for(var i=0;i<qs.docs.length;i++){await DB.collection('entries').doc(qs.docs[i].id).delete()}SY.known={};SY.meta={}}
     var keep=$('#nvTeam').checked;S=fresh();S.ui=old.ui;S.ui.collapsed=fresh().ui.collapsed;
     if(keep){S.setup.team=old.setup.team;S.setup.days=old.setup.days;S.mode=old.mode;S.assign=old.assign;S.subAssign={};S.setup.viewers=old.setup.viewers||[]}
+    if(!keep)emClear();
     if(rotated===1){SH.vkey='';cfgSave();try{shViewSync()}catch(e){}}
     SH.q={};SY.pend={};DEF={};saveNow();bootAll();queueMain();
     $('#ov3').hidden=true;toast('بدأت زيارة جديدة'+(SH.on?' وأُرشفت السابقة في ورقة جديدة داخل Google Sheet':''));
@@ -22019,6 +22036,7 @@ document.addEventListener('input',function(ev){var e=ev.target;
   if(e.id==='ptLink'||e.id==='ptTeam'){if(myRole()==='lead'){S.setup[e.id==='ptTeam'?'portalTeam':'portalView']=e.value.trim();renderPortal();queueMain();save()}return}
   if(e.id==='facility'){S.setup.facility=e.value;renderSetupSum();queueMain();save();return}
   if(e.id==='fSearch'){applyFilter();return}
+  if(e.hasAttribute('data-em')){emSet(e.getAttribute('data-em'),e.value);var _v=e.value.trim();e.setAttribute('aria-invalid',_v&&!EM_RE.test(_v.toLowerCase())?'true':'false');return}
   if(e.hasAttribute('data-tn')){var m=mem(e.getAttribute('data-tn'));if(m){m.name=e.value;updOwners();renderQuick();renderDist();updFilterSel();renderSetupSum();renderSummary();queueMain();save()}return}
   if(e.hasAttribute('data-day')){S.setup.dayNotes[+e.getAttribute('data-day')]=e.value;queueMain();save()}
   if(e.hasAttribute('data-vn')||e.hasAttribute('data-vo')){var vv=viewer(e.getAttribute('data-vn')||e.getAttribute('data-vo'));if(vv){if(e.hasAttribute('data-vn'))vv.name=e.value;else vv.org=e.value;try{shViewLinks()}catch(e3){}queueMain();save()}}
@@ -22060,6 +22078,7 @@ document.addEventListener('click',function(ev){var t=ev.target,e=t.closest?t.clo
     case 'reqWord':exportReq();break;
     case 'reqPub':pubSend();break;
     case 'ptAuto':ptAuto();break;
+    case 'ptShare':emShareNow();break;
     case 'pubSave':pubSave();break;
     case 'pubForget':pubForget();break;
     case 'pubCopy':pubCopy();break;
