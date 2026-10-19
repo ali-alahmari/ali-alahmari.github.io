@@ -374,6 +374,7 @@ button,.btn,[role=button],a.btn,select,summary{touch-action:manipulation}
 #app.view .rqi-btn,#app.view [data-rqdel],#app.view [data-rvw],#app.view [data-finb],#app.view #reqAdd,#app.view #reqWord,#app.view #pubBox,#app.view #btnData,#app.view #btnFreeze,#app.view #meBox,#app.view #vwT,#app.view #vwBox,#app.view #vwAdd,#app.view #ptBox,#app.view .rqi-ft,#app.view #tkSum+div .btn{display:none!important}
 #app.mem:not(.view) #teamT,#app.mem:not(.view) #teamBox,#app.mem:not(.view) #addRow,#app.mem:not(.view) #vwT,#app.mem:not(.view) #vwBox,#app.mem:not(.view) #vwAdd,#app.mem:not(.view) #ptBox,#app.mem:not(.view) #distT,#app.mem:not(.view) #quickBox,#app.mem:not(.view) #presetBox,#app.mem:not(.view) #pvBox{display:none!important}
 #app.mem:not(.view) #reqWord,#app.mem:not(.view) #reqPub,#app.mem:not(.view) #pubBox>*:not(:first-child){display:none!important}
+#vwNotice:not([hidden]){display:flex;align-items:center;gap:10px}
 #app.view #memBanner{border-color:var(--crit)!important;background:var(--crit-soft)!important}
 .vtag{display:inline-block;margin-top:6px;padding:4px 12px;border-radius:999px;background:var(--crit-soft);color:var(--crit);font-weight:800;font-size:.92rem;border:1px solid var(--crit)}
 .vn-i{border:1px solid var(--line,#ddd);border-radius:12px;padding:10px 14px;margin:8px 0;background:var(--surface-2)}.vn-i b{display:block;margin-bottom:4px}.vn-i small{color:var(--ink-2)}.vn-i p{margin:4px 0 0;white-space:pre-wrap}
@@ -615,7 +616,7 @@ html[data-skin="heritage"] .gd::before{background:linear-gradient(90deg,#C9A24B,
 
 <div class="card" id="roBanner" hidden style="margin-top:14px;border:2px solid var(--crit);background:var(--crit-soft)"><b>وضع القراءة فقط:</b> صلاحيتك لا تسمح بالتعديل. اطلب من صاحب الصفحة منحك صلاحية «مساهم» لتتمكن من التعبئة.</div>
 <div class="card" id="memBanner" hidden style="margin-top:14px;border:2px solid var(--brand);background:var(--surface-2)"><b id="memTtl">أنت عضو في الفريق:</b> <span id="memTxt">تعبّئ المعايير وتختار اسمك من «أنا». أما بيانات الزيارة وأسماء الفريق وتوزيع المعايير فيعدّلها رئيس الفريق وحده.</span> <button class="btn ghost" id="memOff" type="button" style="margin-inline-start:8px">فصل المزامنة</button></div>
-<div class="card" id="vwNotice" role="status" hidden style="margin-top:10px;border:2px solid var(--crit,#b4532a);background:var(--crit-soft,#fbeee6)"><b>تنبيه:</b> <span id="vwNoticeTxt"></span></div>
+<div class="card" id="vwNotice" role="status" hidden style="margin-top:10px;padding:10px 16px;border:1px solid var(--line,#e3dccb);border-inline-start:4px solid var(--brand);background:var(--surface-2);font-size:14px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;color:var(--brand)"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg><span id="vwNoticeTxt"></span></div>
 
 <section class="card" id="setup" aria-label="بيانات الزيارة">
   <div class="card-h">
@@ -21289,7 +21290,7 @@ function renderPortal(){try{var a=$('#btnPortal'),io=$('#ptLink'),it=$('#ptTeam'
 /* ---------- مراقب الهيئة (اطلاع فقط) ---------- */
 function viewers(){if(!Array.isArray(S.setup.viewers))S.setup.viewers=[];return S.setup.viewers}
 function viewer(id){for(var i=0;i<viewers().length;i++)if(viewers()[i].id===id)return viewers()[i];return null}
-function vwNotice(){var el=$('#vwNotice');if(!el)return;var r=myRole(),nm=viewers().filter(function(v){return v&&String(v.name||'').trim()}).map(function(v){return String(v.name).trim()});el.hidden=!(SH.on&&(r==='mem'||r==='obs')&&nm.length);if(el.hidden)return;$('#vwNoticeTxt').textContent=(nm.length>1?'مراقبون من هيئة تقويم التعليم والتدريب ('+nm.join('، ')+') يطّلعون':'مراقب من هيئة تقويم التعليم والتدريب ('+nm[0]+') يطّلع')+' على عمل الفريق لحظيًا، للاطلاع فقط ولا يعدّل شيئًا.'}
+function vwNotice(){var el=$('#vwNotice');if(!el)return;var r=myRole(),nm=viewers().filter(function(v){return v&&String(v.name||'').trim()}).map(function(v){return String(v.name).trim()});el.hidden=!(SH.on&&(r==='mem'||r==='obs')&&nm.length);if(el.hidden)return;$('#vwNoticeTxt').textContent=(nm.length>1?'يطّلع مراقبون من هيئة تقويم التعليم والتدريب ('+nm.join('، ')+')':'يطّلع مراقب من هيئة تقويم التعليم والتدريب ('+nm[0]+')')+' على سير العمل، للاطلاع فقط.'}
 function renderViewers(){try{vwNotice()}catch(e){}var b=$('#vwBox');if(!b)return;var vs0=viewers();
   var same=b.children.length===vs0.length&&vs0.every(function(v,i){var n=b.children[i].querySelector('[data-vn]');return n&&n.getAttribute('data-vn')===v.id});
   if(same){vs0.forEach(function(v,i){var a=b.children[i].querySelector('[data-vn]'),o=b.children[i].querySelector('[data-vo]');if(a&&a!==document.activeElement&&a.value!==(v.name||''))a.value=v.name||'';if(o&&o!==document.activeElement&&o.value!==(v.org||''))o.value=v.org||''});return}
