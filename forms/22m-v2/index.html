@@ -615,6 +615,7 @@ html[data-skin="heritage"] .gd::before{background:linear-gradient(90deg,#C9A24B,
 
 <div class="card" id="roBanner" hidden style="margin-top:14px;border:2px solid var(--crit);background:var(--crit-soft)"><b>وضع القراءة فقط:</b> صلاحيتك لا تسمح بالتعديل. اطلب من صاحب الصفحة منحك صلاحية «مساهم» لتتمكن من التعبئة.</div>
 <div class="card" id="memBanner" hidden style="margin-top:14px;border:2px solid var(--brand);background:var(--surface-2)"><b id="memTtl">أنت عضو في الفريق:</b> <span id="memTxt">تعبّئ المعايير وتختار اسمك من «أنا». أما بيانات الزيارة وأسماء الفريق وتوزيع المعايير فيعدّلها رئيس الفريق وحده.</span> <button class="btn ghost" id="memOff" type="button" style="margin-inline-start:8px">فصل المزامنة</button></div>
+<div class="card" id="vwNotice" role="status" hidden style="margin-top:10px;border:2px solid var(--crit,#b4532a);background:var(--crit-soft,#fbeee6)"><b>تنبيه:</b> <span id="vwNoticeTxt"></span></div>
 
 <section class="card" id="setup" aria-label="بيانات الزيارة">
   <div class="card-h">
@@ -21288,7 +21289,8 @@ function renderPortal(){try{var a=$('#btnPortal'),io=$('#ptLink'),it=$('#ptTeam'
 /* ---------- مراقب الهيئة (اطلاع فقط) ---------- */
 function viewers(){if(!Array.isArray(S.setup.viewers))S.setup.viewers=[];return S.setup.viewers}
 function viewer(id){for(var i=0;i<viewers().length;i++)if(viewers()[i].id===id)return viewers()[i];return null}
-function renderViewers(){var b=$('#vwBox');if(!b)return;var vs0=viewers();
+function vwNotice(){var el=$('#vwNotice');if(!el)return;var r=myRole(),nm=viewers().filter(function(v){return v&&String(v.name||'').trim()}).map(function(v){return String(v.name).trim()});el.hidden=!(SH.on&&(r==='mem'||r==='obs')&&nm.length);if(el.hidden)return;$('#vwNoticeTxt').textContent=(nm.length>1?'مراقبون من هيئة تقويم التعليم والتدريب ('+nm.join('، ')+') يطّلعون':'مراقب من هيئة تقويم التعليم والتدريب ('+nm[0]+') يطّلع')+' على عمل الفريق لحظيًا، للاطلاع فقط ولا يعدّل شيئًا.'}
+function renderViewers(){try{vwNotice()}catch(e){}var b=$('#vwBox');if(!b)return;var vs0=viewers();
   var same=b.children.length===vs0.length&&vs0.every(function(v,i){var n=b.children[i].querySelector('[data-vn]');return n&&n.getAttribute('data-vn')===v.id});
   if(same){vs0.forEach(function(v,i){var a=b.children[i].querySelector('[data-vn]'),o=b.children[i].querySelector('[data-vo]');if(a&&a!==document.activeElement&&a.value!==(v.name||''))a.value=v.name||'';if(o&&o!==document.activeElement&&o.value!==(v.org||''))o.value=v.org||''});return}
   var h='';viewers().forEach(function(v,i){h+='<div class="tm" style="--mc:var(--crit)"><span class="av">👁</span><input class="in" data-vn="'+esc(v.id)+'" placeholder="اسم المراقب" value="'+esc(v.name||'')+'"><input class="in" data-vo="'+esc(v.id)+'" placeholder="الجهة (مثال: هيئة تقويم التعليم والتدريب)" value="'+esc(v.org||'')+'" style="min-width:220px"><button class="btn sm danger" data-vrm="'+esc(v.id)+'" type="button" aria-label="حذف المراقب">حذف</button></div>'});b.innerHTML=h}
