@@ -650,7 +650,7 @@ html[data-skin="heritage"] .gd::before{background:linear-gradient(90deg,#C9A24B,
     <div class="sec-t" id="vwT">مراقب من هيئة تقويم التعليم والتدريب (اطلاع فقط)</div>
     <div class="team" id="vwBox"></div>
     <div class="presets" id="vwAdd"><button class="btn sm" id="addView" type="button">+ إضافة مراقب من الهيئة</button><span class="note">يطّلع على كل شيء ولا يعدّل شيئاً، ولا يُحسب في توزيع المعايير. رابطه الشخصي من «مشاركة الفريق»، ويتوقف مع تغيير الرابط في الزيارة الجديدة.</span></div>
-    <div class="presets" id="ptBox"><label class="lbl" for="ptLink" style="margin:0">رابط بوابة الشواهد (اطلاع فقط)</label><input class="in" id="ptLink" type="url" dir="ltr" placeholder="الصق رابط مراقب الهيئة من بوابة الشواهد (يحتوي #o=)" style="flex:1;min-width:260px"><label class="lbl" for="ptTeam" style="margin:0">رابط بوابة الشواهد للفريق</label><input class="in" id="ptTeam" type="url" dir="ltr" placeholder="الصق رابط الفريق من البوابة (يحتوي #t=)" style="flex:1;min-width:260px"><span class="note" id="ptNote">يظهر زر «بوابة الشواهد» لكل من يفتح النموذج: الفريق يفتح برابط الفريق، ومراقب الهيئة برابط الاطلاع فقط. لا تلصق هنا رابط القائد (#l=) أبدًا.</span></div>
+    <div class="presets" id="ptBox"><label class="lbl" for="ptLink" style="margin:0">رابط بوابة الشواهد (اطلاع فقط)</label><input class="in" id="ptLink" type="url" dir="ltr" placeholder="الصق رابط مراقب الهيئة من بوابة الشواهد (يحتوي #o=)" style="flex:1;min-width:260px"><label class="lbl" for="ptTeam" style="margin:0">رابط بوابة الشواهد للفريق</label><input class="in" id="ptTeam" type="url" dir="ltr" placeholder="الصق رابط الفريق من البوابة (يحتوي #t=)" style="flex:1;min-width:260px"><button class="btn sm" id="ptAuto" type="button">جلب الرابطين من البوابة</button><span class="note" id="ptNote">يظهر زر «بوابة الشواهد» لكل من يفتح النموذج: الفريق يفتح برابط الفريق، ومراقب الهيئة برابط الاطلاع فقط. لا تلصق هنا رابط القائد (#l=) أبدًا.</span></div>
 
     <div class="presets" id="meBox" hidden><label class="lbl" for="meSel" style="margin:0">أنا:</label><select class="in" id="meSel" style="width:auto;min-width:200px"></select><span class="note">يُسجَّل اسمك آخر معدِّل لكل معيار تعبئه.</span></div>
     <div class="sec-t">توزيع المعايير على الفريق</div>
@@ -21622,6 +21622,22 @@ function pubInit(){var bx=$('#pubBox');if(bx&&bx.contains(document.activeElement
 function pubTeamShow(){var b=$('#pubTeam');if(b)b.hidden=!(S.f['rq.meta.ptc']&&S.f['rq.meta.pvisit']&&(S.f['rq.meta.pexec']||pubLS('url')))}
 function pubTeamOpen(){var u=S.f['rq.meta.pexec']||pubLS('url'),v=S.f['rq.meta.pvisit'],tc=S.f['rq.meta.ptc'];if(!u||!v||!tc){toast('انشر الطلب أولاً');return}window.open(PUB.page+'#t='+btoa(unescape(encodeURIComponent(JSON.stringify({u:u,v:v,tc:tc})))),'_blank','noopener')}
 async function pubPost(url,o){var r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(o)});return r.json()}
+/* جلب رابطي الفريق ومراقب الهيئة من البوابة تلقائياً (لا يُخزَّن رابط الرئيس أبداً) */
+async function ptFetch(url,key,visit){
+  var r=await pubPost(url,{action:'leader',key:key,visit:visit});
+  if(!r||!r.ok||!r.current||!r.current.tc)throw new Error((r&&r.error)||'لم ترجع البوابة بيانات الزيارة');
+  var c=r.current,enc=function(o){return btoa(unescape(encodeURIComponent(JSON.stringify(o))))},got=0;
+  var t=PUB.page+'#t='+enc({u:url,v:visit,tc:c.tc}),o=c.vc?PUB.page+'#o='+enc({u:url,v:visit,vc:c.vc}):'';
+  if(ptUrl(t,PT_RE_T)){S.setup.portalTeam=t;got++}
+  if(o&&ptUrl(o,PT_RE_O)){S.setup.portalView=o;got++}
+  if(!got)throw new Error('تعذّر تكوين الرابطين');
+  renderPortal();queueMain();save();return got}
+async function ptAuto(){
+  if(myRole()!=='lead'){pubMsg('الجلب لرئيس الفريق فقط',1);return}
+  var url=pubLS('url'),key=pubLS('key'),visit=S.f['rq.meta.pvisit']||'';
+  if(!url||!key||!visit){pubMsg('انشر الطلب على البوابة أولاً ليُجلب الرابطان',1);return}
+  try{var n=await ptFetch(url,key,visit);pubMsg('تم جلب رابط'+(n>1?'ي الفريق والمراقب':' الفريق')+' من البوابة')}
+  catch(e){pubMsg(String(e&&e.message||e)==='Failed to fetch'?'تعذّر الاتصال بالبوابة، تحقق من الإنترنت':String(e.message||e),1)}}
 async function pubSend(){
   if(myRole()!=='lead'){pubMsg('النشر لرئيس الفريق فقط',1);return}
   var url=pubLS('url'),key=pubLS('key');if(!url||!key){$('#pubSet').open=true;pubMsg('احفظ إعداد الربط أولاً',1);return}
@@ -21634,7 +21650,9 @@ async function pubSend(){
     if(!r.ok)throw new Error(r.error||'تعذّر النشر');
     rqSet('meta','pvisit',r.visit);rqSet('meta','plink',r.link);if(r.tc){rqSet('meta','ptc',r.tc);rqSet('meta','pexec',url)}save();pubTeamShow();
     $('#pubOut').hidden=false;$('#pubLinkOut').value=r.link;
-    pubMsg(r.created?('تم إنشاء الزيارة ونشر '+r.rows+' شاهد'):('تم التحديث: '+r.added+' شاهد جديد، المجموع '+r.rows))}
+    var pm=r.created?('تم إنشاء الزيارة ونشر '+r.rows+' شاهد'):('تم التحديث: '+r.added+' شاهد جديد، المجموع '+r.rows);
+    try{await ptFetch(url,key,r.visit);pm+=' · وُضع رابطا الفريق والمراقب تلقائياً'}catch(e2){pm+=' · لم يُجلب رابطا البوابة تلقائياً، استخدم «جلب الرابطين من البوابة»'}
+    pubMsg(pm)}
   catch(e){pubMsg(String(e&&e.message||e)==='Failed to fetch'?'تعذّر الاتصال بالبوابة، تحقق من الإنترنت':String(e.message||e),1)}
   b.disabled=false}
 function pubSave(){var u=pubExec($('#pubUrl').value);if(!u){pubMsg('الرابط غير صالح، الصق رابط الفريق الدائم من صفحة البوابة',1);return}
@@ -21952,7 +21970,7 @@ function shInit(){var c=cfgLoad(),o=decShare(location.hash);
   if(o){if(!c||c.u!==o.u)shBackupReset();SH.url=o.u;SH.code=o.c||'';SH.lead=o.k||((c&&c.u===o.u)?(c.k||''):'');SH.me=(c&&c.u===o.u)?(c.me||''):'';SH.lock=(c&&c.u===o.u)?!!c.lock:false;if(o.m){SH.me=String(o.m);SH.lock=true}SH.seed=!!o.l;if(SH.seed)SH.lock=false;SH.view=!!o.r;if(SH.view){SH.seed=false;SH.me='';SH.lock=true;SH.lead='';SH.vname=String(o.n||'');SH.vorg=String(o.o||'');SH.vid=String(o.i||'');SH.vkey=String(o.v||'');SH.code=o.v?'':(o.c||'')}else{SH.vkey=(c&&c.u===o.u)?(c.vkey||''):''}SH.on=true;cfgSave();try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}}
   else if(c&&c.u){SH.url=c.u;SH.code=c.c||'';SH.lead=c.k||'';SH.me=c.me||'';SH.seed=!!c.seed;SH.lock=!!c.lock&&!c.seed;SH.view=!!c.view;SH.vname=c.vname||'';SH.vorg=c.vorg||'';SH.vid=c.vid||'';SH.vkey=c.vkey||'';if(SH.view){SH.seed=false;SH.me='';SH.lead=''}SH.on=true}}
 function shMsg(t,bad){var e=$('#shMsg');e.textContent=t;e.style.color=bad?'var(--bad)':'var(--ok)'}
-var LEAD_SEL=['#p-groups .presets','#pvBox','#addObs','#setup .grid.g3','#daysBox','#teamBox','#addMember','#quickBox','#presetBox','#distGrid','#vwBox','#vwAdd','#ptLink','#ptTeam'];
+var LEAD_SEL=['#p-groups .presets','#pvBox','#addObs','#setup .grid.g3','#daysBox','#teamBox','#addMember','#quickBox','#presetBox','#distGrid','#vwBox','#vwAdd','#ptLink','#ptTeam','#ptAuto'];
 function shLinks(){applyRole();if(!SH.on){shMemLinks();$('#shLink').value='';$('#shTok').value='';$('#shLeadBox').hidden=true;return}var base=location.href.split('#')[0];$('#shTok').value=encShare();$('#shLink').value=base+'#s='+encodeURIComponent(encShare());$('#shLeadBox').hidden=!SH.seed;shMemLinks();try{shViewLinks()}catch(e){}if(SH.seed){var tl=btoa(unescape(encodeURIComponent(JSON.stringify({u:SH.url,c:SH.code,l:1,k:SH.lead||undefined}))));$('#shLead').value=base+'#s='+encodeURIComponent(tl)}}
 function memLink(id){var base=location.href.split('#')[0];var t=btoa(unescape(encodeURIComponent(JSON.stringify({u:SH.url,c:SH.code,m:id}))));return base+'#s='+encodeURIComponent(t)}
 function shMemLinks(){var b=$('#shMemList');if(!b)return;var bx=$('#shMemBox');bx.hidden=!(SH.on&&SH.seed);if(bx.hidden)return;var h='',n=0;team().forEach(function(m,i){if(!m.name.trim()||m.role==='رئيس الفريق')return;n++;h+='<div class="row" style="margin:4px 0"><b style="flex:1">'+esc(m.name.trim())+(isObs(m)?' <span class="note">(تحت المعايشة)</span>':'')+'</b><button class="btn" type="button" data-mlink="'+esc(m.id)+'">نسخ رابطه</button></div>'});b.innerHTML=h||'<span class="note">أضف أسماء الأعضاء في جدول الفريق أولاً، وستظهر هنا أزرار روابطهم.</span>'}
@@ -22034,6 +22052,7 @@ document.addEventListener('click',function(ev){var t=ev.target,e=t.closest?t.clo
     case 'reqAdd':rqAdd();break;
     case 'reqWord':exportReq();break;
     case 'reqPub':pubSend();break;
+    case 'ptAuto':ptAuto();break;
     case 'pubSave':pubSave();break;
     case 'pubForget':pubForget();break;
     case 'pubCopy':pubCopy();break;
