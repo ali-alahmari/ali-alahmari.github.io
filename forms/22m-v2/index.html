@@ -194,7 +194,7 @@ body{margin:0;background:var(--bg);color:var(--ink)}
 .mini em{font-style:normal;font-weight:800;color:#fff;background:var(--r-na);border-radius:6px;min-width:1.5rem;text-align:center;padding:0 .35rem;font-family:'Tajawal',var(--font)}
 .mini em.r1{background:var(--r1)}.mini em.r2{background:var(--r2)}.mini em.r3{background:var(--r3)}.mini em.r4{background:var(--r4)}.mini em.r5{background:var(--r5)}
 .lvls{display:grid;gap:14px;padding:14px 16px 16px}
-.rec.rec2{display:block}.rec-t{display:block;margin-bottom:8px}.rrow{display:grid;grid-template-columns:150px 190px minmax(0,1fr);gap:10px;margin-bottom:10px;align-items:start}.rrow[hidden],.rec2 [hidden]{display:none}@media (max-width:700px){.rrow{grid-template-columns:1fr}}
+.rec.rec2{display:block}.rec-t{display:block;margin-bottom:8px}.rrow{display:grid;grid-template-columns:150px 190px minmax(0,1fr) auto;gap:10px;margin-bottom:10px;align-items:start}.rrow[hidden],.rec2 [hidden]{display:none}@media (max-width:700px){.rrow{grid-template-columns:1fr}}.rdel{align-self:start;white-space:nowrap}
 .lv{border:1px solid var(--line);border-inline-start:6px solid var(--lc);border-radius:14px;padding:12px 14px;min-width:0}
 .lv-e{--lc:var(--lv-e)}.lv-p{--lc:var(--lv-p)}.lv-f{--lc:var(--lv-f)}
 .lv-h{display:flex;align-items:center;gap:10px;margin-bottom:10px}
@@ -21083,7 +21083,21 @@ var ORD5=['الأول','الثاني','الثالث','الرابع','الخام�
 var GROUPS={A:[[1,3],[2,6,7],[4,5,8]],B:[[2,8],[4,5,6],[1,3,7]],F:[[1,3],[4,5,7],[2,6,8]],D:[[1,2,3],[4,5,7],[6,8]],E:[[1,2,8],[4,5,6],[3,7]]};
 var ROLES=['رئيس الفريق','مقيّم','مقيّم مساعد','منسّق','تحت المعايشة'];var OBS='تحت المعايشة';
 var RMAX=8,RLV={e:'الوجود',p:'الممارسة',f:'الفاعلية',a:'شامل'};
-function subRecs(code){var o=[];for(var i=1;i<=RMAX;i++){var t=S.f[code+'.r'+i+'.t']||'',l=S.f[code+'.r'+i+'.l']||'',x=(S.f[code+'.r'+i+'.x']||'').trim();if(t||l||x)o.push({i:i,t:t,l:l,x:x})}return o}
+var OPEN={'توصية':'ينبغي على المنشأة التدريبية ','إشادة':'يشيد فريق المراجعة بـ … ، استنادا الى … ، مما نتج عنه … ','مقترح':'يقترح فريق المراجعة على المنشأة التدريبية '};
+var PFX={'توصية':'ينبغي على المنشأة التدريبية','إشادة':'يشيد فريق المراجعة بـ','مقترح':'يقترح فريق المراجعة على المنشأة التدريبية'};
+function nrm(x){return String(x||'').replace(/\u0640/g,'').replace(/\s+/g,' ').trim()}
+function isOpen(x){x=nrm(x);if(!x)return false;for(var k in OPEN)if(nrm(OPEN[k])===x)return true;return false}
+function recClean(x){return isOpen(x)?'':x}
+function startsOK(t,x){return !PFX[t]||nrm(x).indexOf(nrm(PFX[t]))===0}
+function recOpen(k){var m=k.match(/^(.+)\.r(\d+)\.t$/);if(!m)return;var c=m[1],xk=c+'.r'+m[2]+'.x',t=S.f[k]||'',cur=(S.f[xk]||'').trim();
+  if(cur&&!isOpen(cur))return;var nv=t&&OPEN[t]?OPEN[t]:'';if((S.f[xk]||'')===nv)return;S.f[xk]=nv;queueEntry(xk,nv);var ta=$('[data-f="'+xk+'"]');if(ta){ta.value=nv;autosize(ta)}}
+function recDel(c,i){var n=recShown(c),keys=['t','l','x'],j,q;
+  for(j=i;j<n;j++)keys.forEach(function(f){var a=c+'.r'+j+'.'+f,b=c+'.r'+(j+1)+'.'+f,v=S.f[b]||'';if((S.f[a]||'')!==v){S.f[a]=v;queueEntry(a,v)}});
+  keys.forEach(function(f){var a=c+'.r'+n+'.'+f;if(S.f[a]){S.f[a]='';queueEntry(a,'')}});
+  var nn=String(Math.max(1,n-1)),nk=c+'.r.n';if(S.f[nk]!==nn){S.f[nk]=nn;queueEntry(nk,nn)}
+  $$('[data-rr^="'+c+'|"] [data-f]').forEach(function(e){var v=S.f[e.getAttribute('data-f')];e.value=v==null?'':v;if(e.tagName==='TEXTAREA')autosize(e)});
+  light(c);obsTouch(c);save()}
+function subRecs(code){var o=[];for(var i=1;i<=RMAX;i++){var t=S.f[code+'.r'+i+'.t']||'',l=S.f[code+'.r'+i+'.l']||'',x=recClean((S.f[code+'.r'+i+'.x']||'').trim());if(t||l||x)o.push({i:i,t:t,l:l,x:x})}return o}
 function recShown(code){var n=parseInt(S.f[code+'.r.n']||'0',10)||0,mx=0;subRecs(code).forEach(function(r){if(r.i>mx)mx=r.i});return Math.min(RMAX,Math.max(1,n,mx))}
 function migRecs(){SUBS_ALL.forEach(function(sb){var c=sb.code;if(S.f[c+'.r.m'])return;var t=S.f[c+'.x.rec'],x=S.f[c+'.x.rect'];if(t||x){if(!subRecs(c).length){S.f[c+'.r1.t']=t||'';S.f[c+'.r1.x']=x||''}S.f[c+'.r.m']='1'}})}
 var KEY='etec22m.v2';
@@ -21171,7 +21185,7 @@ function fieldHTML(sb,l,f){var id='f-'+sb.code+'-'+l.k+'-'+f[0],key=sb.code+'.'+
   return '<div class="fld"><label for="'+id+'">'+f[1]+'</label><textarea id="'+id+'" data-f="'+key+'" placeholder="اكتب هنا…"></textarea></div>'}
 function lvHTML(sb,l){return '<section class="lv lv-'+l.k+'"><div class="lv-h"><span class="ch">'+l.ch+'</span><h4>'+l.name+'</h4></div><div class="cols"><div class="col"><span class="col-t">جانب المنشأة</span>'+F_ORG.map(function(f){return fieldHTML(sb,l,f)}).join('')+'</div><div class="col rev"><span class="col-t">جانب المراجع</span>'+F_REV.map(function(f){return fieldHTML(sb,l,f)}).join('')+'</div></div><div class="rqi-wrap" data-rqi-w="'+sb.code+'" data-rqi-l="'+l.k+'"><button type="button" class="rqi-btn" data-rqi-b="'+sb.code+'|'+l.k+'" aria-expanded="false">📎 شواهد إضافية؟ <b></b></button><div class="rqi" hidden></div></div></section>'}
 function recHTML(sb){var c=sb.code,h='<div class="rec rec2"><b class="rec-t">التوصيات والإشادات والمقترحات (يمكن إضافة أكثر من بند لنفس المستوى)</b>';
-  for(var i=1;i<=RMAX;i++){var k=c+'.r'+i;h+='<div class="rrow" data-rr="'+c+'|'+i+'"'+(i>1?' hidden':'')+'><select data-f="'+k+'.t" aria-label="نوع البند '+i+' للمعيار الفرعي '+c+'"><option value="">— النوع —</option><option value="توصية">توصية</option><option value="إشادة">إشادة</option><option value="مقترح">مقترح</option></select><select data-f="'+k+'.l" aria-label="مستوى الجودة للبند '+i+' للمعيار الفرعي '+c+'"><option value="">— مستوى الجودة —</option><option value="e">الوجود</option><option value="p">الممارسة</option><option value="f">الفاعلية</option><option value="a">شامل (للإشادة)</option></select><textarea data-f="'+k+'.x" aria-label="نص البند '+i+' للمعيار الفرعي '+c+'" placeholder="اكتب نص التوصية أو الإشادة أو المقترح…"></textarea></div>'}
+  for(var i=1;i<=RMAX;i++){var k=c+'.r'+i;h+='<div class="rrow" data-rr="'+c+'|'+i+'"'+(i>1?' hidden':'')+'><select data-f="'+k+'.t" aria-label="نوع البند '+i+' للمعيار الفرعي '+c+'"><option value="">— النوع —</option><option value="توصية">توصية</option><option value="إشادة">إشادة</option><option value="مقترح">مقترح</option></select><select data-f="'+k+'.l" aria-label="مستوى الجودة للبند '+i+' للمعيار الفرعي '+c+'"><option value="">— مستوى الجودة —</option><option value="e">الوجود</option><option value="p">الممارسة</option><option value="f">الفاعلية</option><option value="a">شامل (للإشادة)</option></select><textarea data-f="'+k+'.x" aria-label="نص البند '+i+' للمعيار الفرعي '+c+'" placeholder="اكتب نص التوصية أو الإشادة أو المقترح…"></textarea><button type="button" class="btn sm rdel" data-rdel="'+c+'|'+i+'" aria-label="حذف البند '+i+' للمعيار الفرعي '+c+'">حذف</button></div>'}
   return h+'<button type="button" class="btn sm" data-radd="'+c+'">+ إضافة بند آخر</button><div class="radv" data-rw="'+c+'"></div></div>'}
 function subHTML(sb){return '<article class="sub'+(sb.crit?' is-crit':'')+'" id="sub-'+sb.code+'" data-code="'+sb.code+'"><div class="sub-own" data-so="'+sb.code+'"></div><header class="sub-h"><span class="code">'+sb.code+'</span><p class="sub-text">'+esc(sb.text)+' <span class="rqi-tot" data-rqi-t="'+sb.code+'"></span></p>'+(sb.crit?'<span class="crit-tag" title="اللون البرتقالي معيار حرج (أساسي)">معيار حرج</span>':'')+'<div class="sub-chips" data-sc="'+sb.code+'"></div><div class="ed" data-ed="'+sb.code+'"></div></header><div class="lvls">'+LV.map(function(l){return lvHTML(sb,l)}).join('')+'</div>'+recHTML(sb)+'</article>'}
 function stdHTML(s){return '<section class="std" id="std-'+s.n+'" data-n="'+s.n+'"><div class="own-row" data-so-std="'+s.n+'"></div><div class="own-row" data-tw="'+s.n+'" style="display:none"></div><div class="own-row" data-fin="'+s.n+'"></div><header class="std-h"><div class="std-num num">'+s.n+'</div><div><h2>المعيار '+esc(s.ord)+' ('+s.n+'): '+esc(s.title)+'</h2><p>'+esc(s.desc)+'</p></div><div class="std-side"><span class="stp" data-stp="'+s.n+'"></span><span class="pc num" data-pc="'+s.n+'">0%</span><select data-sd="'+s.n+'" aria-label="يوم المراجعة للمعيار '+s.n+'"></select><button type="button" data-tg="'+s.n+'">فتح / طيّ</button></div></header><div class="subs">'+s.subs.map(subHTML).join('')+'</div></section>'}
@@ -21272,6 +21286,8 @@ function updRecAdv(n){var s=STD[n];if(!s)return;var el=stdComp(s);
       if(!r.t){if(r.l||r.x)h+=W(p+'اختر النوع: توصية أو إشادة أو مقترح.');return}
       if(!r.l)h+=W(p+'حدد مستوى الجودة.');
       if(!r.x)h+=W(p+'لم تكتب النص.');
+      if(r.x&&!startsOK(r.t,r.x))h+=W(p+'يجب أن يبدأ نص '+esc(r.t)+' بالصيغة الإلزامية في الدليل: «'+esc(OPEN[r.t].trim())+'».');
+      if(r.x&&r.x.indexOf('…')>=0)h+=W(p+'أكمل الفراغات المحددة بـ «…» في النص.');
       if(r.l==='a'&&r.t!=='إشادة')h+=W(p+'المستوى «شامل» للإشادة فقط.');
       if(r.t==='توصية'&&r.l&&r.l!=='a'&&!sp.rec.some(function(l){return l.k===r.l}))h+=I(p+'لا توجد درجة 1 أو 2 في هذا المستوى، فالتوصية اختيارية.');
       if(r.t==='إشادة'){if(!sp.praise)h+=W(p+'لا تصح الإشادة: تتطلب درجة 5 في كل المستويات المقيّمة لهذا المعيار الفرعي.');else if(!el.ok)h+=W(p+'لا يمكن وضع إشادة: المعيار الرئيس غير مؤهل — '+esc(el.why.join('، '))+'.')}});
@@ -22051,7 +22067,7 @@ document.addEventListener('input',function(ev){var e=ev.target;
   if(e.hasAttribute&&e.hasAttribute('data-xp')){var xk='rq.rxp'+e.getAttribute('data-xp')+'.exp';S.f[xk]=e.value;queueEntry(xk,e.value);save();return}
   if(e.hasAttribute&&e.hasAttribute('data-rq')&&e.tagName!=='SELECT'){var rk=e.getAttribute('data-rq'),pp=rk.split('.');rqSet(pp[0],pp[1],e.value);save();var rc=$('#reqCount');return}
   if(e.id==='shCode'){shFillGs();return}
-  if(e.hasAttribute&&e.hasAttribute('data-f')){var k=e.getAttribute('data-f');S.f[k]=e.value;if(e.tagName==='TEXTAREA')autosize(e);else updHint(e);light(k.split('.')[0]);queueEntry(k,e.value);if(/\.why$/.test(k)){var wb=e.closest('.why');if(wb)wb.classList.toggle('miss',!e.value.trim())}obsTouch(k.split('.')[0]);save();return}
+  if(e.hasAttribute&&e.hasAttribute('data-f')){var k=e.getAttribute('data-f');S.f[k]=e.value;if(/\.r\d+\.t$/.test(k))recOpen(k);if(e.tagName==='TEXTAREA')autosize(e);else updHint(e);light(k.split('.')[0]);queueEntry(k,e.value);if(/\.why$/.test(k)){var wb=e.closest('.why');if(wb)wb.classList.toggle('miss',!e.value.trim())}obsTouch(k.split('.')[0]);save();return}
   if(e.id==='ptLink'||e.id==='ptTeam'){if(myRole()==='lead'){S.setup[e.id==='ptTeam'?'portalTeam':'portalView']=e.value.trim();renderPortal();queueMain();save()}return}
   if(e.id==='facility'){S.setup.facility=e.value;renderSetupSum();queueMain();save();return}
   if(e.id==='fSearch'){applyFilter();return}
@@ -22088,6 +22104,9 @@ document.addEventListener('click',function(ev){var t=ev.target,e=t.closest?t.clo
   if(e.hasAttribute('data-rvw')){var rn=+e.getAttribute('data-rvw');if(!canReview(rn)){toast('اعتماد المراجعة للعضو المسؤول عن المعيار');return}var rk=chkKey(rn),rv=S.f[rk]==='1'?'0':'1';S.f[rk]=rv;queueEntry(rk,rv);updTrainee();renderSummary();save();toast(rv==='1'?'اعتُمدت مراجعتك للمعيار':'أُلغي اعتماد المراجعة');return}
   if(e.hasAttribute('data-vrm')){if(myRole()==='lead'){var vid=e.getAttribute('data-vrm');S.setup.viewers=viewers().filter(function(v){return v.id!==vid});renderViewers();shViewLinks();queueMain();save()}return}
   if(e.hasAttribute('data-rm')){if(team().length>1){var id=e.getAttribute('data-rm');S.setup.team=team().filter(function(m){return m.id!==id});Object.keys(S.subAssign).forEach(function(k){if(S.subAssign[k]===id)delete S.subAssign[k]});renderTeam();updAll();queueMain();save()}return}
+  if(e.hasAttribute('data-rdel')){var dp=e.getAttribute('data-rdel').split('|'),dc=dp[0],di=+dp[1],dq=subRecs(dc).filter(function(q){return q.i===di})[0];
+    if(dq&&(dq.t||dq.l||dq.x)&&e.getAttribute('data-arm')!=='1'){e.setAttribute('data-arm','1');e.textContent='تأكيد الحذف؟';setTimeout(function(){e.removeAttribute('data-arm');e.textContent='حذف'},3500);return}
+    recDel(dc,di);e.removeAttribute('data-arm');e.textContent='حذف';return}
   if(e.hasAttribute('data-radd')){var rc0=e.getAttribute('data-radd'),cur0=recShown(rc0);if(cur0<RMAX){var rk0=rc0+'.r.n',rv0=String(cur0+1);S.f[rk0]=rv0;queueEntry(rk0,rv0);save();updRecAdv(SUB[rc0].std)}return}
   if(e.hasAttribute('data-tg')){var n=e.getAttribute('data-tg');S.ui.collapsed[n]=S.ui.collapsed[n]?0:1;updStd();if(!S.ui.collapsed[n])$$('textarea[data-f]',$('#std-'+n)).forEach(autosize);save();return}
   if(e.hasAttribute('data-rail')){ev.preventDefault();var n2=e.getAttribute('data-rail');S.ui.collapsed[n2]=0;updStd();$$('textarea[data-f]',$('#std-'+n2)).forEach(autosize);var el=$('#std-'+n2);var rm=window.matchMedia('(prefers-reduced-motion: reduce)').matches;el.scrollIntoView({behavior:rm?'auto':'smooth',block:'start'});return}
