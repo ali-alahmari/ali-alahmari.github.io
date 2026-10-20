@@ -587,6 +587,60 @@ html[data-skin="heritage"] .in:focus,html[data-skin="heritage"] .fld select:focu
 html[data-skin="heritage"] table.o th{background:#E8E2C6;color:#0E2E29}
 html[data-skin="heritage"] .gd::before{background:linear-gradient(90deg,#C9A24B,#E6C673,#C9A24B)}
 }
+
+/* ======== تهدئة بصرية — الشاشة الأولى ======== */
+.top::before{display:none!important}
+.top{overflow:visible}
+.top-act{overflow:visible}
+.top{border-radius:18px;padding:22px 26px 24px;box-shadow:0 1px 2px rgba(5,47,44,.10),0 14px 34px -24px rgba(5,47,44,.45)}
+.top .ttl h1{font-size:1.95rem}
+.top .logos{display:inline-flex;align-items:center;gap:0;background:rgba(255,255,255,.93);border-radius:14px;padding:8px 14px}
+.top .logos .lg{height:52px;border:0;border-radius:0;box-shadow:none;background:transparent;padding:0 12px}
+.top .logos .lg+.lg{border-inline-start:1px solid rgba(10,79,73,.18)}
+.top .btn{border-radius:10px;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(255,255,255,.10);border-color:rgba(255,255,255,.28)}
+html .top .btn.pri{background:var(--gold)!important;color:#07332F!important;border-color:var(--gold)!important;box-shadow:none!important}
+@media (hover:hover) and (pointer:fine){.top .btn.pri:hover{background:var(--gold);filter:brightness(1.06);transform:none;box-shadow:none}}
+.tmenu{position:relative}
+.tmenu>summary{list-style:none;cursor:pointer;user-select:none}
+.tmenu>summary::-webkit-details-marker{display:none}
+.tmenu>summary::after{content:"";width:.56em;height:.56em;margin-inline-start:.2rem;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-2px) rotate(45deg);transform-origin:center;transition:transform .16s ease-out}
+.tmenu[open]>summary::after{transform:translateY(1px) rotate(225deg)}
+.tmenu-p{position:absolute;inset-block-start:calc(100% + 10px);inset-inline-end:0;z-index:90;min-width:248px;display:flex;flex-direction:column;gap:6px;padding:8px;border-radius:14px;background:var(--surface);border:1px solid var(--line);box-shadow:0 18px 40px -18px rgba(5,47,44,.45)}
+html .top .tmenu-p .btn{width:100%;justify-content:flex-start;background:transparent;border-color:transparent;color:var(--ink);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;font-weight:600;padding:.5rem .7rem}
+@media (hover:hover) and (pointer:fine){html .top .tmenu-p .btn:hover{background:color-mix(in srgb,var(--brand) 10%,transparent);border-color:transparent;transform:none}}
+html .top .tmenu-p .btn:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+html .top .tmenu-p .btn,html .top .tmenu-p .btn *{color:#0E2E29!important}
+html[data-theme="dark"] .top .tmenu-p .btn,html[data-theme="dark"] .top .tmenu-p .btn *{color:#E8F3F0!important}
+@media (prefers-reduced-motion:reduce){.tmenu>summary::after{transition:none}}
+@media (max-width:640px){.tmenu-p{position:static;min-width:0;margin-top:8px;box-shadow:none}}
+.card{border-radius:18px}
+.card-h h2 .st{border-radius:10px;box-shadow:none;background:var(--brand)}
+.in,.fld select,.fld textarea{border-radius:10px;border-width:1px}
+.btn{border-radius:10px}
+.btn.sm{border-radius:9px}
+:root{--m0:#0D6B63;--m1:#1F6F8B;--m2:#8A6A1F;--m3:#6B4C7A;--m4:#2E7D4F;--m5:#9A4A36}
+html[data-theme="dark"]{--m0:#4DC2B4;--m1:#6FB4CE;--m2:#D7B264;--m3:#B49AC6;--m4:#6FC291;--m5:#D4927F}
+.tm .av{box-shadow:none;width:38px;height:38px}
+.own{box-shadow:none}
+
+/* ======== تهدئة بصرية — الشاشة الثانية: بطاقة المعيار والمستويات ======== */
+.std-h::before{display:none!important}
+.std-h{border-radius:18px;padding:16px 18px;box-shadow:0 1px 2px rgba(5,47,44,.10),0 12px 28px -22px rgba(5,47,44,.5)}
+html .std-h{background:linear-gradient(120deg,var(--hero-a),var(--hero-b) 70%)}
+.std-num{border-radius:12px!important;box-shadow:none!important}
+html[data-skin] .rail .rn,html .rail .rn{border-radius:10px;box-shadow:none}
+html[data-skin] .card-h h2 .st{border-radius:10px;box-shadow:none}
+.rail a{border-radius:10px}
+.rail{border-radius:18px}
+html[data-skin] .lv,html .lv{background:color-mix(in srgb,var(--lc) 3%,var(--surface));border-color:color-mix(in srgb,var(--lc) 22%,var(--line));border-radius:14px;border-inline-start:5px solid var(--lc);padding:12px 14px}
+html .lv-h .ch{box-shadow:none;width:30px;height:30px;font-size:.95rem}
+.lv-h h4{font-size:1.02rem}
+.sub{border-radius:16px;box-shadow:none;border:1px solid var(--line)}
+html .sub-h{background:var(--surface-2);padding:12px 16px}
+.lvls{gap:12px;padding:12px 14px 14px}
+.rec{border-radius:12px}
+html .fld textarea{min-height:3.1rem}
+html .fld textarea:focus{min-height:7rem}
 </style>
 </head>
 <body>
@@ -599,7 +653,7 @@ html[data-skin="heritage"] .gd::before{background:linear-gradient(90deg,#C9A24B,
   </div>
   <div class="ttl">
     <h1>نموذج تقويم المعايير للمراجعة</h1>
-    <p>الاعتماد المؤسسي لمنشآت التدريب · ٨ معايير رئيسة و٣٧ معياراً فرعياً</p>
+    <p>الاعتماد المؤسسي لمنشآت التدريب · 8 معايير رئيسة و37 معياراً فرعياً</p>
     <p style="margin-top:4px;font-weight:700;color:var(--brand)">معدّ التقرير: المهندس/ علي الأحمري</p>
     <p id="viewTag" hidden><span class="vtag"></span></p>
   </div>
@@ -609,13 +663,22 @@ html[data-skin="heritage"] .gd::before{background:linear-gradient(90deg,#C9A24B,
     <a class="btn" id="btnPortal" href="#" target="_blank" rel="noopener noreferrer" hidden title="يفتح بوابة شواهد المنشأة بصلاحية اطلاع فقط">بوابة الشواهد</a>
     <button class="btn" id="btnShare" type="button">مشاركة الفريق</button>
     <button class="btn pri" id="btnWord" type="button">تقرير المراجعة المكتبية (Word)</button>
-    <button class="btn pri" id="btnWordF" type="button">تقرير المراجعة الميدانية (Word)</button>
-    <button class="btn" id="btnData" type="button">حفظ ودمج البيانات</button>
-    <button class="btn" id="btnGuide" type="button" title="خطوات الاستخدام حسب دورك">دليل الاستخدام</button>
-    <button class="btn" id="btnChk" type="button" hidden title="يفحص الحفظ والاتصال بالـSheet والرمز السري وبيانات الفريق">فحص النموذج</button>
-    <button class="btn" id="btnEnd" type="button" title="يحفظ تقرير Word وملف البيانات وجدول CSV دفعة واحدة، ويذكّرك بما يجب فعله قبل الزيارة التالية">إنهاء الزيارة</button>
+    <details class="tmenu" id="topTools">
+      <summary class="btn" aria-haspopup="menu">أدوات النموذج</summary>
+      <div class="tmenu-p" role="menu">
+        <button class="btn" id="btnWordF" type="button">تقرير المراجعة الميدانية (Word)</button>
+        <button class="btn" id="btnData" type="button">حفظ ودمج البيانات</button>
+        <button class="btn" id="btnGuide" type="button" title="خطوات الاستخدام حسب دورك">دليل الاستخدام</button>
+        <button class="btn" id="btnChk" type="button" hidden title="يفحص الحفظ والاتصال بالـSheet والرمز السري وبيانات الفريق">فحص النموذج</button>
+        <button class="btn" id="btnEnd" type="button" title="يحفظ تقرير Word وملف البيانات وجدول CSV دفعة واحدة، ويذكّرك بما يجب فعله قبل الزيارة التالية">إنهاء الزيارة</button>
+      </div>
+    </details>
   </div>
 </header>
+<script>(function(){var d=document.getElementById('topTools');if(!d)return;
+d.addEventListener('click',function(e){if(e.target.closest('.tmenu-p'))d.open=false});
+document.addEventListener('click',function(e){if(d.open&&!d.contains(e.target))d.open=false});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')d.open=false})})();</script>
 
 <div class="card" id="roBanner" hidden style="margin-top:14px;border:2px solid var(--crit);background:var(--crit-soft)"><b>وضع القراءة فقط:</b> صلاحيتك لا تسمح بالتعديل. اطلب من صاحب الصفحة منحك صلاحية «مساهم» لتتمكن من التعبئة.</div>
 <div class="card" id="memBanner" hidden style="margin-top:14px;border:2px solid var(--brand);background:var(--surface-2)"><b id="memTtl">أنت عضو في الفريق:</b> <span id="memTxt">تعبّئ المعايير وتختار اسمك من «أنا». أما بيانات الزيارة وأسماء الفريق وتوزيع المعايير فيعدّلها رئيس الفريق وحده.</span> <button class="btn ghost" id="memOff" type="button" style="margin-inline-start:8px">فصل المزامنة</button></div>
@@ -623,7 +686,7 @@ html[data-skin="heritage"] .gd::before{background:linear-gradient(90deg,#C9A24B,
 
 <section class="card" id="setup" aria-label="بيانات الزيارة">
   <div class="card-h">
-    <h2><span class="st">١</span> بيانات الزيارة وفريق المراجعة</h2>
+    <h2><span class="st">1</span> بيانات الزيارة وفريق المراجعة</h2>
     <div class="row"><button class="btn sm" id="btnNew" type="button">زيارة جديدة</button><button class="btn sm" id="setupToggle" type="button" aria-expanded="true">طيّ</button></div>
   </div>
   <div class="setup-sum" id="setupSum"></div>
