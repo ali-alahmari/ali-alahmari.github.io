@@ -22085,14 +22085,44 @@ function buildDocxMode(mode){var f=frozen();if(mode!=='dsk'||!f)return buildDocx
 /* ---------- official report draft (قالب تقرير فريق المراجعة الخارجية) ---------- */
 var RLAB={'1':'غير مستوفى\n\u200F[1]\u200F','2':'مستوفى جزئياً\n\u200F[2]\u200F','3':'مستوفى\n\u200F[3]\u200F','4':'مستوفى بإتقان\n\u200F[4]\u200F','5':'مستوفى بتميز\n\u200F[5]\u200F'};
 var OLV={e:'الوجود',p:'التطبيق',f:'الفاعلية'},OLVF={e:'FFCCCC',p:'FFF2CC',f:'E2EFD9'};
-var OLEAD={e:'في مستوى الوجود، ',p:'وفيما يخص التطبيق، ',f:'وفيما يخص الفاعلية، '};
 var OREC=[['إشادة','الإشادات'],['توصية','التوصيات'],['مقترح','المقترحات']];
 function oDate(d){try{return new Intl.DateTimeFormat('ar-SA-u-ca-gregory-nu-latn',{day:'numeric',month:'long',year:'numeric'}).format(d)}catch(e){return d.toDateString()}}
+/* phrase bank distilled from approved final review reports (generic wording, no facility details) */
+var PB={
+  lead:{e:['في مستوى الوجود، ','وعلى مستوى الوجود، '],p:['وفي مستوى التطبيق، ','وعلى مستوى الممارسة والتطبيق، ','وفيما يخص التطبيق، '],f:['وعلى مستوى الفاعلية، ','وفيما يخص الفاعلية، ','وعلى مستوى قياس الفاعلية، ']},
+  saw:{e:['وقد اطلع فريق المراجعة في مستوى الوجود على ','في مستوى الوجود، اطّلع الفريق على '],p:['وفي مستوى التطبيق اطلع الفريق على ','وعلى مستوى التطبيق تم الاطلاع على ','وفيما يخص التطبيق، فقد استعرض الفريق '],f:['وعلى مستوى الفاعلية تم الاطلاع على ','وفيما يخص الفاعلية، فقد اطّلع الفريق على ','وعلى مستوى قياس الفاعلية، اطّلع الفريق على ']},
+  verdict:{3:'الشاهد المرفق يحقق مستوى الجودة المستهدف لهذا المعيار.',2:'الشاهد المرفق يحقق مستوى الجودة بشكل جزئي.',1:'الشاهد المرفق لا يحقق مستوى الجودة المستهدف لهذا المعيار.'},
+  body:{
+    3:{e:'[يُستكمل: الوثيقة المعتمدة وما تتضمنه]، مما يعكس التزاماً مؤسسياً بـ[يُستكمل].',
+       p:'[يُستكمل: نماذج التطبيق وما أكدته المقابلات والجولة الميدانية]، مما يؤكد التطبيق الفعلي للإجراءات والسياسات المعتمدة.',
+       f:'[يُستكمل: نتائج القياس ونسبها وعدد المشاركين وخطة التحسين]، مما يعكس فاعلية [يُستكمل] في تحقيق المستهدف.'},
+    2:{e:'[يُستكمل: الوثيقة]، إلا أن الفريق لاحظ أن [يُستكمل: ما ينقصها، أو أنها غير محدثة أو غير معتمدة].',
+       p:'[يُستكمل: ما اطلع عليه الفريق]، إلا أنه لم يتم تزويد الفريق بما يثبت [يُستكمل].',
+       f:'[يُستكمل: القياس الذي اطلع عليه الفريق]، إلا أنه لم يتم تحليل نتائجه ووضع خطط تحسين مزمنة بمستهدفات قابلة للقياس ومرتبطة بمؤشرات الأداء.'},
+    1:{e:'لم يتضح من خلال الشواهد في المنصة ولا الشواهد الإضافية ولا المقابلات وجود [يُستكمل: السياسة أو الإجراء المطلوب].',
+       p:'لم يتم تزويد الفريق بما يثبت تطبيق [يُستكمل]، كما لم يتم تزويد الفريق بتقارير أو محاضر اجتماعات توضح ذلك.',
+       f:'لم تقدم المنشأة ما يثبت وجود قياس رضا [يُستكمل: الفئة] عن [يُستكمل]، أو خطة تحسين مزمنة ومحددة المسؤوليات.'}},
+  /* notes that already open as a sentence keep their own start */
+  sent:/^(و?في مستوى|و?فيما يخص|و?على مستوى|و?على صعيد|و?في إطار|أما|و?قد|و?لقد|اطلع|اطّلع|تبين|تبيّن|اتضح|يتضح|توصل|توصَّل|لاحظ|لوحظ|يلاحظ|يقوم|تقوم|يعتبر|يُعد|يعد|تُعد|تعد|تم |كما |يوجد|توجد|يتوفر|تتوفر|لدى|لم |لا |إلا|الا|غير أن|بالرغم|رغم|من خلال|بناء|بناءً|يعتمد|تعتمد|يتبنى|تتبنى|يمتلك|تمتلك|أظهرت|أظهر|تشير|يشير|حيث|يتم|تتم)/,
+  noun:/^(ال|دليل|سياسة|سياسات|خطة|خطط|محضر|محاضر|تقرير|تقارير|نموذج|نماذج|استبانة|استبانات|استبيان|قياس|قياسات|سجل|سجلات|إجراء|إجراءات|لائحة|وثيقة|وثائق|قائمة|قوائم|عقد|عقود|اتفاقية|اتفاقيات|مذكرة|جدول|نتائج|تحليل|بيانات|شهادة|شهادات|عينة|عينات|ملف|منصة|نظام|مصفوفة|هيكل|آلية|مؤشرات|مؤشر|عدد|عدة|برامج|برنامج|لوحة|دراسة)/};
+function pbPick(a,code){var h=0;for(var i=0;i<code.length;i++)h+=code.charCodeAt(i);return a[h%a.length]}
+function pbScore(k,v){v=num(v);if(v==null)return null;if(k==='f')return v<3?1:3;return v>3?3:v}
 function oNarr(code,k,x){var t=(S.f[code+'.'+k+'.notes']||'').trim();
   if(k==='f'){var e=num(x.rev.e),p=num(x.rev.p);if(e!=null&&p!=null&&Math.min(e,p)<3&&!t)return 'لم يُقيَّم مستوى الفاعلية لعدم استيفاء مستويي الوجود والتطبيق للمستوى [3].'}
-  if(!t)return '[يُستكمل: ملخص مستوى '+OLV[k]+' مع الإحالة إلى الشواهد]';
-  if(/^(و?في مستوى|و?فيما يخص|و?على مستوى|و?قد|اطلع|اطّلع|تبين|تبيّن|لاحظ|يقوم|يعتبر|يُعد|يعد|تم |كما )/.test(t))return t;
-  return OLEAD[k]+t}
+  if(!t){var sc=pbScore(k,x.rev[k]);if(sc==null)return '[يُستكمل: ملخص مستوى '+OLV[k]+' مع الإحالة إلى الشواهد]';
+    var b=PB.body[sc][k];return PB.verdict[sc]+'\n'+(sc===1?b:pbPick(PB.saw[k],code)+b)}
+  if(PB.sent.test(t))return t;
+  return (PB.noun.test(t)?pbPick(PB.saw[k],code):pbPick(PB.lead[k],code))+t}
+/* recommendation text in the report's approved opening form */
+function oRec(type,t){t=String(t||'').trim();if(!t||startsOK(type,t)||/^(يشيد|ينبغي|يقترح|نقترح|يوصي|قد ي|قد ت|يُقترح)/.test(t))return t;
+  if(type==='إشادة')return 'يشيد فريق المراجعة الخارجي '+(/^ب/.test(t)?'':'ب')+t;
+  if(type==='توصية')return 'ينبغي على المنشأة التدريبية '+t;
+  if(type==='مقترح')return 'يقترح فريق المراجعة الخارجي على المنشأة التدريبية '+t;return t}
+/* compliance note in the wording used by the approved reports */
+function oCompNote(st,c,x){if(!c.ev)return '';var h='متوسط التقييم '+x.avg.toFixed(2)+'. ';
+  var gaps=[];st.subs.forEach(function(sb){var sp=subSpot(sb);if(sp.rec.length)gaps.push(sb.code.replace('-','.')+' ('+sp.rec.map(function(l){return OLV[l.k]}).join('، ')+')')});
+  if(!gaps.length)return h+'تم استيفاء المعيار بشكل كامل.';
+  return h+'لم يتم استيفاء المعيار بشكل كامل، ففي المعيار الفرعي '+gaps.join(' و')+' لم يتحقق مستوى الجودة المستهدف'+(gaps.some(function(g){return g.indexOf(OLV.f)>=0})?'، ولم يتم قياس الفاعلية بالشكل المطلوب':'')+'.'}
 function buildOfficial(){var D=window.docx;if(!D)throw new Error('docx');
   var FB={ascii:'DIN NEXT™ ARABIC BOLD',hAnsi:'DIN NEXT™ ARABIC BOLD',cs:'DIN NEXT™ ARABIC BOLD',eastAsia:'DIN NEXT™ ARABIC BOLD'},
       FL={ascii:'DIN NEXT™ ARABIC LIGHT',hAnsi:'DIN NEXT™ ARABIC LIGHT',cs:'DIN NEXT™ ARABIC LIGHT',eastAsia:'DIN NEXT™ ARABIC LIGHT'},
@@ -22134,9 +22164,10 @@ function buildOfficial(){var D=window.docx;if(!D)throw new Error('docx');
   kids.push(H1('ملخص تنفيذي'));
   kids.push(P('[يُستكمل: نبذة عن '+fac+' (التأسيس، الرؤية والرسالة، الخطة الاستراتيجية ومحاورها)].',{size:24,color:'808080'}));
   kids.push(P('ويتقدم فريق المراجعة بالشكر والتقدير لإدارة ومنسوبي '+fac+' على التعاون والاستعداد خلال زيارة الاعتماد المؤسسي التي استمرت '+(nd===1?'يوماً واحداً':nd===2?'يومين':nd+' أيام')+' بدءاً من '+from+'، وذلك لغرض تقييم المنشأة وقياس مدى مطابقة الشواهد والأدلة التي تم رفعها على منصة اعتماد التدريب. ويتضمن هذا التقرير تفصيلاً للتقييم الميداني استناداً إلى ما قُدّم من أدلة وشواهد وما اطلع عليه الفريق خلال الزيارة. وقد أظهرت نتائج المراجعة تحقق الامتثال الكامل في '+nFull+' من '+STDS.length+' معايير رئيسة، وتضمن التقرير '+nPr+' إشادة و'+nRc+' توصية و'+nSg+' مقترحاً.',{size:24}));
-  if(nPr)kids.push(P('ومن أبرز الممارسات المميزة التي اطلع عليها الفريق: '+RL.filter(function(x){return x.type==='إشادة'}).map(function(x){return x.text.replace(/[.\s]+$/,'')}).join('؛ ')+'.',{size:24}));
-  if(nRc)kids.push(P('وفي سياق التحسين المستمر، تظهر فرص للتطوير أبرزها: '+RL.filter(function(x){return x.type==='توصية'}).slice(0,3).map(function(x){return x.text.replace(/[.\s]+$/,'')}).join('؛ ')+'.',{size:24}));
-  kids.push(P('وختاماً يُثمّن فريق المراجعة الجهود التي تبذلها المنشأة وحرصها على التطوير المستمر، ويتمنى لها مواصلة مسيرتها والاستفادة من نقاط قوتها لتحقيق أثر أكبر في إعداد الكوادر الوطنية المؤهلة.',{size:24}));
+  kids.push(P('وأثناء الزيارة أجرى الفريق مقابلات مع قيادات ومنسوبي المنشأة وعينات من المدربين والمتدربين والهيئة الإدارية والخريجين والشركاء من أصحاب العمل، واطلع على شواهد إضافية، كما قام بجولة ميدانية على الورش والمعامل وقاعات التدريب وعموم المرافق، وتمت مناقشة جميع المعايير مع المعنيين بكل معيار لتكوين صورة كاملة ودقيقة وواضحة عن المنشأة وعن العملية التدريبية فيها.',{size:24}));
+  if(nPr)kids.push(P('وقد رصد الفريق أثناء الزيارة جوانب عديدة تستحق الإشادة، تتمثل في: '+RL.filter(function(x){return x.type==='إشادة'}).map(function(x){return x.text.replace(/^يشيد (فريق المراجعة( الخارجي| الخارجية)?|الفريق) ?/,'').replace(/^بـ|^ب(?=ال)/,'').replace(/[.\s]+$/,'')}).join('؛ ')+'.',{size:24}));
+  if(nRc)kids.push(P('وقد وجد الفريق عدداً من فرص التحسين التي يمكن للمنشأة العمل عليها، ومن ذلك: '+RL.filter(function(x){return x.type==='توصية'}).slice(0,3).map(function(x){return x.text.replace(/^ينبغي (على )?(المنشأة التدريبية|المنشأة)? ?/,'').replace(/[.\s]+$/,'')}).join('؛ ')+'.',{size:24}));
+  kids.push(P('وختاماً يرى الفريق أن العمل على فرص التحسين المدرجة ضمن هذا التقرير، إضافة إلى التوصيات الأخرى فيه، سيؤدي إلى رفع كفاءة أداء المنشأة لمهامها بشكل أكثر فاعلية وتحقيق أهدافها ورفع جودة وكفاءة مخرجاتها، ويُثمّن الفريق الجهود التي تبذلها المنشأة وحرصها على التطوير المستمر.',{size:24}));
   var EI=[['معلومات أساسية',['تاريخ التأسيس','جهة التأسيس','نموذج عمل المنشأة','طبيعة التدريب المقدم','عدد البرامج التدريبية','مسميات البرامج التدريبية المنتهية بمؤهل']],['مؤشرات الأداء',['عدد المدربين في المنشأة وتوزيعهم على الأقسام','عدد المتدربين\n(فترة لا تقل عن ثلاث سنوات)','عدد الخريجين\n(فترة لا تقل عن ثلاث سنوات)','عدد التوظيف\n(فترة لا تقل عن ثلاث سنوات)','نسب التسرب\n(فترة لا تقل عن ثلاث سنوات)','أهم الجهات المستفيدة من مخرجات المنشأة التدريبية\n(يتم ذكر 3 جهات في حال تعدد الجهات)','الاعتمادات الحاصلة عليها المنشأة التدريبية\n(يتم ذكر عدد الاعتمادات والجهات المانحة لها)']]],er=[];
   EI.forEach(function(g){g[1].forEach(function(x,i){var r=[];if(!i)r.push(H(g[0],{w:1600,rs:g[1].length}));r.push(C(x,{w:3600,bold:true,fill:BLUE,color:WH,size:20}));r.push(C('',{w:5004}));er.push(r)})});
   kids.push(P('',{sa:60}));kids.push(T([1600,3600,5004],er));
@@ -22155,12 +22186,12 @@ function buildOfficial(){var D=window.docx;if(!D)throw new Error('docx');
         if(!li){r.push(C(code,{w:567,fill:GRY,bold:true,vm:'r',font:FB}));r.push(C(sb.text,{w:3260,span:2,fill:GRY,vm:'r',size:20}));r.push(C(x.avg!=null?RLAB[String(x.avg)]||String(x.avg):'',{w:993,vm:'r',bold:true,size:20}))}
         else{r.push(K(567,{fill:GRY}));r.push(K(3260,{span:2,fill:GRY}));r.push(K(993))}
         r.push(C(OLV[l.k],{w:992,fill:OLVF[l.k],bold:true,size:20}));r.push(C(oNarr(sb.code,l.k,x),{w:3546,font:FS,size:24}));rows.push(r)});
-      OREC.forEach(function(t){var q=subRecs(sb.code).filter(function(z){return z.t===t[0]&&z.x}).map(function(z){return z.x});
+      OREC.forEach(function(t){var q=subRecs(sb.code).filter(function(z){return z.t===t[0]&&z.x}).map(function(z){return oRec(z.t,z.x)});
         rows.push([K(556,{fill:NAVY}),K(567,{fill:GRY}),C(t[1],{w:3260,span:2,fill:GRY2,color:WH,bold:true,size:20}),C(q.join('\n')||'لا يوجد',{w:5531,span:3,font:FS,size:24})])})});
     var org=stdOrg(st),x=sts[si],c=cs[si],EV=[['درجة التقييم الذاتي\n(يتم استعراض درجة التقييم الذاتي بعد اعتماد تقدير فريق المراجعة، وتُستخدم للمقارنة وتحليل الفجوات. ويُعتدّ بها بقدر ما تؤيّده الأدلة والشواهد؛ وعند الاختلاف يُرجَّح حكم فريق المراجعة.)',org!=null?org.toFixed(2):''],['متوسط تقييم المعيار\n(بناء على تقدير فريق المراجعة)',x.avg!=null?x.avg.toFixed(2):''],['حالة الامتثال',c.ev?c.lab:'']];
     EV.forEach(function(v,i){rows.push([i?K(556,{fill:NAVY}):H('',{w:556,vm:'r'}),C(v[0],{w:3827,span:3,fill:BLUE,color:WH,bold:true,size:i?20:18}),C(v[1],{w:5531,span:3,bold:true,size:24})])});
     rows.push([H('',{w:556,vm:'r'}),H('نتائج المراجعة',{w:2899,span:2}),H('المعيار المرتبط',{w:928}),H('نص النتائج',{w:5531,span:3})]);
-    OREC.forEach(function(t){var it=[];st.subs.forEach(function(sb){subRecs(sb.code).forEach(function(z){if(z.t===t[0]&&z.x)it.push([sb.code.replace('-','.'),z.x])})});if(!it.length)it.push(['','لا يوجد']);
+    OREC.forEach(function(t){var it=[];st.subs.forEach(function(sb){subRecs(sb.code).forEach(function(z){if(z.t===t[0]&&z.x)it.push([sb.code.replace('-','.'),oRec(z.t,z.x)])})});if(!it.length)it.push(['','لا يوجد']);
       it.forEach(function(v,i){rows.push([K(556,{fill:NAVY}),i?K(2899,{span:2,fill:BLUE}):C(t[1],{w:2899,span:2,vm:'r',fill:BLUE,color:WH,bold:true,size:20}),C(v[0],{w:928,bold:true,size:20}),C(v[1],{w:5531,span:3,font:FS,size:24})])})});
     kids.push(T(CW,rows))});
   /* overall findings */
@@ -22168,13 +22199,13 @@ function buildOfficial(){var D=window.docx;if(!D)throw new Error('docx');
   kids.push(NOTE('(يقوم فريق المراجعة بسرد جميع الإشادات والتوصيات والمقترحات مرقمة بالتوالي على أن تنسخ كما هي من تقييم كل معيار.)'));
   var fr=[[H('الإشادات والتوصيات والمقترحات',{w:10204,span:2})]];
   OREC.forEach(function(t){fr.push([C('ملخص '+t[1]+':',{w:10204,span:2,fill:BLUE,color:WH,bold:true,al:AL.START})]);var it=RL.filter(function(x){return x.type===t[0]});
-    if(!it.length)fr.push([C('',{w:700}),C('لا يوجد',{w:9504,font:FS,size:24})]);it.forEach(function(x,i){fr.push([C((i+1)+'.',{w:700,bold:true,al:AL.CENTER}),C(x.text,{w:9504,font:FS,size:24})])})});
+    if(!it.length)fr.push([C('',{w:700}),C('لا يوجد',{w:9504,font:FS,size:24})]);it.forEach(function(x,i){fr.push([C((i+1)+'.',{w:700,bold:true,al:AL.CENTER}),C(oRec(x.type,x.text),{w:9504,font:FS,size:24})])})});
   kids.push(T([700,9504],fr));
   /* compliance */
   kids.push(H1('ملخص الامتثال وتوصية الاعتماد المؤسسي'));
   kids.push(NOTE('(يُسجِّل الفريق حالة الامتثال لكل معيار رئيس، مع توثيق الملاحظات الداعمة، ثم يُحدِّد توصية الاعتماد المؤسسي.)'));
   var cr=[[H('ملخص امتثال المعايير الرئيسة',{w:10204,span:3})],[H('المعايير الرئيسة',{w:4000,fill:BLUE}),H('حالة الامتثال',{w:2400,fill:BLUE}),H('ملاحظات',{w:3804,fill:BLUE})]];
-  STDS.forEach(function(st,i){var c=cs[i],x=sts[i];cr.push([C('المعيار '+st.ord+': '+st.title,{w:4000,bold:true,al:AL.START,size:20}),C(c.ev?c.lab:'',{w:2400,bold:true,size:20}),C(c.ev?('متوسط التقييم '+x.avg.toFixed(2)+(c.rec?'، '+c.rec+' موضع توصية'+(c.recE?' منها '+c.recE+' مرتبط بالوجود':''):'')):'',{w:3804,font:FS,size:24})])});
+  STDS.forEach(function(st,i){var c=cs[i],x=sts[i];cr.push([C('المعيار '+st.ord+': '+st.title,{w:4000,bold:true,al:AL.START,size:20}),C(c.ev?c.lab:'',{w:2400,bold:true,size:20}),C(oCompNote(st,c,x),{w:3804,font:FS,size:24})])});
   cr.push([H('توصية الاعتماد المؤسسي',{w:10204,span:3})]);
   cr.push([C('توصية الاعتماد',{w:4000,fill:BLUE,color:WH,bold:true}),C(dc.k?dc.t:'',{w:6204,span:2,bold:true,size:24})]);
   kids.push(T([4000,2400,3804],cr));
