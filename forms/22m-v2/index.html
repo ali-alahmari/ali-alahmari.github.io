@@ -21430,8 +21430,8 @@ function viewLink(v){var base=location.href.split('#')[0];var o={u:SH.url,r:1,i:
 function shViewLinks(){var bx=$('#shViewBox'),b=$('#shViewList'),nt=$('#shViewNote');if(!bx||!b)return;bx.hidden=!(SH.on&&SH.seed&&viewers().length);if(bx.hidden)return;var h='';viewers().forEach(function(v){h+='<div class="row" style="margin:4px 0"><b style="flex:1">'+esc((v.name||'').trim()||'مراقب بانتظار الاسم')+(v.org?' <span class="note">('+esc(v.org)+')</span>':'')+'</b><button class="btn" type="button" data-vlink="'+esc(v.id)+'">نسخ رابطه</button></div>'});b.innerHTML=h;
   nt.textContent=SH.vkey?'الرابط لا يحمل رمز الفريق: القراءة فقط مضمونة من الخادم (Apps Script)، فلا يمرّ أي حفظ منه حتى لو عُدّل الرابط يدوياً.':'كود Apps Script الحالي قديم: الرابط يعمل للاطلاع والقفل من المتصفح فقط. انسخ الكود الجديد من الأعلى وانشره إصداراً جديداً لتصبح الحماية من الخادم أيضاً.'}
 document.addEventListener('click',function(ev){var b=ev.target.closest&&ev.target.closest('[data-vlink]');if(!b)return;var v=viewer(b.getAttribute('data-vlink'));if(!v)return;var t=$('#shMemTmp');t.value=viewLink(v);copyText(t,'تم نسخ رابط المراقب')});
-function shViewSync(){if(!SH.on||!SH.seed||SH.vkey||SH.vrec)return;SH.vrec=1;(async function(){try{var ar=new Uint8Array(12);crypto.getRandomValues(ar);var key=Array.from(ar,function(x){return'abcdefghjkmnpqrstuvwxyz23456789'[x%31]}).join('');
-  var r=await fetch(SH.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({code:SH.code,lead:SH.lead||undefined,setView:key,ops:[]})});var j=await r.json();if(j&&j.ok&&j.view===key){SH.vkey=key;cfgSave();shLinks()}}catch(e){}SH.vrec=0})()}
+function shViewSync(){if(!SH.on||!SH.seed||!SH.seeded||SH.vrec)return;var srv=SH.vkSrv||'';if(srv){if(SH.vkey!==srv){SH.vkey=srv;cfgSave();shLinks()}return}SH.vrec=1;(async function(){try{var ar=new Uint8Array(12);crypto.getRandomValues(ar);var key=Array.from(ar,function(x){return'abcdefghjkmnpqrstuvwxyz23456789'[x%31]}).join('');
+  var r=await fetch(SH.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({code:SH.code,lead:SH.lead||undefined,setView:key,ops:[]})});var j=await r.json();if(j&&j.ok&&j.view===key){SH.vkey=key;SH.vkSrv=key;cfgSave();shQ('vk|',key);shLinks()}}catch(e){}SH.vrec=0})()}
 function tkView(){var rows='';team().forEach(function(m,i){if(isObs(m))return;var subs=subsOfMem(m),p=pctOf(subs),ns=stdsOfSubs(subs);rows+='<div class="tk-r"><span class="tk-nm">'+esc(m.name.trim()||lbl(i))+'</span><span class="tk-s">'+(ns.length?'المعايير: '+ns.join('، '):'بلا معايير')+'</span><span class="tk-b"><i style="width:'+p+'%"></i></span><b class="num">'+p+'%</b></div>'});
   var fin=0;STDS.forEach(function(s){if(finalOf(s.n))fin++});return '<div class="tk-p"><b>تقدّم الفريق</b> <span class="note">· اعتمد الرئيس '+fin+' من '+STDS.length+' معايير · المرحلة: '+(frozen()?'ميدانية':'مكتبية')+'</span></div>'+rows}
 function vnRender(){var card=$('#vnCard');if(!card)return;var r=myRole();card.hidden=!(SH.on&&(r==='lead'||r==='view'));if(card.hidden)return;$('#vnForm').hidden=r!=='view';$('#vnHint').textContent=r==='view'?'ملاحظاتك تصل إلى رئيس الفريق وحده، وتُحفظ باسمك وتاريخها، ولا تؤثر في التقويم.':'ملاحظات كتبها مراقب الهيئة أثناء الاطلاع على العمل. لا يراها الأعضاء.';
@@ -22122,7 +22122,7 @@ async function exportWord(mode){var b=$('#btnWord');if(!window.docx){toast('تع
   bs.forEach(function(x,i){x.disabled=false;x.textContent=olds[i]})}
 
 /* ---------- shared team mode (db capability) ---------- */
-var SH={on:false,url:'',code:'',lead:'',rec:0,view:false,vname:'',vorg:'',vid:'',vkey:'',vrec:0,vn:{},since:0,q:{},tm:null,busy:false,flushing:false,seeded:false,seed:false,me:'',lock:false,err:0,poll:null,known:{},kt:{}};
+var SH={on:false,url:'',code:'',lead:'',rec:0,view:false,vname:'',vorg:'',vid:'',vkey:'',vkSrv:'',vrec:0,vn:{},since:0,q:{},tm:null,busy:false,flushing:false,seeded:false,seed:false,me:'',lock:false,err:0,poll:null,known:{},kt:{}};
 var DEF={};
 var DB=null,SY={on:false,can:true,uid:null,user:null,known:{},pend:{},busy:{},timers:{},mainT:null,mainBusy:false,mainDirty:false,mainPending:false,firstEnt:false,remoteMain:false,meta:{},admin:false};
 function setShare(st){applyRole();var el=$('#shareSt');if(!el)return;el.classList.remove('off','busy');var tx=el.lastChild;
@@ -22230,6 +22230,7 @@ async function shPull(){if(!SH.on||SH.busy)return;SH.busy=true;
   try{var r=await fetch(shUrl('action=pull&since='+SH.since));var j=await r.json();if(!j||j.error)throw new Error(j&&j.error||'bad');var chg={};
     (j.rows||[]).forEach(function(row){var k=String(row[0]);if(k.indexOf('v2:')!==0)return;k=k.slice(3);var v=String(row[1]==null?'':row[1]),t=+row[2],b=String(row[3]||'');SH.known[k]=1;SH.kt[k]=t;
       if(k==='m|setup'){if(SH.q[k]===undefined&&!SH.flushing){try{applyMain(JSON.parse(v))}catch(e){}}}
+      else if(k==='vk|'){if(SH.q[k]===undefined)SH.vkSrv=v}
       else if(k.slice(0,3)==='vn|'){try{var _o=JSON.parse(v);if(_o&&_o.txt){SH.vn[k.slice(3)]=_o;chg.vn=1}}catch(e){}}
       else if(k.slice(0,5)==='f|rq.'){if(SH.q[k]!==undefined)return;var rk3=k.slice(2);if((S.f[rk3]||'')!==v){S.f[rk3]=v;chg.rq=1;chg.xp=1}}
       else if(k.slice(0,2)==='f|'){if(SH.q[k]!==undefined)return;var p=parseKey(k.slice(2));if(!SUB[p.code])return;if(applyField(p.code,p.lv,p.f,v))chg[p.code]=1;SY.meta[p.code]={by:b,at:new Date(t).toISOString()}}});
@@ -22238,7 +22239,7 @@ async function shPull(){if(!SH.on||SH.busy)return;SH.busy=true;
     if(chg.rq){delete chg.rq;renderReq(false);renderPhase();renderFin();applyRole();SUBS_ALL.forEach(updSubChips);if(chg.xp){delete chg.xp;try{renderSummary()}catch(e){}}saveNow()}
     Object.keys(chg).forEach(function(c){updSubChips(SUB[c])});if(Object.keys(chg).length){lazySummary();saveNow()}renderEditors();
     if(!SH.seeded){SH.seeded=true;if(!SH.view)pendReplay();if(SH.seed&&!SH.view){if(!SH.known['m|setup'])shQ('m|setup',null);Object.keys(S.f).forEach(function(k){var v=S.f[k];if(v!=null&&String(v)!==''&&!SH.known['f|'+k])shQ('f|'+k,v)})}}
-    SH.err=0;if(!Object.keys(SH.q).length)setShare('ok')}
+    SH.err=0;if(!Object.keys(SH.q).length)setShare('ok');if(SH.seed&&!SH.view){try{shViewSync()}catch(e){}}}
   catch(e){SH.err++;SH.ek=(e&&e.message==='code')?'code':'net';setShare('err')}
   SH.busy=false}
 function shLeadSync(){if(!SH.on||!SH.seed||SH.rec)return;SH.rec=1;(async function(){try{
@@ -22279,7 +22280,7 @@ async function newVisit(){var rotated=0;var go=$('#nvGo');go.disabled=true;var m
     var keep=$('#nvTeam').checked;S=fresh();S.ui=old.ui;S.ui.collapsed=fresh().ui.collapsed;
     if(keep){S.setup.team=old.setup.team;S.setup.days=old.setup.days;S.mode=old.mode;S.assign=old.assign;S.subAssign={};S.setup.viewers=old.setup.viewers||[]}
     if(!keep)emClear();
-    if(rotated===1){SH.vkey='';cfgSave();try{shViewSync()}catch(e){}}
+    if(rotated===1){SH.vkey='';SH.vkSrv='';cfgSave();try{shViewSync()}catch(e){}}
     SH.q={};SY.pend={};DEF={};saveNow();bootAll();queueMain();
     $('#ov3').hidden=true;toast('بدأت زيارة جديدة'+(SH.on?' وأُرشفت السابقة في ورقة جديدة داخل Google Sheet':''));
     if(rotated===1){shLinks();$('#shUrl').value=SH.url;$('#shCode').value=SH.code;shMsg('أُنشئ رابط جديد للفريق الجديد. انسخه وأرسله لأعضاء هذه الزيارة فقط؛ الروابط القديمة لم تعد تعمل.');$('#ov2').hidden=false}
