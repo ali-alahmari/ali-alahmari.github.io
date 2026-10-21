@@ -681,6 +681,7 @@ html[data-skin="heritage"] .top .byline .by-v{color:#FBF3D6}
       <summary class="btn" aria-haspopup="menu">أدوات النموذج</summary>
       <div class="tmenu-p" role="menu">
         <button class="btn" id="btnWordF" type="button">تقرير المراجعة الميدانية (Word)</button>
+        <button class="btn" id="btnRpt" type="button" title="مسودة بقالب تقرير فريق المراجعة الخارجية المعتمد: المقدمة والملخص التنفيذي وجداول المعايير وملخص النتائج والامتثال والتوثيق">مسودة التقرير الرسمي (Word)</button>
         <button class="btn" id="btnData" type="button">حفظ ودمج البيانات</button>
         <button class="btn" id="btnGuide" type="button" title="خطوات الاستخدام حسب دورك">دليل الاستخدام</button>
         <button class="btn" id="btnChk" type="button" hidden title="يفحص الحفظ والاتصال بالـSheet والرمز السري وبيانات الفريق">فحص النموذج</button>
@@ -22003,6 +22004,117 @@ function buildDocx(mode){var D=window.docx;if(!D)throw new Error('docx');var FLD
     styles:{default:{document:{run:{font:FONT,size:26}}}},
     sections:[{properties:{page:{size:{width:11906,height:16838,orientation:D.PageOrientation.PORTRAIT},margin:{top:850,bottom:850,left:850,right:850}}},headers:{default:header},footers:{default:footer},children:kids}]})}
 function buildDocxMode(mode){var f=frozen();if(mode!=='dsk'||!f)return buildDocx(mode);var o=S.f,c=Object.assign({},o);Object.keys(o).forEach(function(k){var m=k.match(/^(.*)\.(e|p|f)\.dsk$/);if(m){var v=o[k];c[m[1]+'.'+m[2]+'.rev']=(v==='-'?'':v)}});S.f=c;try{return buildDocx(mode)}finally{S.f=o}}
+/* ---------- official report draft (قالب تقرير فريق المراجعة الخارجية) ---------- */
+var RLAB={'1':'غير مستوفى\n\u200F[1]\u200F','2':'مستوفى جزئياً\n\u200F[2]\u200F','3':'مستوفى\n\u200F[3]\u200F','4':'مستوفى بإتقان\n\u200F[4]\u200F','5':'مستوفى بتميز\n\u200F[5]\u200F'};
+var OLV={e:'الوجود',p:'التطبيق',f:'الفاعلية'},OLVF={e:'FFCCCC',p:'FFF2CC',f:'E2EFD9'};
+var OLEAD={e:'في مستوى الوجود، ',p:'وفيما يخص التطبيق، ',f:'وفيما يخص الفاعلية، '};
+var OREC=[['إشادة','الإشادات'],['توصية','التوصيات'],['مقترح','المقترحات']];
+function oDate(d){try{return new Intl.DateTimeFormat('ar-SA-u-ca-gregory-nu-latn',{day:'numeric',month:'long',year:'numeric'}).format(d)}catch(e){return d.toDateString()}}
+function oNarr(code,k,x){var t=(S.f[code+'.'+k+'.notes']||'').trim();
+  if(k==='f'){var e=num(x.rev.e),p=num(x.rev.p);if(e!=null&&p!=null&&Math.min(e,p)<3&&!t)return 'لم يُقيَّم مستوى الفاعلية لعدم استيفاء مستويي الوجود والتطبيق للمستوى [3].'}
+  if(!t)return '[يُستكمل: ملخص مستوى '+OLV[k]+' مع الإحالة إلى الشواهد]';
+  if(/^(و?في مستوى|و?فيما يخص|و?على مستوى|و?قد|اطلع|اطّلع|تبين|تبيّن|لاحظ|يقوم|يعتبر|يُعد|يعد|تم |كما )/.test(t))return t;
+  return OLEAD[k]+t}
+function buildOfficial(){var D=window.docx;if(!D)throw new Error('docx');
+  var FB={ascii:'DIN NEXT™ ARABIC BOLD',hAnsi:'DIN NEXT™ ARABIC BOLD',cs:'DIN NEXT™ ARABIC BOLD',eastAsia:'DIN NEXT™ ARABIC BOLD'},
+      FL={ascii:'DIN NEXT™ ARABIC LIGHT',hAnsi:'DIN NEXT™ ARABIC LIGHT',cs:'DIN NEXT™ ARABIC LIGHT',eastAsia:'DIN NEXT™ ARABIC LIGHT'},
+      FS={ascii:'Sakkal Majalla',hAnsi:'Sakkal Majalla',cs:'Sakkal Majalla',eastAsia:'Sakkal Majalla'};
+  var AL=D.AlignmentType,DX=D.WidthType.DXA,NAVY='002060',BLUE='8EAADB',GRY='E7E6E6',GRY2='BFBFBF',WH='FFFFFF',HC='3C3D97';
+  function run(t,o){o=o||{};return new D.TextRun({text:String(t),font:o.font||(o.bold?FB:FL),size:o.size||22,bold:!!o.bold,color:o.color,rightToLeft:true})}
+  function P(t,o){o=o||{};return new D.Paragraph({bidirectional:true,heading:o.h,alignment:o.al||AL.BOTH,spacing:{before:o.sb||0,after:o.sa==null?60:o.sa,line:o.line||276},keepNext:!!o.keep,pageBreakBefore:!!o.pb,children:[run(t,o)]})}
+  function Ps(t,o){return String(t==null?'':t).split(/\r?\n/).map(function(x){return P(x,o)})}
+  var bd={style:D.BorderStyle.SINGLE,size:4,color:'8496B0'},BD={top:bd,bottom:bd,left:bd,right:bd};
+  function C(t,o){o=o||{};var ch=o.kids||Ps(t,{size:o.size||22,bold:o.bold,al:o.al||(o.bold?AL.CENTER:AL.BOTH),sa:0,color:o.color,font:o.font});
+    return new D.TableCell({children:ch,width:{size:o.w,type:DX},columnSpan:o.span,rowSpan:o.rs,verticalMerge:o.vm==='r'?D.VerticalMergeType.RESTART:(o.vm==='c'?D.VerticalMergeType.CONTINUE:undefined),verticalAlign:o.va||D.VerticalAlign.CENTER,shading:o.fill?{type:D.ShadingType.CLEAR,fill:o.fill,color:'auto'}:undefined,borders:BD,margins:{top:60,bottom:60,left:100,right:100}})}
+  function H(t,o){o=o||{};return C(t,Object.assign({bold:true,fill:NAVY,color:WH},o))}
+  function T(cw,rows){var w=cw.reduce(function(a,b){return a+b},0);return new D.Table({visuallyRightToLeft:true,width:{size:w,type:DX},columnWidths:cw,rows:rows.map(function(r){return new D.TableRow({children:r,cantSplit:true})})})}
+  function H1(t){return P(t,{h:D.HeadingLevel.HEADING_1,size:32,bold:true,color:HC,al:AL.START,sb:240,sa:120,pb:true,keep:true})}
+  function H2(t){return P(t,{h:D.HeadingLevel.HEADING_2,size:28,bold:true,color:HC,al:AL.START,sb:240,sa:80,keep:true})}
+  function NOTE(t){return P(t,{size:20,color:'808080',sa:120})}
+  var s=S.setup,fac=(s.facility||'').trim()||'[اسم المنشأة التدريبية]',nd=+s.days||1,d0=pd(s.date),d1=d0?new Date(d0.getTime()+(nd-1)*864e5):null,kids=[];
+  var from=d0?oDate(d0):'[تاريخ البداية]',to=d1?oDate(d1):'[تاريخ النهاية]';
+  /* cover */
+  kids.push(P('',{sa:1600}));
+  kids.push(P('تقرير فريق المراجعة الخارجية',{size:56,bold:true,color:NAVY,al:AL.CENTER,sa:80}));
+  kids.push(P('للاعتماد المؤسسي',{size:40,bold:true,color:NAVY,al:AL.CENTER,sa:900}));
+  kids.push(P(fac,{size:44,bold:true,color:HC,al:AL.CENTER,sa:80}));
+  kids.push(P('[المنطقة / المدينة]',{size:28,color:'808080',al:AL.CENTER,sa:900}));
+  kids.push(P('تاريخ إعداد التقرير: '+oDate(new Date()),{size:24,al:AL.CENTER,sa:80}));
+  kids.push(P('مسودة أُعدّت آلياً من نموذج 22م وتتطلب مراجعة الفريق قبل الرفع',{size:20,color:'C00000',al:AL.CENTER}));
+  /* contents */
+  kids.push(P('جدول المحتويات',{size:32,bold:true,color:HC,al:AL.START,pb:true,sa:160}));
+  kids.push(new D.TableOfContents('جدول المحتويات',{hyperlink:true,headingStyleRange:'1-1'}));
+  kids.push(NOTE('(إن لم تظهر الصفحات: انقر بزر الفأرة الأيمن على الجدول ثم «تحديث الحقل».)'));
+  /* introduction */
+  kids.push(H1('مقدمة'));
+  kids.push(P('قام فريق المراجعة الخارجية بتنفيذ زيارة مراجعة لـ'+fac+'، خلال الفترة من تاريخ '+from+' إلى تاريخ '+to+' لتقويم المنشأة وعمليات ضمان الجودة بها وتقديم الإشادات والتوصيات والاقتراحات حسب ما تمخضت عنه المراجعة الخارجية. وقد اضطلع الفريق بهذه المهمة بناء على دعوة من المركز الوطني لتقويم واعتماد التدريب من أجل تعزيز جودة التدريب في المملكة العربية السعودية ودوره في التنمية الاقتصادية.',{size:24}));
+  var ID=['نوع المنشأة التدريبية','تاريخ بداية عمل المنشأة','طبيعة المنشأة','الفئة المستهدفة','حالة طلب الاعتماد'];
+  kids.push(T([1600,3000,5604],ID.map(function(x,i){var r=[];if(!i)r.push(H('البيانات التعريفية',{w:1600,rs:ID.length}));r.push(C(x,{w:3000,bold:true,fill:BLUE,color:WH}));r.push(C('',{w:5604}));return r})));
+  kids.push(P('ارتكزت منهجية الفريق على مراجعة الأدلة والشواهد والمعلومات المقدّمة من '+fac+'، وإجراء لقاءات مع منسوبي المنشأة وأصحاب المصلحة، بالإضافة إلى الملاحظات الميدانية أثناء الزيارة. وقد استند الفريق في بناء هذا التقرير على معايير الاعتماد المؤسسي لمنشآت التدريب (النسخة 2) الصادرة عن هيئة تقويم التعليم والتدريب ممثلة في مركز "مسار".',{size:24,sb:160}));
+  /* executive summary */
+  var cs=STDS.map(stdComp),sts=STDS.map(stdStats),RL=recList(),nPr=RL.filter(function(x){return x.type==='إشادة'}).length,nRc=RL.filter(function(x){return x.type==='توصية'}).length,nSg=RL.filter(function(x){return x.type==='مقترح'}).length,nFull=cs.filter(function(c){return c.lab==='الامتثال الكامل'}).length,dc=decision();
+  kids.push(H1('ملخص تنفيذي'));
+  kids.push(P('[يُستكمل: نبذة عن '+fac+' (التأسيس، الرؤية والرسالة، الخطة الاستراتيجية ومحاورها)].',{size:24,color:'808080'}));
+  kids.push(P('ويتقدم فريق المراجعة بالشكر والتقدير لإدارة ومنسوبي '+fac+' على التعاون والاستعداد خلال زيارة الاعتماد المؤسسي التي استمرت '+(nd===1?'يوماً واحداً':nd===2?'يومين':nd+' أيام')+' بدءاً من '+from+'، وذلك لغرض تقييم المنشأة وقياس مدى مطابقة الشواهد والأدلة التي تم رفعها على منصة اعتماد التدريب. ويتضمن هذا التقرير تفصيلاً للتقييم الميداني استناداً إلى ما قُدّم من أدلة وشواهد وما اطلع عليه الفريق خلال الزيارة. وقد أظهرت نتائج المراجعة تحقق الامتثال الكامل في '+nFull+' من '+STDS.length+' معايير رئيسة، وتضمن التقرير '+nPr+' إشادة و'+nRc+' توصية و'+nSg+' مقترحاً.',{size:24}));
+  if(nPr)kids.push(P('ومن أبرز الممارسات المميزة التي اطلع عليها الفريق: '+RL.filter(function(x){return x.type==='إشادة'}).map(function(x){return x.text.replace(/[.\s]+$/,'')}).join('؛ ')+'.',{size:24}));
+  if(nRc)kids.push(P('وفي سياق التحسين المستمر، تظهر فرص للتطوير أبرزها: '+RL.filter(function(x){return x.type==='توصية'}).slice(0,3).map(function(x){return x.text.replace(/[.\s]+$/,'')}).join('؛ ')+'.',{size:24}));
+  kids.push(P('وختاماً يُثمّن فريق المراجعة الجهود التي تبذلها المنشأة وحرصها على التطوير المستمر، ويتمنى لها مواصلة مسيرتها والاستفادة من نقاط قوتها لتحقيق أثر أكبر في إعداد الكوادر الوطنية المؤهلة.',{size:24}));
+  var EI=[['معلومات أساسية',['تاريخ التأسيس','جهة التأسيس','نموذج عمل المنشأة','طبيعة التدريب المقدم','عدد البرامج التدريبية','مسميات البرامج التدريبية المنتهية بمؤهل']],['مؤشرات الأداء',['عدد المدربين في المنشأة وتوزيعهم على الأقسام','عدد المتدربين\n(فترة لا تقل عن ثلاث سنوات)','عدد الخريجين\n(فترة لا تقل عن ثلاث سنوات)','عدد التوظيف\n(فترة لا تقل عن ثلاث سنوات)','نسب التسرب\n(فترة لا تقل عن ثلاث سنوات)','أهم الجهات المستفيدة من مخرجات المنشأة التدريبية\n(يتم ذكر 3 جهات في حال تعدد الجهات)','الاعتمادات الحاصلة عليها المنشأة التدريبية\n(يتم ذكر عدد الاعتمادات والجهات المانحة لها)']]],er=[];
+  EI.forEach(function(g){g[1].forEach(function(x,i){var r=[];if(!i)r.push(H(g[0],{w:1600,rs:g[1].length}));r.push(C(x,{w:3600,bold:true,fill:BLUE,color:WH,size:20}));r.push(C('',{w:5004}));er.push(r)})});
+  kids.push(P('',{sa:60}));kids.push(T([1600,3600,5004],er));
+  /* standards */
+  kids.push(H1('تقويم الممارسات وفق معايير الاعتماد'));
+  kids.push(NOTE('(يقوم الفريق هنا بتقييم وعرض ملاحظاته على المعايير الفرعية لكل معيار رئيس، وتشمل الإشادات والمقترحات والتوصيات إن وجدت. ويتم التركيز في الملاحظات على نواتج الأثر المتحقق وكيفية الاستفادة منه في تحسين عمليات المنشأة. على أن تكون مبنية على الأدلة والبراهين.)'));
+  var CW=[556,567,2332,928,993,992,3546];
+  function K(w,o){return C('',Object.assign({w:w,vm:'c'},o||{}))}
+  STDS.forEach(function(st,si){kids.push(H2('المعيار '+st.ord+': '+st.title));kids.push(P(st.desc,{size:22,sa:100}));
+    var rows=[];
+    rows.push([H('',{w:556,vm:'r'}),H('المعايير الفرعية',{w:3827,span:3}),H('مستوى التقييم',{w:993}),H('مستوى الجودة',{w:992}),H('الملخص',{w:3546})]);
+    st.subs.forEach(function(sb){var x=subStats(sb),code=sb.code.replace('-','.');
+      if(x.na){rows.push([K(556,{fill:NAVY}),C(code,{w:567,fill:GRY,bold:true,vm:'r',font:FB}),C(sb.text,{w:3260,span:2,fill:GRY,size:20}),C('لا ينطبق',{w:993,bold:true,size:20}),C('',{w:992,fill:GRY}),C('لا ينطبق: '+((S.f[sb.code+'.s.nar']||'').trim()||'[يُستكمل: تعليل عدم الانطباق وطريقة التحقق]'),{w:3546,font:FS,size:24})]);
+        rows.push([K(556,{fill:NAVY}),K(567,{fill:GRY}),C('الإشادات والتوصيات والمقترحات',{w:3260,span:2,fill:GRY2,color:WH,bold:true,size:20}),C('لا يوجد',{w:5531,span:3,font:FS,size:24})]);return}
+      LV.forEach(function(l,li){var r=[K(556,{fill:NAVY})];
+        if(!li){r.push(C(code,{w:567,fill:GRY,bold:true,vm:'r',font:FB}));r.push(C(sb.text,{w:3260,span:2,fill:GRY,vm:'r',size:20}));r.push(C(x.avg!=null?RLAB[String(x.avg)]||String(x.avg):'',{w:993,vm:'r',bold:true,size:20}))}
+        else{r.push(K(567,{fill:GRY}));r.push(K(3260,{span:2,fill:GRY}));r.push(K(993))}
+        r.push(C(OLV[l.k],{w:992,fill:OLVF[l.k],bold:true,size:20}));r.push(C(oNarr(sb.code,l.k,x),{w:3546,font:FS,size:24}));rows.push(r)});
+      OREC.forEach(function(t){var q=subRecs(sb.code).filter(function(z){return z.t===t[0]&&z.x}).map(function(z){return z.x});
+        rows.push([K(556,{fill:NAVY}),K(567,{fill:GRY}),C(t[1],{w:3260,span:2,fill:GRY2,color:WH,bold:true,size:20}),C(q.join('\n')||'لا يوجد',{w:5531,span:3,font:FS,size:24})])})});
+    var org=stdOrg(st),x=sts[si],c=cs[si],EV=[['درجة التقييم الذاتي\n(يتم استعراض درجة التقييم الذاتي بعد اعتماد تقدير فريق المراجعة، وتُستخدم للمقارنة وتحليل الفجوات. ويُعتدّ بها بقدر ما تؤيّده الأدلة والشواهد؛ وعند الاختلاف يُرجَّح حكم فريق المراجعة.)',org!=null?org.toFixed(2):''],['متوسط تقييم المعيار\n(بناء على تقدير فريق المراجعة)',x.avg!=null?x.avg.toFixed(2):''],['حالة الامتثال',c.ev?c.lab:'']];
+    EV.forEach(function(v,i){rows.push([i?K(556,{fill:NAVY}):H('',{w:556,vm:'r'}),C(v[0],{w:3827,span:3,fill:BLUE,color:WH,bold:true,size:i?20:18}),C(v[1],{w:5531,span:3,bold:true,size:24})])});
+    rows.push([H('',{w:556,vm:'r'}),H('نتائج المراجعة',{w:2899,span:2}),H('المعيار المرتبط',{w:928}),H('نص النتائج',{w:5531,span:3})]);
+    OREC.forEach(function(t){var it=[];st.subs.forEach(function(sb){subRecs(sb.code).forEach(function(z){if(z.t===t[0]&&z.x)it.push([sb.code.replace('-','.'),z.x])})});if(!it.length)it.push(['','لا يوجد']);
+      it.forEach(function(v,i){rows.push([K(556,{fill:NAVY}),i?K(2899,{span:2,fill:BLUE}):C(t[1],{w:2899,span:2,vm:'r',fill:BLUE,color:WH,bold:true,size:20}),C(v[0],{w:928,bold:true,size:20}),C(v[1],{w:5531,span:3,font:FS,size:24})])})});
+    kids.push(T(CW,rows))});
+  /* overall findings */
+  kids.push(H1('ملخص نتائج المراجعة'));
+  kids.push(NOTE('(يقوم فريق المراجعة بسرد جميع الإشادات والتوصيات والمقترحات مرقمة بالتوالي على أن تنسخ كما هي من تقييم كل معيار.)'));
+  var fr=[[H('الإشادات والتوصيات والمقترحات',{w:10204,span:2})]];
+  OREC.forEach(function(t){fr.push([C('ملخص '+t[1]+':',{w:10204,span:2,fill:BLUE,color:WH,bold:true,al:AL.START})]);var it=RL.filter(function(x){return x.type===t[0]});
+    if(!it.length)fr.push([C('',{w:700}),C('لا يوجد',{w:9504,font:FS,size:24})]);it.forEach(function(x,i){fr.push([C((i+1)+'.',{w:700,bold:true,al:AL.CENTER}),C(x.text,{w:9504,font:FS,size:24})])})});
+  kids.push(T([700,9504],fr));
+  /* compliance */
+  kids.push(H1('ملخص الامتثال وتوصية الاعتماد المؤسسي'));
+  kids.push(NOTE('(يُسجِّل الفريق حالة الامتثال لكل معيار رئيس، مع توثيق الملاحظات الداعمة، ثم يُحدِّد توصية الاعتماد المؤسسي.)'));
+  var cr=[[H('ملخص امتثال المعايير الرئيسة',{w:10204,span:3})],[H('المعايير الرئيسة',{w:4000,fill:BLUE}),H('حالة الامتثال',{w:2400,fill:BLUE}),H('ملاحظات',{w:3804,fill:BLUE})]];
+  STDS.forEach(function(st,i){var c=cs[i],x=sts[i];cr.push([C('المعيار '+st.ord+': '+st.title,{w:4000,bold:true,al:AL.START,size:20}),C(c.ev?c.lab:'',{w:2400,bold:true,size:20}),C(c.ev?('متوسط التقييم '+x.avg.toFixed(2)+(c.rec?'، '+c.rec+' موضع توصية'+(c.recE?' منها '+c.recE+' مرتبط بالوجود':''):'')):'',{w:3804,font:FS,size:24})])});
+  cr.push([H('توصية الاعتماد المؤسسي',{w:10204,span:3})]);
+  cr.push([C('توصية الاعتماد',{w:4000,fill:BLUE,color:WH,bold:true}),C(dc.k?dc.t:'',{w:6204,span:2,bold:true,size:24})]);
+  kids.push(T([4000,2400,3804],cr));
+  /* documentation */
+  kids.push(H1('التوثيق'));
+  kids.push(NOTE('(يُستكمَل هذا الجدول ببيانات فريق المراجعة، متضمنة الصفة، والاسم الثلاثي، وتاريخ اعتماد النسخة النهائية من التقرير، وتوقيع كل عضو. ويُوقِّع رئيس الفريق أخيرًا لإقرار محتوى التقرير.)'));
+  var tm=team().filter(function(m){return !isObs(m)}),lead=tm.filter(function(m){return m.role==='رئيس الفريق'}),oth=tm.filter(function(m){return m.role!=='رئيس الفريق'}),dr=[[H('فريق المراجعة',{w:10204,span:4})],[H('الصفة',{w:2000,fill:BLUE}),H('الاسم',{w:4204,fill:BLUE}),H('التاريخ',{w:2000,fill:BLUE}),H('التوقيع',{w:2000,fill:BLUE})]];
+  lead.concat(oth).forEach(function(m,i){var r=[];if(i===0&&lead.length)r.push(C('رئيس الفريق',{w:2000,bold:true}));else if(i===lead.length)r.push(C('أعضاء الفريق',{w:2000,bold:true,rs:oth.length}));r.push(C(m.name.trim()||'',{w:4204,bold:true}));r.push(C('',{w:2000}));r.push(C('',{w:2000}));dr.push(r)});
+  kids.push(T([2000,4204,2000,2000],dr));
+  var footer=new D.Footer({children:[new D.Paragraph({alignment:AL.CENTER,bidirectional:true,children:[run('تقرير فريق المراجعة الخارجية للاعتماد المؤسسي — '+fac+'     |     ',{size:18,color:'808080'}),new D.TextRun({children:[D.PageNumber.CURRENT],font:FL,size:18,color:'808080'})]})]});
+  return new D.Document({creator:'علي الأحمري',title:'تقرير فريق المراجعة الخارجية — '+fac,description:'مسودة تقرير المراجعة الخارجية للاعتماد المؤسسي',features:{updateFields:true},
+    styles:{default:{document:{run:{font:FL,size:22}}},paragraphStyles:[{id:'Heading1',name:'Heading 1',basedOn:'Normal',next:'Normal',quickFormat:true,run:{font:FB,size:32,bold:true,color:HC}},{id:'Heading2',name:'Heading 2',basedOn:'Normal',next:'Normal',quickFormat:true,run:{font:FB,size:28,bold:true,color:HC}}]},
+    sections:[{properties:{page:{size:{width:11906,height:16838,orientation:D.PageOrientation.PORTRAIT},margin:{top:1440,bottom:1440,left:851,right:851}}},footers:{default:footer},children:kids}]})}
+async function exportOfficial(){var b=$('#btnRpt');if(!window.docx){toast('تعذّر تحميل مكتبة Word؛ تحقق من الاتصال بالإنترنت');return}
+  var old=b?b.textContent:'';if(b){b.disabled=true;b.textContent='جارٍ الإنشاء…'}
+  try{var blob=await window.docx.Packer.toBlob(buildOfficial());var r=await saveFile('مسودة تقرير فريق المراجعة الخارجية'+(S.setup.facility?' - '+safeName(S.setup.facility):'')+'.docx',blob);reportSaved(r,'مسودة التقرير الرسمي')}
+  catch(e){toast('تعذّر إنشاء مسودة التقرير');if(window.console)console.error(e)}
+  if(b){b.disabled=false;b.textContent=old}}
 async function exportWord(mode){var b=$('#btnWord');if(!window.docx){toast('تعذّر تحميل مكتبة Word؛ تحقق من الاتصال بالإنترنت');return}
   var modes=mode?[mode]:['dsk','fld'],bs=[$('#btnWord'),$('#btnWordF')].filter(Boolean),olds=bs.map(function(x){return x.textContent});bs.forEach(function(x){x.disabled=true;x.textContent='جارٍ الإنشاء…'});
   try{for(var i=0;i<modes.length;i++){var m=modes[i],blob=await window.docx.Packer.toBlob(buildDocxMode(m));var r=await saveFile((m==='fld'?'تقرير المراجعة الميدانية':'تقرير المراجعة المكتبية')+(S.setup.facility?' - '+safeName(S.setup.facility):'')+'.docx',blob);reportSaved(r,m==='fld'?'تقرير المراجعة الميدانية':'تقرير المراجعة المكتبية')}}
@@ -22255,6 +22367,7 @@ document.addEventListener('click',function(ev){var t=ev.target,e=t.closest?t.clo
     case 'dMerge':mergeImport($('#dataTxt').value);break;
     case 'btnWord':exportWord('dsk');break;
     case 'btnWordF':exportWord('fld');break;
+    case 'btnRpt':exportOfficial();break;
     case 'btnNew':var okn=nvCan();$('#nvGo').disabled=!okn;$('#nvMsg').textContent='';$('#nvNote').textContent=okn?(SH.on?'سيُحفظ أرشيف الزيارة الحالية في ورقة جديدة داخل Google Sheet ويُفرَّغ النموذج عند جميع الأعضاء.':(SY.on?'سيُفرَّغ النموذج المشترك لجميع الأعضاء.':'سيُفرَّغ النموذج على هذا الجهاز فقط.')):'تبدأ الزيارة الجديدة من جهاز رئيس الفريق الذي أعدّ الربط، حتى لا تُمسح بيانات الفريق بالخطأ.';$('#nvRot').checked=false;$('#nvRotRow').hidden=!SH.on;$('#ov3').hidden=false;break;
     case 'nvClose':$('#ov3').hidden=true;break;
     case 'nvGo':newVisit();break;
