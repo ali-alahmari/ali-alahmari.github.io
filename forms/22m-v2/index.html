@@ -363,6 +363,7 @@ button,.btn,[role=button],a.btn,select,summary{touch-action:manipulation}
 .btn[hidden]{display:none}#shareSt{cursor:pointer}#shareSt:hover{text-decoration:underline}
 .ov{position:fixed;inset:0;background:rgba(8,20,19,.55);z-index:50;display:grid;place-items:center;padding:16px}
 .ov[hidden]{display:none}
+.pl-days{display:grid;gap:8px}.pl-day[hidden]{display:none}.pl-day{display:grid;grid-template-columns:minmax(120px,auto) 1fr;gap:8px;align-items:center}.pl-std{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:6px 12px}.pl-std label{display:flex;gap:8px;align-items:center;justify-content:space-between;font-size:.92rem}.pl-std select{max-width:150px}@media (max-width:560px){.pl-day{grid-template-columns:1fr}}
 .modal{background:var(--surface);border-radius:18px;max-width:760px;width:100%;max-height:88vh;overflow:auto;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.4);display:grid;gap:12px}
 .modal textarea{width:100%;min-height:150px;border:1.5px solid var(--line);background:var(--surface-2);border-radius:10px;padding:.6rem;direction:ltr;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.82rem}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
@@ -702,7 +703,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')d.open=false
 <section class="card" id="setup" aria-label="بيانات الزيارة">
   <div class="card-h">
     <h2><span class="st">1</span> بيانات الزيارة وفريق المراجعة</h2>
-    <div class="row"><button class="btn sm" id="btnNew" type="button">زيارة جديدة</button><button class="btn sm" id="setupToggle" type="button" aria-expanded="true">طيّ</button></div>
+    <div class="row"><button class="btn sm" id="btnPlan" type="button" title="يقرأ ملف جدول الزيارة على جهازك ويعرض ما استخرجه لتراجعه قبل التطبيق">استيراد خطة الزيارة (PDF)</button><input id="planFile" type="file" accept="application/pdf,.pdf" hidden><button class="btn sm" id="btnNew" type="button">زيارة جديدة</button><button class="btn sm" id="setupToggle" type="button" aria-expanded="true">طيّ</button></div>
   </div>
   <div class="setup-sum" id="setupSum"></div>
   <div class="setup-body">
@@ -1008,6 +1009,15 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')d.open=false
       <div class="row"><input class="in" id="shJoinIn" placeholder="الصق الرمز أو الرابط هنا" dir="ltr" style="flex:1"><button class="btn pri" id="shJoin" type="button">انضمام</button></div>
     </div>
     <div class="row"><button class="btn danger" id="shOff" type="button">فصل المزامنة عن هذا الجهاز</button><button class="btn ghost" id="shClose" type="button">إغلاق</button></div>
+  </div>
+</div>
+<div class="ov" id="ovPlan" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="plT">
+    <h2 class="doc-t" id="plT" style="margin:0">استيراد خطة الزيارة</h2>
+    <p style="color:var(--ink-2);font-size:.95rem">هذا ما قُرئ من الملف. راجِعه وعدّل ما يلزم، ولن يتغير شيء في النموذج حتى تضغط «تطبيق». أسماء الفريق لا ترد في جدول الزيارة فتبقى كما هي.</p>
+    <div id="plBody"></div>
+    <p id="plWarn" style="color:var(--ink-2);font-size:.9rem;margin:0"></p>
+    <div class="row"><button class="btn pri" id="plGo" type="button">تطبيق على النموذج</button><button class="btn ghost" id="plClose" type="button">إلغاء</button></div>
   </div>
 </div>
 <div class="ov" id="ov3" hidden>
@@ -21646,7 +21656,7 @@ function applyMode(mode){var map=computeMap(mode),plan=planAttach(map);S.mode=mo
 var obsOpened=0;
 function applyRole(){var role=myRole(),lim=role!=='lead',vw=role==='view';try{renderPortal()}catch(e){}
   try{document.querySelector('#app').classList.toggle('mem',lim);document.querySelector('#app').classList.toggle('view',vw);var vt=document.querySelector('#viewTag');if(vt){vt.hidden=!vw;if(vw)vt.firstChild.textContent='نسخة اطلاع — مراقب الهيئة: '+(SH.vname||'')+(SH.vorg?' · '+SH.vorg:'')}try{renderViewers()}catch(e0){}var b=document.querySelector('#memBanner');if(b)b.hidden=!lim;
-    var sb=document.querySelector('#btnShare');if(sb)sb.style.display=lim?'none':'';var nb=document.querySelector('#btnNew');if(nb)nb.style.display=lim?'none':'';var eb=document.querySelector('#btnEnd');if(eb)eb.style.display=lim?'none':'';var rb=document.querySelector('#btnRpt');if(rb)rb.style.display=lim?'none':'';var pb=document.querySelector('#presetBox');if(pb)pb.style.display=lim?'none':'';var gt=document.querySelector('.tab[data-tab="groups"]');if(gt)gt.style.display=lim?'none':'';if(lim&&S.ui.tab==='groups')showTab('form');
+    var sb=document.querySelector('#btnShare');if(sb)sb.style.display=lim?'none':'';var nb=document.querySelector('#btnNew');if(nb)nb.style.display=lim?'none':'';var eb=document.querySelector('#btnEnd');if(eb)eb.style.display=lim?'none':'';var rb=document.querySelector('#btnRpt');if(rb)rb.style.display=lim?'none':'';var plb=document.querySelector('#btnPlan');if(plb)plb.style.display=lim?'none':'';var pb=document.querySelector('#presetBox');if(pb)pb.style.display=lim?'none':'';var gt=document.querySelector('.tab[data-tab="groups"]');if(gt)gt.style.display=lim?'none':'';if(lim&&S.ui.tab==='groups')showTab('form');
     LEAD_SEL.forEach(function(q){document.querySelectorAll(q).forEach(function(e){e.inert=lim;e.style.opacity=lim?'.7':''})});
     var me=role==='obs'?mem(SH.me):null,n=0;if(me&&me.tr&&obsOf(me.tr)&&obsOf(me.tr).id===me.id)n=+me.tr;if(n&&!obsOpened){obsOpened=1;S.ui.collapsed[n]=0;updStd()}
     $$('#stds .std').forEach(function(e){var k=+e.getAttribute('data-n'),ro=(role==='obs'&&k!==n)||vw;e.inert=false;e.style.opacity='';$$('[data-f]',e).forEach(function(f){if(role==='mem'){var sbE=f.closest?f.closest('.sub'):null,c=sbE?sbE.getAttribute('data-code'):null;f.disabled=c?!canSub(c):!canStd(k)}else f.disabled=ro});$$('[data-rvw]',e).forEach(function(f){f.disabled=role==='obs'||(role==='mem'&&!canReview(k))});if(role!=='lead'&&finalOf(k)){$$('[data-f]',e).forEach(function(f){f.disabled=true});$$('[data-rvw]',e).forEach(function(f){f.disabled=true})}$$('[data-rdel],[data-radd]',e).forEach(function(bt){var sbx=bt.closest('.sub'),rf=sbx?sbx.querySelector('[data-f]'):null;bt.disabled=rf?rf.disabled:false});e.classList.toggle('ro-std',(role==='mem'&&!canStd(k))||(role!=='lead'&&finalOf(k))||vw)});try{renderReq(false)}catch(e2){}
@@ -21740,6 +21750,74 @@ function wait(ms){return new Promise(function(r){setTimeout(r,ms)})}
 function dl(name,text,type){return saveFile(name,new Blob([text],{type:type})).then(function(r){reportSaved(r,'الملف');if(r==='link')msg('تم طلب التنزيل. إن لم يبدأ فاستخدم «نسخ البيانات».')})}
 function parseImp(txt){var o=JSON.parse(txt);return norm(o&&o.state?o.state:o)}
 function applyImport(txt){try{S=parseImp(txt);S.ui.tab=S.ui.tab||'form';saveNow();bootAll();pushAll();msg('تم استبدال البيانات.');toast('تم الاستيراد')}catch(e){msg('تعذّر قراءة البيانات: تأكد من لصق نص JSON كاملاً.')}}
+/* ---------- visit plan PDF import (lead only; file is read in this browser, never uploaded) ---------- */
+function vpParse(pages,facs){
+  var AR=/[ء-ي]/;
+  function clean(t){return String(t||'').normalize('NFKC').replace(/[ً-ْـ]/g,'').replace(/[^ء-ي0-9\/\-\.:\s"«»()]/g,' ').replace(/\s+/g,' ')}
+  function letters(t){return clean(t).replace(/[^ء-ي]/g,'').replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي')}
+  var all=pages.map(clean).join(' \n ');
+  /* dates: gregorian only */
+  var re=/(\d{1,4})\s*[\/\-\.]\s*(\d{1,2})\s*[\/\-\.]\s*(\d{1,4})/g,m,ds=[];
+  while((m=re.exec(all))){var a=+m[1],b=+m[2],c=+m[3],y,mo,d;
+    if(a>=2000&&a<2100){y=a;mo=b;d=c}else if(c>=2000&&c<2100){y=c;mo=b;d=a}else continue;
+    if(mo<1||mo>12||d<1||d>31)continue;
+    var iso=y+'-'+('0'+mo).slice(-2)+'-'+('0'+d).slice(-2);
+    if(!ds.some(function(x){return x.iso===iso}))ds.push({iso:iso,at:m.index})}
+  var dates=ds.slice().sort(function(p,q){return p.iso<q.iso?-1:1});
+  /* standards per day */
+  var ORD=[[1,/^ال?[اأ]ول/],[2,/^الثا[ن]?ي/],[3,/^الثالث/],[4,/^الرا/],[5,/^(ال)?ا?[خ]?امس/],[6,/^الساد/],[7,/^السا(?!د)/],[8,/^الثامن/],[0,/^(\d)/]];
+  var KW=[[1,/الشراكه/],[2,/وكمه/],[3,/وخدمات/],[4,/وادوات/],[5,/الخامس|اامس|(ب|يب)وا(مل|لم)وارد/],[6,/تحصيل/],[8,/الاستدامه/]];
+  function stdsIn(t){var L=letters(t).replace(/\s/g,''),out={},k,i;
+    var dig=clean(t).replace(/\s/g,'');
+    var r2=/عيار/g,mm;while((mm=r2.exec(L))){var tail=L.slice(mm.index+4,mm.index+16);
+      for(i=0;i<ORD.length;i++){if(ORD[i][0]&&ORD[i][1].test(tail)){out[ORD[i][0]]=1;break}}}
+    var r3=/عيار(\d)/g;while((mm=r3.exec(dig))){k=+mm[1];if(k>=1&&k<=8)out[k]=1}
+    KW.forEach(function(x){if(x[1].test(L))out[x[0]]=1});
+    return Object.keys(out).map(Number).sort()}
+  /* some PDFs store Arabic glyphs in visual order: retry on each line reversed */
+  function rev(t){return t.split('\n').map(function(l){return l.split('').reverse().join('')}).join('\n')}
+  var seg=ds.slice().sort(function(p,q){return p.at-q.at});
+  var perDay=dates.map(function(d){var j=seg.indexOf(d),end=j+1<seg.length?seg[j+1].at:all.length;var t=all.slice(d.at,end);return stdsIn(t+' \n '+rev(t))});
+  /* facility: trigram overlap on page 1 */
+  var p1=letters(pages[0]||'')+'|'+letters(rev(clean(pages[0]||''))),best=null,second=0;
+  (facs||[]).forEach(function(f){var nm=letters(f.replace(/\([^)]*\)/g,''));if(nm.length<4)return;var n=0,tot=0;
+    for(var i=0;i+3<=nm.length;i++){tot++;if(p1.indexOf(nm.substr(i,3))>=0)n++}
+    var sc=tot?n/tot:0;if(!best||sc>best.sc){second=best?best.sc:0;best={name:f,sc:sc}}else if(sc>second)second=sc});
+  var fac=best&&best.sc>=0.6&&best.sc-second>=0.08?best.name:'';
+  return {start:dates.length?dates[0].iso:'',days:dates.length,dates:dates.map(function(d){return d.iso}),perDay:perDay,facility:fac,facScore:best?[best.sc,second]:null}
+}
+var PDFJS_V='3.11.174',PDFJS_CDN=['https://cdnjs.cloudflare.com/ajax/libs/pdf.js/'+PDFJS_V+'/','https://cdn.jsdelivr.net/npm/pdfjs-dist@'+PDFJS_V+'/build/'];
+function pdfLib(){if(window.pdfjsLib)return Promise.resolve(window.pdfjsLib);
+  return PDFJS_CDN.reduce(function(p,base){return p.catch(function(){return new Promise(function(ok,no){var sc=document.createElement('script');sc.src=base+'pdf.min.js';
+    sc.onload=function(){if(!window.pdfjsLib)return no(new Error('pdfjs'));window.pdfjsLib.GlobalWorkerOptions.workerSrc=base+'pdf.worker.min.js';ok(window.pdfjsLib)};sc.onerror=function(){sc.remove();no(new Error('load'))};document.head.appendChild(sc)})})},Promise.reject())}
+async function readPlan(file){if(myRole()!=='lead')return;toast('جارٍ قراءة خطة الزيارة…',4000);var lib;
+  try{lib=await pdfLib()}catch(e){toast('تعذّر تحميل قارئ PDF. تحقق من الاتصال بالإنترنت ثم أعد المحاولة.',5000);return}
+  try{var doc=await lib.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise,pages=[];
+    for(var p=1;p<=doc.numPages;p++){var tc=await (await doc.getPage(p)).getTextContent();pages.push(tc.items.map(function(it){return it.str+(it.hasEOL?'\n':' ')}).join(''))}
+    var facs=$$('#facList option').map(function(o){return o.value});var r=vpParse(pages,facs);
+    if(!r.days&&!r.facility){toast('لم أجد في الملف تواريخ أو اسم منشأة. قد يكون الملف صورة ممسوحة ضوئياً.',5000);return}
+    $('#toast').classList.remove('on');showPlan(r)}catch(e){toast('تعذّر قراءة الملف. تأكد أنه ملف PDF سليم.',5000)}}
+function plStdSel(n,days,val){var h='<select class="in" data-pls="'+n+'"><option value="">—</option>';for(var i=0;i<days;i++)h+='<option value="'+i+'"'+(String(i)===String(val)?' selected':'')+'>اليوم '+ORD5[i]+'</option>';return h+'</select>'}
+function showPlan(r){var days=Math.max(1,Math.min(5,r.days||+S.setup.days||1)),day={};
+  r.perDay.forEach(function(a,i){if(i<5)a.forEach(function(n){if(day[n]===undefined)day[n]=i})});
+  var h='<div class="grid g3"><div><label class="lbl" for="plFac">اسم المنشأة</label><input class="in" id="plFac" list="facList" value="'+esc(r.facility||S.setup.facility||'')+'" placeholder="لم يُتعرَّف على الاسم؛ اختره من القائمة"></div>'+
+    '<div><label class="lbl" for="plDate">تاريخ بداية الزيارة</label><input class="in" type="date" id="plDate" value="'+esc(r.start||S.setup.date||'')+'"></div>'+
+    '<div><label class="lbl" for="plDays">عدد أيام الزيارة</label><select class="in" id="plDays">'+[1,2,3,4,5].map(function(n){return '<option value="'+n+'"'+(n===days?' selected':'')+'>'+n+'</option>'}).join('')+'</select></div></div>';
+  h+='<div class="sec-t">محور كل يوم</div><div class="pl-days">';
+  for(var i=0;i<5;i++){var ns=(r.perDay[i]||[]),txt=ns.length?(ns.length>1?'مناقشة المعايير '+ns.join(' و'):'مناقشة المعيار '+ns[0]+' ('+STDS[ns[0]-1].title+')'):(S.setup.dayNotes[i]||'');
+    h+='<div class="pl-day" data-pld="'+i+'"'+(i<days?'':' hidden')+'><b>اليوم '+ORD5[i]+(r.dates[i]?' <span class="num" dir="ltr">'+esc(r.dates[i].split('-').reverse().join('/'))+'</span>':'')+'</b><input class="in" id="plN'+i+'" value="'+esc(txt)+'"></div>'}
+  h+='</div><div class="sec-t">يوم مراجعة كل معيار</div><div class="pl-std">';
+  STDS.forEach(function(s){var v=day[s.n]!==undefined?day[s.n]:(S.stdDay[s.n]||'');h+='<label><span><b class="num">'+s.n+'</b> '+esc(s.title)+'</span>'+plStdSel(s.n,days,v)+'</label>'});
+  h+='</div>';$('#plBody').innerHTML=h;
+  var miss=[];if(!r.facility)miss.push('اسم المنشأة');if(!r.start)miss.push('التاريخ');var found=Object.keys(day).length;
+  $('#plWarn').textContent=(miss.length?'لم يُتعرَّف على: '+miss.join(' و')+'، فأدخله يدوياً. ':'')+'تُعرف '+found+' من 8 معايير في الجدول.'+(S.setup.facility||S.setup.date?' عند التطبيق تُستبدل بيانات الزيارة الحالية (المنشأة والتاريخ والأيام ومحاورها وأيام المعايير).':'');
+  $('#ovPlan').hidden=false}
+function plDays(){var n=+$('#plDays').value;$$('[data-pld]').forEach(function(e){e.hidden=+e.getAttribute('data-pld')>=n});$$('[data-pls]').forEach(function(e){var v=e.value;if(v!==''&&+v>=n)v='';e.outerHTML=plStdSel(e.getAttribute('data-pls'),n,v)})}
+function applyPlan(){if(myRole()!=='lead')return;var s=S.setup,n=+$('#plDays').value||1;
+  s.facility=$('#plFac').value.trim();s.date=$('#plDate').value;s.days=n;
+  var dn=[];for(var i=0;i<n;i++)dn[i]=$('#plN'+i).value.trim();s.dayNotes=dn;
+  $$('[data-pls]').forEach(function(e){var k=e.getAttribute('data-pls');if(e.value!=='')S.stdDay[k]=e.value;else delete S.stdDay[k]});
+  $('#ovPlan').hidden=true;refreshSetupDom();queueMain();save();toast('تم تطبيق خطة الزيارة')}
 function mergeImport(txt){try{var I=parseImp(txt),n=0;
   Object.keys(I.f).forEach(function(k){var v=I.f[k];if(v!=null&&String(v).trim()!==''&&S.f[k]!==v){S.f[k]=v;n++}});
   var a=I.setup,b=S.setup;if(!b.facility&&a.facility)b.facility=a.facility;if(!b.date&&a.date)b.date=a.date;
@@ -22316,6 +22394,8 @@ document.addEventListener('change',function(ev){var e=ev.target;
   if(e.hasAttribute('data-qs')||e.hasAttribute('data-ds')){var n=+(e.getAttribute('data-qs')||e.getAttribute('data-ds'));setAssign(n,e.value);updOwners();updFilterSel();applyFilter();renderQuick();renderDist();renderSummary();queueMain();save();return}
   if(e.hasAttribute('data-dx')){var c=e.getAttribute('data-dx');if(e.value)S.subAssign[c]=e.value;else delete S.subAssign[c];updOwners();applyFilter();renderDist();renderSummary();queueMain();save();return}
   if(e.hasAttribute('data-sd')){S.stdDay[e.getAttribute('data-sd')]=e.value;renderSummary();queueMain();save();return}
+  if(e.id==='plDays'){plDays();return}
+  if(e.id==='planFile'&&e.files&&e.files[0]){readPlan(e.files[0]);e.value='';return}
   if(e.id==='dFile'&&e.files&&e.files[0]){var r=new FileReader();r.onload=function(){mergeImport(String(r.result))};r.readAsText(e.files[0]);e.value=''}
 });
 document.addEventListener('click',function(ev){var t=ev.target,e=t.closest?t.closest('button,a,.hint,[data-tab]'):null;if(!e)return;
@@ -22369,6 +22449,9 @@ document.addEventListener('click',function(ev){var t=ev.target,e=t.closest?t.clo
     case 'btnWord':exportWord('dsk');break;
     case 'btnWordF':exportWord('fld');break;
     case 'btnRpt':exportOfficial();break;
+    case 'btnPlan':if(myRole()==='lead')$('#planFile').click();break;
+    case 'plGo':applyPlan();break;
+    case 'plClose':$('#ovPlan').hidden=true;break;
     case 'btnNew':var okn=nvCan();$('#nvGo').disabled=!okn;$('#nvMsg').textContent='';$('#nvNote').textContent=okn?(SH.on?'سيُحفظ أرشيف الزيارة الحالية في ورقة جديدة داخل Google Sheet ويُفرَّغ النموذج عند جميع الأعضاء.':(SY.on?'سيُفرَّغ النموذج المشترك لجميع الأعضاء.':'سيُفرَّغ النموذج على هذا الجهاز فقط.')):'تبدأ الزيارة الجديدة من جهاز رئيس الفريق الذي أعدّ الربط، حتى لا تُمسح بيانات الفريق بالخطأ.';$('#nvRot').checked=false;$('#nvRotRow').hidden=!SH.on;$('#ov3').hidden=false;break;
     case 'nvClose':$('#ov3').hidden=true;break;
     case 'nvGo':newVisit();break;
