@@ -2412,6 +2412,8 @@ PB4.link = {
   f:["وللتحقق من أثر هذه الممارسات، اطّلع الفريق في مستوى الفاعلية على ", "ولقياس انعكاس ما سبق على النتائج، اطّلع الفريق في مستوى الفاعلية على ", "وامتداداً لما سبق، وللوقوف على فاعلية ما ورد في {t}، اطّلع الفريق على ", "وعلى صعيد الفاعلية، وللتحقق من أثر ما ورد في {t}، اطّلع الفريق على "]};
 PB4.tie = ["، وبذلك تتكامل مستويات الوجود والتطبيق والفاعلية في هذا المعيار الفرعي", "، مما يكشف عن ترابط واضح بين السياسات المعتمدة وتطبيقها وقياس أثرها", "، وهو ما يعكس دورة متكاملة تبدأ بالتوثيق والاعتماد وتمتد إلى التطبيق وقياس الأثر والتحسين"];
 PB4.cnt = ["، وبلغ عدد {w} ({v}){o}", "، حيث بلغ عدد {w} ({v}){o}"];
+PB4.unread = ["، وقد تعذّرت قراءة محتواه آلياً ويلزم الرجوع إلى نسخته الأصلية قبل الحكم", "، ولم تتضح قراءته في النسخة المرفوعة، ويلزم التحقق منه من النسخة الأصلية"];
+PB4.unreadAll = "، ويُترك الحكم على هذا المستوى لفريق المراجعة بعد الاطلاع على النسخ الأصلية والشواهد الإضافية والمقابلات";
 PB4.anchorDefault = "الخطط والسياسات المعتمدة في مستوى الوجود";
 /* التواريخ والأرقام بحسب الدليل الإرشادي لكتابة التقرير: «15 يناير 2025» والأرقام 123 */
 const MON_G = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
@@ -2473,17 +2475,17 @@ function numParse(s){
   m = s.match(/-?\d+(?:\.\d+)?/); return m ? {v:+m[0], max:null, pct:null} : null;
 }
 const isFemWord = w => { const f = String(w || "").trim().split(/\s+/)[0] || ""; return /ة$/.test(f) || /^(نتائج|درجة|قيمة)/.test(f); };
-function numSentence(n, pick){
+function numSentence(n, pick, next){
   const w = String(n.what || "").trim(); const x = String(n.value || "").trim(); if (!w || !x) return "";
   const fem = isFemWord(w); const b = fem ? "بلغت" : "بلغ";
   const yr = y => /^[0-9٠-٩]{4}\s*(هـ|م)?$/.test(String(y).trim()) ? "عام " + y : y;
   const wy = n.year && !w.includes(String(n.year)) ? (/^[0-9٠-٩]{4}/.test(String(n.year).trim()) && /^[0-9٠-٩]{4}\s*(هـ|م)?$/.test(String(n.year).trim()) ? `${w} لعام ${n.year}` : `${w} في ${n.year}`) : w;
   const v = numParse(x); let s;
   const dg = v && v.pct != null && /رضا|تقييم|متوسط/.test(w) ? PB4.degWord.find(([lim]) => v.pct >= lim)[1] : "";
-  if (dg && dg !== "بدرجة منخفضة") s = pick(PB4.num.deg).replace("{d}", dg).replace("{b2}", "وبنسبة بلغت");
-  else s = pick(PB4.num.base);
+  if (dg && dg !== "بدرجة منخفضة" && (next || 0) < 2) s = (next ? "كما جاءت {w} {d} {b2} ({x})" : pick(PB4.num.deg)).replace("{d}", dg).replace("{b2}", "وبنسبة بلغت");
+  else s = next ? ["", "كما {b} {w} ({x})", "و{b} {w} ({x})", "فيما {b} {w} ({x})"][Math.min(next, 3)] : pick(PB4.num.base);
   s = s.replace("{b}", b).replace("{w}", wy).replace("{x}", x);
-  if (!fem) s = s.replace(/^حيث جاءت/, "حيث جاء").replace(/^وقد جاءت/, "وقد جاء");
+  if (!fem) s = s.replace(/^حيث جاءت/, "حيث جاء").replace(/^وقد جاءت/, "وقد جاء").replace(/^كما جاءت/, "كما جاء");
   if (n.target) { const t = numParse(n.target); if (v && t) { const k = v.v > t.v ? "up" : v.v === t.v ? "eq" : "down"; let c = pick(PB4.num[k]).replace("{t}", n.target); if (!fem) c = c.replace("متجاوزةً", "متجاوزاً").replace("محققةً", "محققاً"); s += c; } else s += `، مقابل مستهدف (${n.target})`; }
   if (n.prev) { const p = numParse(n.prev); const py = n.prev_year ? yr(n.prev_year) : "القياس السابق"; if (v && p) { const k = v.v > p.v ? "rise" : v.v < p.v ? "fall" : "same"; s += pick(PB4.num[k]).replace("{p}", n.prev).replace("{py}", py); } }
   if (n.respondents) { const rr = latin(n.respondents).match(/(\d+(?:\.\d+)?)\s*(?:من|\/)\s*(?:أصل\s*)?(\d+(?:\.\d+)?)/); s += pick(PB4.num.resp).replace("{r}", rr ? `${rr[1]}) من أصل (${rr[2]}` : n.respondents); }
@@ -2502,7 +2504,7 @@ function subBundle(list, code, s){
   const B = {e:[], p:[], f:[]};
   for (const r of list) { if (String(r.sub_code) !== code) continue; if (s.ex[entryId(r)]) continue; for (const k of entryLevels(r)) B[k].push(r); }
   const sc = {};
-  for (const [k, K] of LVK) { B[k].sort((a, b) => weightOf(b, k) - weightOf(a, k)); const auto = B[k].length ? Math.max(...B[k].map(r => +(r.quality?.[K]?.score ?? 0))) || null : null; const ov = s.ov[code]?.[k]; sc[k] = ov ? +ov : auto; sc[k + "auto"] = auto; }
+  for (const [k, K] of LVK) { B[k].sort((a, b) => weightOf(b, k) - weightOf(a, k)); const rd = B[k].filter(r => !r.unreadable); const auto = rd.length ? Math.max(...rd.map(r => +(r.quality?.[K]?.score ?? 0))) || null : null; const ov = s.ov[code]?.[k]; sc[k] = ov ? +ov : auto; sc[k + "auto"] = auto; }
   const lv = (sc.e == null && sc.p == null && sc.f == null) ? null : instLv({E:sc.e, A:sc.p, F:sc.f});
   return {B, sc, lv};
 }
@@ -2539,9 +2541,11 @@ function composeSub(x, bundle, s, F, pick){
       const lst = top.length ? top : old.slice(0, 1);
       let lead = pick(PB4.lead[k]); if (k === "e") lead = noConj(lead);
       if (k !== "e" && anchor && (k === "p" || B.p.length)) lead = pick(PB4.link[k]).replace("{t}", anchor);
-      seg += lead + withDocs(evPhrase(lst[0]), lst[0], pick);
-      const n0 = numsAt(lst[0], k)[0]; if (n0) { const ns = numSentence(n0, pick); if (ns) seg += "، " + ns; }
-      for (const r of lst.slice(1)) { seg += pick(PB4.chain) + withDocs(evPhrase(r), r, pick); const n = numsAt(r, k)[0]; if (n && k === "f") { const ns = numSentence(n, pick); if (ns) seg += "، " + ns; } }
+      const ur = r => r.unreadable ? pick(PB4.unread) : "";
+      seg += lead + withDocs(evPhrase(lst[0]), lst[0], pick) + ur(lst[0]);
+      const nums = (r, all) => { let t = ""; numsAt(r, k).slice(0, all ? 4 : 1).forEach((n, j) => { const ns = numSentence(n, pick, j); if (ns) t += "، " + ns; }); return t; };
+      seg += nums(lst[0], k === "f");
+      for (const r of lst.slice(1)) { seg += pick(PB4.chain) + withDocs(evPhrase(r), r, pick) + ur(r); if (k === "f") seg += nums(r, true); }
     }
     items.forEach(r => seen.add(entryId(r)));
     if (fresh.length > 3) seg += pick(PB4.more).replace("{n}", AR(fresh.length - 3));
@@ -2550,7 +2554,8 @@ function composeSub(x, bundle, s, F, pick){
     else if (v != null && v >= 3) {
       const mixed = k === "f" && items.some(r => (r.numbers || []).some(n => { const a = numParse(n.value), p = numParse(n.prev), t = numParse(n.target); return a && ((p && a.v < p.v) || (t && a.v < t.v)); }));
       if (!viaRef) seg += pick(mixed ? PB4.affirmMixed : k === "f" && allMet ? PB4.tie : PB4.affirm[k]); if (s.conf[x.code]) seg += pick(PB4.field); }
-    else { const g = gapClause(items[0], k) || PB4.gapDefault[k]; seg += pick(/^(لم|لا|ليس)\s/.test(g) ? PB4.gapc.neg : PB4.gapc.pos) + g; }
+    else if (v == null && items.every(r => r.unreadable)) seg += PB4.unreadAll;
+    else { const g = gapClause(items.find(r => !r.unreadable) || items[0], k) || PB4.gapDefault[k]; seg += pick(/^(لم|لا|ليس)\s/.test(g) ? PB4.gapc.neg : PB4.gapc.pos) + g; }
     cell[k] = fmtDates(seg + ".").replace(/\s+/g, " ").replace(/،\s*،/g, "،").replace(/\.\./g, ".");
   }
   return cell;
@@ -2609,12 +2614,29 @@ function ssStd(m, org){
   return {m, a, s, F, out, subs, open:ssVal(s, "open", out.open), c:compl(lvs), selfAvg: selfs.length ? selfs.reduce((p, q) => p + q, 0) / selfs.length : null};
 }
 const SS_META = () => ssState(SUM_ORG, "meta");
+/* البيانات التعريفية ونبذة المنشأة، كما يكتبها الفريق في المقدمة */
+const PROF = [["kind","نوع المنشأة التدريبية","مقر رئيسي"],["founded","تاريخ بداية عمل المنشأة","2013"],["city","المدينة / الحي","جدة – حي …"],["contact","معلومات الاتصال","الهاتف / البريد"],["nature","طبيعة المنشأة","ربحية / غير ربحية"],["target","الفئة المستهدفة","رجال / نساء"],["reqst","حالة طلب الاعتماد",""],["programs","البرامج المقدمة","البرنامج الأول، البرنامج الثاني"],["staff","عدد المنسوبين",""],["trainers","عدد المدربين",""],["saudiTr","المدربون السعوديون",""],["trainees","عدد المتدربين أثناء الزيارة",""],["features","مزايا المتدربين","عقد عمل، تأمين طبي، مكافأة…"]];
+const progList = M => String(M.programs || "").split(/[،,\n]+/).map(x => x.trim()).filter(Boolean);
+function profText(M, F){
+  const n = v => latin(String(v || "").trim()); const parts = [];
+  if (n(M.founded)) parts.push(`تأسس ${F} في عام ${n(M.founded).replace(/م$/, "")}${M.city ? " بمدينة " + M.city.trim() : ""}`);
+  if (n(M.staff)) parts.push(`ويبلغ عدد منسوبيه أثناء الزيارة (${n(M.staff)})`);
+  if (n(M.trainers)) { const t = +n(M.trainers), sa = +n(M.saudiTr); parts.push(`وإجمالي المدربين (${t}) مدرباً` + (sa ? `، منهم (${sa}) سعوديون بنسبة (${Math.round(1000 * sa / t) / 10}%)` : "")); }
+  const pg = progList(M);
+  if (n(M.trainees)) parts.push(`وبلغ عدد المتدربين أثناء الزيارة (${n(M.trainees)}) متدرباً` + (pg.length ? `، مسجلين في (${pg.length}) برامج في مجالات ${pg.join("، ")}` : ""));
+  else if (pg.length) parts.push(`ويقدم (${pg.length}) برامج في مجالات ${pg.join("، ")}`);
+  let t = parts.join("، ").replace(/،\s*و/g, " و"); if (t) t += ".";
+  if (M.features) t += ` ويحصل متدربو ${F} على عدد من المزايا، منها ${M.features.trim().replace(/[.]$/, "")}.`;
+  return t;
+}
+const profVal = (M, k) => { const v = String(M[k] || "").trim(); if (k === "programs") { const pg = progList(M); return pg.length ? `${pg.length} (${pg.join("، ")})` : ""; } return v; };
 /* UI: the document's number and dates, and the guide's checks (dated evidence; opinion surveys within three years) */
 function docLine(r){
   const ds = r.docs || []; const bits = ds.map(d => [d.title, d.ref && "رقم " + d.ref, d.approved && "اعتماد " + fmtDates(d.approved), d.updated && "تحديث " + fmtDates(d.updated), d.date && "بتاريخ " + fmtDates(d.date)].filter(Boolean).join(" · "));
   (r.counts || []).forEach(c => bits.push(`عدد ${c.what}: ${c.value}${c.of ? " من أصل " + c.of : ""}`));
   const txt = [r.ev_phrase, r.doc_summary, ...ds.map(d => [d.approved, d.updated, d.date].join(" "))].join(" ");
   const warn = [];
+  if (r.unreadable) warn.push("تعذّرت قراءة الشاهد آلياً، ولا يُحتسب في التقدير حتى يتحقق منه المقيّم");
   if (!hasDate(txt)) warn.push("لم يظهر تاريخ للشاهد، والدليل الإرشادي يشترط أن يكون الشاهد مؤرخاً");
   const yrs = (latin(txt).match(/\b20\d{2}\b/g) || []).map(Number); const vy = +((() => { try { return String(SS_META().s.from || ""); } catch (e) { return ""; } })().match(/20\d{2}/) || [new Date().getFullYear()])[0];
   if (/استبان|رضا|استطلاع/.test(txt) && yrs.length && vy - Math.max(...yrs) > 3) warn.push("قياس الرأي أقدم من ثلاث سنوات");
@@ -2667,7 +2689,8 @@ function ssRender(){
       <label class="hint">من تاريخ <input type="text" data-ssmeta="from" value="${esc(SS_META().s.from || "")}" style="width:120px"></label>
       <label class="hint">إلى تاريخ <input type="text" data-ssmeta="to" value="${esc(SS_META().s.to || "")}" style="width:120px"></label>
       <label class="hint">تاريخ إعداد التقرير <input type="text" data-ssmeta="rdate" value="${esc(SS_META().s.rdate || "")}" style="width:120px"></label>
-      <div class="hint">فريق المراجعة (سطر لكل عضو، والأول رئيس الفريق):</div><textarea data-ssmeta="team" rows="4" style="width:100%;font:inherit">${esc(SS_META().s.team || "")}</textarea></details>
+      <div class="hint">فريق المراجعة (سطر لكل عضو، والأول رئيس الفريق):</div><textarea data-ssmeta="team" rows="4" style="width:100%;font:inherit">${esc(SS_META().s.team || "")}</textarea>
+      <div class="hint" style="margin-top:6px">البيانات التعريفية ونبذة المنشأة (تُكتب في المقدمة وجدولها):</div>${PROF.map(([k, l, ph]) => `<label class="hint">${l} <input type="text" data-ssmeta="${k}" value="${esc(SS_META().s[k] || "")}" placeholder="${esc(ph)}"></label>`).join(" ")}</details>
     <details class="sscard"><summary><b>قاموس المصطلحات</b> <span class="hint">(${AR(Object.values(TERMS4).reduce((q, a) => q + a.length, 0) + userTerms().length)} مصطلحاً — يُرسل للمحرك عند نبذة كل شاهد وعند تحسين الصياغة)</span></summary>
       ${Object.entries(TERMS4).map(([g, arr]) => `<p><b>${esc(g)}:</b> ${arr.map(esc).join("، ")}</p>`).join("")}
       <label class="hint" for="ssTerms">مصطلحاتك الخاصة (افصل بينها بفاصلة أو سطر جديد)، وتُضاف للقاموس:</label>
@@ -2775,8 +2798,9 @@ function ssBuildDoc(nums){
   /* introduction */
   kids.push(H1("مقدمة"));
   kids.push(P("قام فريق المراجعة الخارجية بتنفيذ زيارة مراجعة لـ" + fac + "، خلال الفترة من تاريخ " + from + " إلى تاريخ " + to + " لتقويم المنشأة وعمليات ضمان الجودة بها وتقديم الإشادات والتوصيات والاقتراحات حسب ما تمخضت عنه المراجعة الخارجية. وقد اضطلع الفريق بهذه المهمة بناء على دعوة من المركز الوطني لتقويم واعتماد التدريب من أجل تعزيز جودة التدريب في المملكة العربية السعودية ودوره في التنمية الاقتصادية.", {size:24}));
-  const ID = ["نوع المنشأة التدريبية", "تاريخ بداية عمل المنشأة", "طبيعة المنشأة", "الفئة المستهدفة", "حالة طلب الاعتماد"];
-  kids.push(T([1600, 3000, 5604], ID.map((x, i) => [...(i ? [] : [H("البيانات التعريفية", {w:1600, rs:ID.length})]), C(x, {w:3000, bold:true, fill:BLUE, color:WH}), C("", {w:5604})])));
+  { const pt = profText(M, ssNoun(org)); if (pt) kids.push(P(pt, {size:24})); }
+  const ID = [["نوع المنشأة التدريبية","kind"], ["تاريخ بداية عمل المنشأة","founded"], ["طبيعة المنشأة","nature"], ["الفئة المستهدفة","target"], ["حالة طلب الاعتماد","reqst"]];
+  kids.push(T([1600, 3000, 5604], ID.map(([x, k], i) => [...(i ? [] : [H("البيانات التعريفية", {w:1600, rs:ID.length})]), C(x, {w:3000, bold:true, fill:BLUE, color:WH}), C(profVal(M, k), {w:5604})])));
   kids.push(P("ارتكزت منهجية الفريق على مراجعة الأدلة والشواهد والمعلومات المقدّمة من " + fac + "، وإجراء لقاءات مع منسوبي المنشأة وأصحاب المصلحة، بالإضافة إلى الملاحظات الميدانية أثناء الزيارة. وقد استند الفريق في بناء هذا التقرير على معايير الاعتماد المؤسسي لمنشآت التدريب (النسخة 2) الصادرة عن هيئة تقويم التعليم والتدريب ممثلة في مركز \"مسار\".", {size:24, sb:160}));
   /* executive summary */
   const recs = t => Rs.flatMap(R => R.subs.filter(z => !z.na).flatMap(z => String(z[t] || "").split(/\n+/).map(s => s.trim()).filter(Boolean).map(s => ({code:z.x.code, t:s}))));
@@ -2890,6 +2914,25 @@ function recGist(t){
   let g = String(t || "").trim().replace(/^\s*ينبغي\s+(على|أن)\s+(المنشأة التدريبية|\S+)\s+(أن\s+)?/, "").replace(/[.\s]+$/, "");
   const w = g.split(/\s+/); return w.length > 22 ? `«${w.slice(0, 22).join(" ")}…»` : g;
 }
+/* a recommendation met in full gets no «ينبغي» in a follow-up report: what is left becomes a suggestion, phrased as the team does */
+const toSug = t => String(t || "").split(/\n+/).map(x => x.trim()).filter(Boolean).map(x => x.replace(/^ينبغي\s+على\s+(المنشأة التدريبية|\S+)\s+/, "قد يرى $1 ").replace(/^يقترح فريق المراجعة الخارجي على\s+(المنشأة التدريبية|\S+)\s+/, "قد يرى $1 ")).join("\n");
+/* the result the executive summary quotes for a recommendation: its strongest effectiveness figure */
+function keyFact(z){
+  for (const r of z.b.B.f || []) for (const n of r.numbers || []) {
+    if (!n.what || !n.value) continue; const fem = isFemWord(n.what);
+    let t = `${fem ? "بلغت" : "بلغ"} ${n.what} (${latin(n.value)})`;
+    if (n.prev) t += ` مقارنةً بـ(${latin(n.prev)})${n.prev_year ? " في " + (/^\d{4}$/.test(latin(n.prev_year).trim()) ? "عام " : "") + latin(n.prev_year) : ""}`;
+    if (n.target) t += ` مقابل مستهدف (${latin(n.target)})`;
+    return t;
+  }
+  return "";
+}
+function execGen(recs, F){
+  const short = t => { const g = recGist(t).replace(/[«»…]/g, "").split(/،|\s(?=لضمان|بهدف|من أجل)/)[0].trim(); const w = g.split(/\s+/); return w.length > 14 ? w.slice(0, 14).join(" ") + "…" : g; };
+  const L = {"كامل":"تحقق الامتثال الكامل", "جوهري":"تحقق الامتثال الجوهري", "حد أدنى":"لا يزال الامتثال في حده الأدنى", "عدم امتثال":"لم يتحقق الامتثال"};
+  return recs.filter(r => r.st && r.t).map((r, j) => `${j ? pick2(j) : "ففيما يخص"} ${short(r.t)}، ${L[r.st]}${r.kf ? "، حيث " + r.kf : ""}.`).join(" ");
+}
+const pick2 = j => ["وفيما يخص", "وعلى صعيد", "أما ما يخص", "وبالنسبة إلى"][(j - 1) % 4];
 const FU_ST = ["كامل", "جوهري", "حد أدنى", "عدم امتثال"];
 const FU_LAB = {"كامل":"الامتثال الكامل", "جوهري":"الامتثال الجوهري", "حد أدنى":"الحد الأدنى من الامتثال", "عدم امتثال":"عدم الامتثال"};
 /* the follow-up as the report will carry it: one block per recommendation, built from the evidence of its linked sub-standard */
@@ -2908,17 +2951,19 @@ function ssFollow(org){
     const gen = body ? pick(FU_OPEN) + " " + lk + body + (st ? " " + fill(pick(FU_CLOSE[st]), F) : "") : "";
     const key = "fu|" + i + "|";
     return {i, t:r.t || "", code, st, auto, z, sum:ssVal(me, key + "sum", gen),
-      P:ssVal(me, key + "P", z ? z.P : ""), R:ssVal(me, key + "R", z ? z.R : ""), S:ssVal(me, key + "S", z ? z.S : ""), note:ssVal(me, key + "note", "")};
+      P:ssVal(me, key + "P", z ? z.P : ""), R:ssVal(me, key + "R", z ? (st === "كامل" ? "" : z.R) : ""), S:ssVal(me, key + "S", z ? toSug([z.S, st === "كامل" ? z.R : ""].filter(Boolean).join("\n")) : ""), note:ssVal(me, key + "note", ""), kf:z ? keyFact(z) : ""};
   });
+  const exec = ssVal(me, "fu|exec", execGen(recs, F));
   const done = recs.length && recs.every(r => r.st);
   const dec = !done ? "" : recs.every(r => r.st === "كامل" || r.st === "جوهري") ? "منح" : "سحب";
-  return {on:!!fu.on, recs, F, M, dec};
+  return {on:!!fu.on, recs, F, M, dec, exec};
 }
 function ssFollowHTML(){
   const FU = ssFollow(SUM_ORG); if (!FU.on) return "";
   const ta = (key, val, rows) => `<textarea data-fued="${esc(key)}" rows="${rows}" style="width:100%;font:inherit;line-height:1.8">${esc(val)}</textarea>${FU.M.s.ed[key] != null ? `<button class="btn sm ghost" data-fureset="${esc(key)}" type="button">إرجاع الصياغة المقترحة</button>` : ""}`;
   return `<h3 style="margin-top:14px">تقرير متابعة الاعتماد المشروط <small class="hint">توصية بتوصية، بقالب «تقرير متابعة الاعتماد المؤسسي المشروط»</small></h3>
     ${FU.recs.length ? "" : '<p class="hint">أضف نصوص التوصيات وربط كل توصية بمعيارها الفرعي من «ملخص المنشأة» (نوع المراجعة: متابعة اعتماد مشروط).</p>'}
+    ${FU.recs.length ? `<div class="hint">الملخص التنفيذي (نتيجة كل توصية وأبرز أرقامها):</div>${ta("fu|exec", FU.exec, 4)}` : ""}
     ${FU.recs.map(r => `<details class="sscard" open><summary><b>التوصية ${ORDF[r.i] || r.i + 1}</b> ${esc(r.t.slice(0, 120))} — ${r.code ? "المعيار الفرعي " + dcode(r.code) : '<span class="hint">لم تُربط بمعيار فرعي</span>'} · ${r.st ? `<span class="${stCls(r.st)}">${FU_LAB[r.st]}</span>${r.auto && r.st !== r.auto ? "" : ' <span class="hint">(تلقائي)</span>'}` : '<span class="hint">لم تُحدد حالة الامتثال</span>'}</summary>
       <div class="hint">ملخص عن التوصية (الوجود ← التطبيق ← الفاعلية من شواهد المعيار المرتبط):</div>${ta("fu|" + r.i + "|sum", r.sum, 6)}
       <div class="hint">الإشادات:</div>${ta("fu|" + r.i + "|P", r.P, 2)}<div class="hint">التوصيات:</div>${ta("fu|" + r.i + "|R", r.R, 2)}<div class="hint">المقترحات:</div>${ta("fu|" + r.i + "|S", r.S, 2)}
@@ -2955,12 +3000,13 @@ function ssBuildFollow(){
   kids.push(P("مسودة أُعدّت من مدقق الشواهد وتتطلب مراجعة فريق المراجعة قبل الرفع", {size:20, color:RED, al:AL.CENTER}));
   kids.push(P("مقدمة:", {h:D.HeadingLevel.HEADING_1, size:28, bold:true, color:HC, al:AL.START, pb:true, sa:120}));
   kids.push(P("قام فريق المراجعة الخارجية بتنفيذ زيارة مراجعة للاعتماد المؤسسي المشروط لـ" + fac + "، " + (to ? "خلال الفترة من " + from + " إلى " + to : "بتاريخ " + from) + "، وذلك لمتابعة وضمان امتثال " + F + " للتوصيات الواردة في خطاب الاعتماد المؤسسي المشروط وتقديم الإشادات والتوصيات والاقتراحات حسب ما تمخضت عنه المراجعة الخارجية."));
-  kids.push(P("[يُستكمل: نبذة عن " + fac + " (التأسيس، عدد المنسوبين والمدربين والمتدربين، البرامج)].", {color:"808080"}));
-  const ID = ["نوع المنشأة التدريبة", "تاريخ بداية عمل المنشأة", "معلومات الاتصال", "طبيعة المنشأة", "الفئة المستهدفة", "عدد البرامج المقدمة"];
-  kids.push(T([3487, 6542], ID.map(x => [C(x, {w:3487, bold:true, fill:LB}), C("", {w:6542})])));
+  { const pt = profText(M, F); kids.push(P(pt || "[يُستكمل: نبذة عن " + fac + " (التأسيس، عدد المنسوبين والمدربين والمتدربين، البرامج)].", pt ? {} : {color:"808080"})); }
+  const ID = [["نوع المنشأة التدريبة","kind"], ["تاريخ بداية عمل المنشأة","founded"], ["معلومات الاتصال","contact"], ["طبيعة المنشأة","nature"], ["الفئة المستهدفة","target"], ["عدد البرامج المقدمة","programs"]];
+  kids.push(T([3487, 6542], ID.map(([x, k]) => [C(x, {w:3487, bold:true, fill:LB}), C(profVal(M, k), {w:6542})])));
   kids.push(P("ويتضمن هذا التقرير ملاحظات الفريق استناداً على المعلومات التي قدمت إليه من قبل " + fac + "، وملاحظات الفريق أثناء الزيارة. وقد استند الفريق في بناء هذا التقرير على امتثال " + F + " للتوصيات الواردة في خطاب الاعتماد المؤسسي المشروط.", {sb:160}));
   kids.push(H1("ملخص تنفيذي:"));
   kids.push(P("تمت زيارة " + fac + " لغرض متابعة وضمان امتثال " + F + " للتوصيات الواردة في خطاب الاعتماد المؤسسي المشروط، وتمت خلال الزيارة مراجعة جميع التوصيات (" + n + ")، وتخللتها نقاشات مع إدارة " + F + " والمعنيين بإعداد الشواهد. ويتضمن هذا التقرير تفصيلاً لامتثال " + F + " للتوصيات استناداً إلى ما تم تقديمه من أدلة وشواهد وما أضيف له من أدلة اطلع عليها فريق المراجعة خلال اللقاء وبعده" + (FU.recs.every(r => r.st) ? "، وقد أظهرت نتائج المراجعة الامتثال الكامل في (" + nFull + ") من أصل (" + n + ") توصيات." : ".")));
+  if (FU.exec) kids.push(P(FU.exec));
   kids.push(P("تقويم الممارسات وفق توصيات الاعتماد المؤسسي المشروط", {h:D.HeadingLevel.HEADING_1, size:28, bold:true, color:HC, al:AL.START, pb:true, sa:160}));
   for (const r of FU.recs) {
     kids.push(P("التوصية " + (ORDF[r.i] || r.i + 1) + ": " + r.t, {size:28, bold:true, color:RED, sb:200, keep:true}));
@@ -3007,6 +3053,7 @@ const V4_FIELDS = `
 "ev_phrase": "نبذة الشاهد بأسلوب تقارير فريق المراجعة، عبارة اسمية تصلح بعد «اطلع الفريق على»: نوع الوثيقة واسمها ورقمها أو رمزها وجهة إصدارها وتاريخ اعتمادها أو تحديثها (أو تاريخ المحضر أو التقرير)، والأعداد الواردة فيها (عدد المحاضر، المستجيبين من أصل، المتدربين، الشركات…)، ثم ما تتضمنه أو ما تثبته، ولا تُغفل التاريخ والرقم متى وردا في الشاهد، مثل: «سياسة … المعتمدة بتاريخ … والتي توضح …» أو «تقرير تحليل استبانة … لعام … والذي أظهر …». لا تذكر ما ليس في الشاهد",
 "numbers": [{"what":"المقيس بالعربية مثل «نسبة رضا المتدربين عن …» أو «متوسط …» أو «نسبة التوظيف»","value":"القيمة كما في الشاهد مثل 4.47 من 5 أو 87%","target":"المستهدف إن ذُكر وإلا فارغ","prev":"قيمة سابقة للمقارنة إن ذُكرت وإلا فارغ","prev_year":"سنة القيمة السابقة أو فارغ","year":"سنة القياس أو فارغ","respondents":"عدد المستجيبين مثل 141 من 230 أو فارغ"}] — حتى 4 أرقام هي الأهم للحكم، أو [] إن لم توجد أرقام,
 "docs": [{"title":"اسم الوثيقة كما ورد فيها","ref":"رقمها أو رمزها كما ورد مثل TOP-PO-25 أو فارغ","approved":"تاريخ الاعتماد كما ورد أو فارغ","updated":"تاريخ التحديث أو المراجعة أو فارغ","date":"تاريخ المحضر أو التقرير أو التعميم أو فارغ","undated":"true إن خلت الوثيقة من أي تاريخ وإلا false"}] — وثيقة لكل ملف رئيس، حتى 6,
+"unreadable": "true إن كان الملف الرئيس مصوراً أو غير مقروء بحيث لا يمكن الحكم على محتواه، وعندها لا تُقدّر المستوى بناءً عليه وإلا false",
 "counts": [{"what":"المعدود بالعربية مثل «المحاضر» أو «المستجيبين للاستبانة» أو «المتدربين المختبرين»","value":"العدد","of":"الإجمالي إن ذُكر وإلا فارغ"}] — حتى 4 أعداد ذات دلالة، أو [],
 "gap_clause": {"existence":"إن قلّ الوجود عن 3: جملة واحدة تبدأ بفعل تصف القصور مثل «لم يتم اعتماد السياسة أو تحديثها» وإلا فارغ","application":"…","effectiveness":"إن قلّت الفاعلية عن 3: مثل «لم يتم تحليل نتائج القياس ووضع خطط تحسين مزمنة» وإلا فارغ"}`;
 { const _bp = buildPrompt; buildPrompt = function(){ const p = _bp(); if (MODE !== "inst") return p; return p + `\n\n— قاموس مصطلحات التقارير النهائية المعتمدة (استخدم منه ما يناسب في ev_phrase وgap_clause والتعليل، ولا تُدخل مصطلحاً لا يدعمه الشاهد) —\n${termsText(IS_FREE ? 1800 : 5000)}\nوأضف أيضاً إلى كائن JSON نفسه هذه الحقول:${V4_FIELDS}`; }; }
@@ -3016,6 +3063,7 @@ const V4_FIELDS = `
     out.ev_phrase = String(r?.ev_phrase || "").trim();
     out.numbers = (Array.isArray(r?.numbers) ? r.numbers : []).map(n => ({what:String(n?.what || "").trim(), value:String(n?.value ?? "").trim(), target:String(n?.target ?? "").trim(), prev:String(n?.prev ?? "").trim(), prev_year:String(n?.prev_year ?? "").trim(), year:String(n?.year ?? "").trim(), respondents:String(n?.respondents ?? "").trim()})).filter(n => n.what && n.value && /\d|[٠-٩]/.test(n.value)).slice(0, 4);
     out.docs = (Array.isArray(r?.docs) ? r.docs : []).map(d => ({title:String(d?.title || "").trim(), ref:String(d?.ref || "").trim(), approved:String(d?.approved || "").trim(), updated:String(d?.updated || "").trim(), date:String(d?.date || "").trim(), undated:d?.undated === true || d?.undated === "true"})).filter(d => d.title).slice(0, 6);
+    out.unreadable = r?.unreadable === true || r?.unreadable === "true";
     out.counts = (Array.isArray(r?.counts) ? r.counts : []).map(c => ({what:String(c?.what || "").trim(), value:String(c?.value ?? "").trim(), of:String(c?.of ?? "").trim()})).filter(c => c.what && /\d|[٠-٩]/.test(c.value)).slice(0, 4);
     const g = r?.gap_clause; out.gap_clause = g && typeof g === "object" ? {existence:String(g.existence || ""), application:String(g.application || ""), effectiveness:String(g.effectiveness || "")} : {};
     return out;
