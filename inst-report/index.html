@@ -2674,7 +2674,7 @@ function ssRender(){
       <div class="hint">التوصيات:</div>${ta(x.code + "|R", Rc, 2, "لا يوجد")}
       <div class="hint">المقترحات:</div>${ta(x.code + "|S", S, 2, "لا يوجد")}</details>`;
   }).join("");
-  box.innerHTML = `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><h3 style="flex:1">ملخص المعيار <small class="hint">الوجود ← التطبيق ← الفاعلية، بقالب تقرير فريق المراجعة الخارجية</small></h3>
+  box.innerHTML = `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><h3 style="flex:1 1 100%;margin:0">ملخص المعيار <small class="hint">الوجود ← التطبيق ← الفاعلية، بقالب تقرير فريق المراجعة الخارجية</small></h3>
     <label class="hint">المنشأة <select id="ssOrg">${(orgs.length ? orgs : [SUM_ORG]).map(o => `<option ${o === SUM_ORG ? "selected" : ""}>${esc(o)}</option>`).join("")}</select></label>
     <label class="hint">المعيار <select id="ssStd">${INST.map(z => `<option value="${z.n}" ${z.n === m.n ? "selected" : ""}>${AR(z.n)}: ${esc(z.title)}</option>`).join("")}</select></label>
     <label class="hint">المسمى في التقرير <input type="text" id="ssNoun" value="${esc(F)}" style="width:150px"></label>
