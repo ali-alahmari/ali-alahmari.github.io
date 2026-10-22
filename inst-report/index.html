@@ -3227,11 +3227,67 @@ function regRender(){
   /* the two report formats, chosen in one place instead of hunting through the summaries */
   $("#result").insertAdjacentHTML("beforebegin", `<div id="expBar" class="sumbox" style="margin:8px 0"><b>إصدار التقرير (Word)</b> <span class="hint" id="expOrg"></span>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"><button class="btn sm pri" id="expFull" type="button">التقرير النهائي للاعتماد المؤسسي</button><button class="btn sm pri" id="expFollow" type="button">تقرير إعادة الاعتماد</button></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px"><span class="hint">توصيات إعادة الاعتماد:</span> <span class="hint" id="recSrc"></span>
+      <button class="btn sm" id="recFileBtn" type="button">رفع ملف التوصيات</button><input type="file" id="recFile" accept=".pdf,.docx,.doc,.xlsx,.xls,.csv,.txt" hidden>
+      <button class="btn sm ghost" id="recHand" type="button">إدخال يدوي أو مراجعة</button></div>
     <p class="hint" style="margin:6px 0 0">بيانات الغلاف وفريق المراجعة ونبذة المنشأة تُدخل مرة واحدة من «ملخص المعيار» ← «بيانات الغلاف والتوثيق»، وتُستخدم في الصيغتين. وفي تقرير إعادة الاعتماد تستخرج الأداة التوصيات بنفسها من ملفات رد المنشأة («التوصية الأولى»، «التوصية الثانية»…) وتربط كل توصية بمعيارها الفرعي، ويبقى جدول التوصيات في «ملخص المنشأة» للمراجعة فقط.</p></div>`);
   /* always on screen, so the two formats are never hidden; before any evidence the buttons explain what they need */
   const expPaint = () => { const has = LOG.some(x => x.mode === "inst"); 
-    if (!has) { $("#expOrg").textContent = "· لا توجد شواهد بعد: يُصدَّر النموذج فارغاً للاطلاع عليه"; return; } SUM_ORG = null; sumEntries(); $("#expOrg").textContent = `· المنشأة: ${SUM_ORG}`; };
+    if (!has) { $("#expOrg").textContent = "· لا توجد شواهد بعد: يُصدَّر النموذج فارغاً للاطلاع عليه"; return; } SUM_ORG = null; sumEntries(); syncRecs(SUM_ORG); $("#expOrg").textContent = `· المنشأة: ${SUM_ORG}`; recSrcPaint(); };
   { const _rl = renderLog; renderLog = function(){ _rl(); expPaint(); }; }
+  /* recommendations from a file the reviewer uploads (the conditional-accreditation letter, the previous report, or a plain list):
+     numbered headings («التوصية الأولى …») first, otherwise each «ينبغي …» sentence in order */
+  const STD_SUBS = INST.flatMap(m => m.subs);
+  const stem = w => w.replace(/[أإآ]/g, "ا").replace(/ة$/, "ه").replace(/^(وال|بال|فال|كال|لل|ال|و|ب)(?=\S{3})/, "").replace(/(ات|ين|ون|يه|ها|هم)$/, "");
+  const toks = s => new Set(normAr(s).split(/[^ء-ي]+/).map(stem).filter(w => w.length > 2 && !/^(خطه|وضع|واضح|علي|ينبغي|معهد|منشا|تدريب|اعداد|بناء|جميع|مستو)/.test(w)));
+  const overlap = (a, b) => { let n = 0; for (const w of a) if (b.has(w)) n++; return n / Math.sqrt(b.size || 1); };
+  /* the closest sub-standard: first among those the evidence was audited under (their briefs say what the institute did), then any */
+  const bestSub = (txt, org) => { const a = toks(txt); let best = "", sc = 0;
+    const ev = {}; for (const x of LOG) if (x.mode === "inst" && orgKey(x.org) === orgKey(org) && x.sub_code) ev[x.sub_code] = (ev[x.sub_code] || "") + " " + [x.doc_summary, x.ev_phrase, x.rationale].join(" ");
+    for (const [c, s] of Object.entries(ev)) { const v = overlap(a, toks(s + " " + (STD_SUBS.find(z => z.code === c)?.text || ""))); if (v > sc) { sc = v; best = c; } }
+    if (sc >= 0.35) return best; best = ""; sc = 0;
+    for (const x of STD_SUBS) { const v = overlap(a, toks(x.text)); if (v > sc) { sc = v; best = x.code; } } return sc >= 0.5 ? best : ""; };
+  const codeIn = txt => { const m = latin(txt).match(/(?:المعيار(?:\s*الفرعي)?|معيار)\s*\(?\s*(\d)\s*[-–.]\s*(\d)\s*\)?/); if (!m) return "";
+    const c = `${m[2]}-${m[1]}`, c2 = `${m[1]}-${m[2]}`; return STD_SUBS.some(x => x.code === c2) ? c2 : STD_SUBS.some(x => x.code === c) ? c : ""; };
+  const recsFromText = raw => {
+    const T = String(raw || "").replace(/\[(صفحة|ورقة)[^\]]*\]/g, "\n");
+    const L = T.split(/\n+/).map(s => s.replace(/[‎‏‪-‮]/g, "").trim()).filter(Boolean);
+    const out = []; let cur = null;
+    for (const line of L) {
+      const n = recNo(line); const head = n && line.replace(/\s/g, "").length < 40;
+      if (n && (head || /^[\s\d\-–.)(]*التوصي[هة]/.test(line))) { cur = {n, parts:[head ? "" : line.replace(/^.*?توصي[هة]\s*\S+\s*[:：\-–]?\s*/, "")]}; out.push(cur); continue; }
+      if (cur && cur.parts.join(" ").length < 600 && !/^(الإشادات|التوصيات|المقترحات|مستوى الجودة|الوجود|التطبيق|الفاعلية)\s*:?$/.test(line)) cur.parts.push(line);
+    }
+    let recs = out.map(r => ({n:r.n, t:fixPdf(r.parts.join(" ")).replace(/^[:：\-–\s]+/, "").slice(0, 600)})).filter(r => r.t.length > 15);
+    if (!recs.length) recs = (T.match(/ينبغي\s+(?:على|أن)[^.。\n]{20,500}/g) || []).map((s, i) => ({n:i + 1, t:fixPdf(s)}));
+    /* a report repeats its recommendations (body, summary, tables): keep each one once, renumbered in order */
+    const seen = new Set(), sig = new Set(); return recs.filter(r => { const k = [...toks(r.t)].slice(0, 6).join("|"); if (seen.has(r.n) || sig.has(k)) return false; seen.add(r.n); sig.add(k); return true; })
+      .map((r, i, A) => A.every(z => z.n) && new Set(A.map(z => z.n)).size === A.length ? r : {...r, n:i + 1});
+  };
+  const recSrcPaint = () => { if (!$("#recSrc")) return; const org = SUM_ORG; if (org == null) return; const r = sumState(org).s.fu?.recs || [];
+    const f = r.filter(x => x.src === "file").length, a = r.filter(x => x.auto).length, h = r.length - f - a;
+    $("#recSrc").textContent = r.length ? [f && `${AR(f)} من الملف المرفوع`, a && `${AR(a)} مستخرجة من الشواهد`, h && `${AR(h)} مدخلة يدوياً`].filter(Boolean).join(" · ") : "تُستخرج تلقائياً من ملفات رد المنشأة، أو ارفع ملفاً بها"; };
+  $("#recFileBtn").onclick = () => $("#recFile").click();
+  $("#recFile").onchange = async e => {
+    const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+    const it = {file:f, name:f.name, ext:(f.name.split(".").pop() || "").toLowerCase(), images:[], sigImages:[]};
+    toast("جارٍ قراءة ملف التوصيات…");
+    try { if (it.ext === "txt") it.text = await f.text(); else await parseFile(it); } catch (er) { toast("تعذّرت قراءة الملف"); return; }
+    const recs = recsFromText(it.text);
+    if (!recs.length) { toast("لم أجد في الملف توصيات مرقمة («التوصية الأولى…») ولا جملاً تبدأ بـ«ينبغي على»"); return; }
+    SUM_ORG = blank() ? "[اسم المنشأة التدريبية]" : null; sumEntries();
+    const auto = autoRecs(SUM_ORG); const {a, s} = sumState(SUM_ORG); const fu = s.fu = s.fu || {on:false, recs:[]};
+    const byN = new Map((fu.recs || []).map(r => [r.n, r]));
+    /* the uploaded wording wins; the sub-standard comes from the text itself, then from the evidence of the same number, then from the closest standard text */
+    for (const r of recs) { const o = byN.get(r.n) || {};
+      byN.set(r.n, {n:r.n, t:r.t, code:codeIn(r.t) || auto.find(x => x.n === r.n)?.code || o.code || bestSub(r.t, SUM_ORG), st:o.st || "", src:"file", auto:false}); }
+    fu.recs = [...byN.values()].sort((x, y) => (x.n || 99) - (y.n || 99)); fu.on = true; sumSave(a);
+    const miss = fu.recs.filter(r => !r.code).length;
+    recSrcPaint(); toast(`أُخذت ${AR(recs.length)} توصية من «${f.name}»` + (miss ? ` · ${AR(miss)} بلا معيار فرعي، اختره في الجدول` : ""));
+    if (miss) $("#recHand").click();
+  };
+  $("#recHand").onclick = () => { SUM_ORG = blank() ? "[اسم المنشأة التدريبية]" : null; sumEntries(); const {a, s} = sumState(SUM_ORG); s.fu = s.fu || {on:false, recs:[]}; s.fu.on = true; sumSave(a);
+    renderSummary(); const b = $("#sumBox"); b.hidden = false; ($("#fuAdd") || b).scrollIntoView({behavior:"smooth", block:"center"}); };
   const blank = () => !LOG.some(x => x.mode === "inst");
   $("#expFull").onclick = () => { SUM_ORG = blank() ? "[اسم المنشأة التدريبية]" : null; sumEntries(); ssExport(INST.map(z => z.n)); };
   $("#expFollow").onclick = () => {
