@@ -3180,10 +3180,12 @@ function regRender(){
     LOG = add.concat(LOG).sort((a, b) => String(b.at || "").localeCompare(String(a.at || ""))).slice(0, 300); store.set("aud-instlog", LOG); renderLog(); toast(`استُورد ${AR(add.length)} شاهداً`);
   };
   /* the two report formats, chosen in one place instead of hunting through the summaries */
-  $("#impBar").insertAdjacentHTML("afterend", `<div id="expBar" class="sumbox" style="margin:8px 0"><b>إصدار التقرير (Word)</b> <span class="hint" id="expOrg"></span>
+  $("#result").insertAdjacentHTML("beforebegin", `<div id="expBar" class="sumbox" style="margin:8px 0"><b>إصدار التقرير (Word)</b> <span class="hint" id="expOrg"></span>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"><button class="btn sm pri" id="expFull" type="button">التقرير النهائي للاعتماد المؤسسي · نموذج معهد الأغذية</button><button class="btn sm pri" id="expFollow" type="button">تقرير إعادة الاعتماد · نموذج معهد الورق</button></div>
     <p class="hint" style="margin:6px 0 0">بيانات الغلاف وفريق المراجعة ونبذة المنشأة تُدخل مرة واحدة من «ملخص المعيار» ← «بيانات الغلاف والتوثيق»، وتُستخدم في الصيغتين. وتقرير إعادة الاعتماد يحتاج نصوص التوصيات وربط كل توصية بمعيارها الفرعي.</p></div>`);
-  const expPaint = () => { const has = LOG.some(x => x.mode === "inst"); $("#expBar").hidden = !has; if (!has) return; SUM_ORG = null; sumEntries(); $("#expOrg").textContent = `· المنشأة: ${SUM_ORG}`; };
+  /* always on screen, so the two formats are never hidden; before any evidence the buttons explain what they need */
+  const expPaint = () => { const has = LOG.some(x => x.mode === "inst"); $("#expFull").disabled = $("#expFollow").disabled = !has;
+    if (!has) { $("#expOrg").textContent = "· يظهر التقرير بعد تدقيق الشواهد أو استيرادها"; return; } SUM_ORG = null; sumEntries(); $("#expOrg").textContent = `· المنشأة: ${SUM_ORG}`; };
   { const _rl = renderLog; renderLog = function(){ _rl(); expPaint(); }; }
   $("#expFull").onclick = () => { SUM_ORG = null; sumEntries(); ssExport(INST.map(z => z.n)); };
   $("#expFollow").onclick = () => {
