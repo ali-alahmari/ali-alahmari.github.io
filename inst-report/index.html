@@ -3179,6 +3179,23 @@ function regRender(){
     if (!add.length) { toast("لا توجد شواهد مؤسسية جديدة في سجل المدقق"); return; }
     LOG = add.concat(LOG).sort((a, b) => String(b.at || "").localeCompare(String(a.at || ""))).slice(0, 300); store.set("aud-instlog", LOG); renderLog(); toast(`استُورد ${AR(add.length)} شاهداً`);
   };
+  /* the two report formats, chosen in one place instead of hunting through the summaries */
+  $("#impBar").insertAdjacentHTML("afterend", `<div id="expBar" class="sumbox" style="margin:8px 0"><b>إصدار التقرير (Word)</b> <span class="hint" id="expOrg"></span>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"><button class="btn sm pri" id="expFull" type="button">التقرير النهائي للاعتماد المؤسسي · نموذج معهد الأغذية</button><button class="btn sm pri" id="expFollow" type="button">تقرير إعادة الاعتماد · نموذج معهد الورق</button></div>
+    <p class="hint" style="margin:6px 0 0">بيانات الغلاف وفريق المراجعة ونبذة المنشأة تُدخل مرة واحدة من «ملخص المعيار» ← «بيانات الغلاف والتوثيق»، وتُستخدم في الصيغتين. وتقرير إعادة الاعتماد يحتاج نصوص التوصيات وربط كل توصية بمعيارها الفرعي.</p></div>`);
+  const expPaint = () => { const has = LOG.some(x => x.mode === "inst"); $("#expBar").hidden = !has; if (!has) return; SUM_ORG = null; sumEntries(); $("#expOrg").textContent = `· المنشأة: ${SUM_ORG}`; };
+  { const _rl = renderLog; renderLog = function(){ _rl(); expPaint(); }; }
+  $("#expFull").onclick = () => { SUM_ORG = null; sumEntries(); ssExport(INST.map(z => z.n)); };
+  $("#expFollow").onclick = () => {
+    SUM_ORG = null; sumEntries(); const {a, s} = sumState(SUM_ORG);
+    const FU = ssFollow(SUM_ORG);
+    if (FU.on && FU.recs.some(r => r.t && r.code)) { ssExportFollow(); return; }
+    /* not set up yet: switch the summary to re-accreditation and take the user to where the recommendations go */
+    if (!s.fu.on) { s.fu.on = true; sumSave(a); }
+    renderSummary(); const b = $("#sumBox"); b.hidden = false; ($("#fuAdd") || b).scrollIntoView({behavior:"smooth", block:"center"});
+    toast("أضف نصوص التوصيات واربط كل توصية بمعيارها الفرعي، ثم اضغط «تقرير إعادة الاعتماد» مرة أخرى");
+  };
+  expPaint();
   paint();
 })();
 /* ===== INST-REPORT end ===== */
