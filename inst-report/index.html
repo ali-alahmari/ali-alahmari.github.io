@@ -2890,7 +2890,7 @@ async function ssExport(nums){
   const btns = [$("#ssDl1"), $("#ssDlAll")].filter(Boolean); btns.forEach(b => b.disabled = true);
   try {
     const blob = await window.docx.Packer.toBlob(ssBuildDoc(nums));
-    const name = "تقرير فريق المراجعة الخارجية - " + String(SUM_ORG || "").replace(/[\\/:*?"<>|]+/g, " ").trim() + (nums.length === 1 ? " - المعيار " + nums[0] : "") + ".docx";
+    const name = "التقرير النهائي للاعتماد المؤسسي" + (nums.length === 1 ? " - المعيار " + nums[0] : "") + ".docx";
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
     toast("صُدِّر التقرير بقالب فريق المراجعة الخارجية — راجعه قبل الرفع");
   } catch (e) { toast("تعذّر إنشاء ملف Word"); if (window.console) console.error(e); }
@@ -3043,7 +3043,7 @@ async function ssExportFollow(){
   const b = $("#fuDl"); if (b) b.disabled = true;
   try {
     const blob = await window.docx.Packer.toBlob(ssBuildFollow());
-    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "تقرير متابعة الاعتماد المشروط - " + String(SUM_ORG || "").replace(/[\\/:*?"<>|]+/g, " ").trim() + ".docx"; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "تقرير إعادة الاعتماد.docx"; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
     toast("صُدِّر تقرير المتابعة — راجعه قبل الرفع");
   } catch (e) { toast("تعذّر إنشاء ملف Word"); if (window.console) console.error(e); }
   finally { if (b) b.disabled = false; }
@@ -3179,23 +3179,72 @@ function regRender(){
     if (!add.length) { toast("لا توجد شواهد مؤسسية جديدة في سجل المدقق"); return; }
     LOG = add.concat(LOG).sort((a, b) => String(b.at || "").localeCompare(String(a.at || ""))).slice(0, 300); store.set("aud-instlog", LOG); renderLog(); toast(`استُورد ${AR(add.length)} شاهداً`);
   };
+  /* ---- re-accreditation: the recommendations come from the evidence itself, never typed in ----
+     the institute files its answer per recommendation («01- التوصية الأولى …»), and each file opens with the
+     recommendation's own text; the engine is also asked to copy it, since PDF text often scrambles Arabic letters */
+  const ORD = [["ولى|اول", 1], ["ثاني", 2], ["ثالث", 3], ["رابع", 4], ["خامس", 5], ["سادس", 6], ["سابع", 7], ["ثامن", 8], ["تاسع", 9], ["عاشر", 10]];
+  const recNo = t => { const m = latin(String(t || "")).replace(/[أإآ]/g, "ا").match(/توصي[هة]\s*(?:رقم\s*)?[(\s]*(\d{1,2}|[^\s\d()]+)/); if (!m) return 0;
+    if (/^\d+$/.test(m[1])) return +m[1]; const w = m[1]; for (const [rx, n] of ORD) if (new RegExp(rx).test(w)) return n; return 0; };
+  const fixPdf = t => String(t || "").replace(/[\u200e\u200f\u202a-\u202e]/g, "").replace(/(^|[\s(«])([وبلفك]?)امل/g, "$1$2الم").replace(/(^|[\s(«])([وبلفك]?)اال/g, "$1$2الا").replace(/(^|[\s(«])([وبلفك]?)ا([أإ])ل/g, "$1$2ال$3")
+    .replace(/خالل/g, "خلال").replace(/معدالت/g, "معدلات").replace(/[‎‏‪-‮]/g, "").replace(/\s+/g, " ").trim();
+  /* the recommendation's text from the top of a response file: the lines after its heading, up to the first blank line or quality-level heading */
+  const recText = t => { const L = String(t || "").replace(/\[صفحة \d+\]/g, "").split(/\n/); const i = L.findIndex(x => recNo(x) && x.replace(/[\s‎‏‪-‮]/g, "").length < 40); if (i < 0) return "";
+    const out = []; for (const x of L.slice(i + 1, i + 9)) { if (!x.trim() || /مستو[ىي]\s*الجودة|^\s*(الوجود|التطبيق|الفاعلية)\s*$/.test(x)) { if (out.length) break; continue; } out.push(x); }
+    return fixPdf(out.join(" ")).slice(0, 500); };
+  { const _bp = buildPrompt; buildPrompt = function(){ return _bp() + `\n\nإضافة لازمة: إن كان الشاهد رداً على توصية من تقرير مراجعة سابق (اعتماد مشروط) — كأن يبدأ الملف بـ«التوصية الأولى» أو «التوصية الثانية» ثم نصها، أو يُذكر رقم التوصية في اسم الملف — فأضف إلى كائن JSON الحقل "prior_rec": {"n": رقم التوصية, "text": "نص التوصية كما ورد في الملف حرفياً، مع تصحيح الحروف المقلوبة من استخراج PDF فقط دون تغيير المعنى"}. وإن لم يكن كذلك فاجعل "prior_rec": null.`; }; }
+  { const _nz = normalise; normalise = function(r){ const o = _nz(r); const pr = r && r.prior_rec; if (pr && typeof pr === "object" && (+pr.n || pr.text)) o.prior_rec = {n:+pr.n || 0, text:String(pr.text || "").trim()}; return o; }; }
+  /* stamp a fresh result with its recommendation, from the engine's copy, the file names or the file text */
+  { const _rr = renderResult; renderResult = function(r){
+      if (r && !r.fu_rec && r.at && Array.isArray(r.files) && typeof files !== "undefined") {
+        const ok = files.filter(f => !f.err && r.files.includes(f.name));
+        let n = r.prior_rec?.n || 0, t = r.prior_rec?.text || "";
+        for (const f of ok) { n = n || recNo(f.name) || recNo(String(f.text || "").slice(0, 400)); t = t || recText(f.text); }
+        if (n || t) r.fu_rec = {n, t};
+      }
+      return _rr.apply(this, arguments); }; }
+  /* one recommendation per number found, linked to the sub-standard most of its evidence was audited under */
+  const autoRecs = org => {
+    const per = {}; for (const x of LOG) { if (x.mode !== "inst" || orgKey(x.org) !== orgKey(org)) continue;
+      const n = x.fu_rec?.n || [].concat(x.files || []).map(recNo).find(Boolean) || 0; if (!n) continue;
+      const g = per[n] = per[n] || {t:"", codes:{}}; if (x.fu_rec?.t && x.fu_rec.t.length > g.t.length) g.t = x.fu_rec.t; if (x.sub_code) g.codes[x.sub_code] = (g.codes[x.sub_code] || 0) + 1; }
+    return Object.keys(per).map(Number).sort((a, b) => a - b).map(n => ({n, t:per[n].t || `[نص التوصية ${ORDF[n - 1] || n}]`, code:Object.entries(per[n].codes).sort((a, b) => b[1] - a[1])[0]?.[0] || "", st:"", auto:true}));
+  };
+  /* fill the follow-up table from the evidence; whatever the reviewer typed or changed by hand stays as it is */
+  const syncRecs = org => {
+    const found = autoRecs(org); if (!found.length) return 0;
+    const {a, s} = sumState(org); const fu = s.fu = s.fu || {on:false, recs:[]};
+    const keep = (fu.recs || []).filter(r => !r.auto);
+    const old = new Map((fu.recs || []).filter(r => r.auto).map(r => [r.n, r]));
+    const auto = found.filter(r => !keep.some(k => k.n === r.n)).map(r => { const o = old.get(r.n); return o ? {...r, st:o.st || ""} : r; });
+    fu.recs = [...keep, ...auto].sort((x, y) => (x.n || 99) - (y.n || 99)); fu.on = true; sumSave(a); return found.length;
+  };
+  { const _rs = renderSummary; renderSummary = function(){ sumEntries(); syncRecs(SUM_ORG); return _rs.apply(this, arguments); }; }
+  { const _ss = ssRender; ssRender = function(){ sumEntries(); syncRecs(SUM_ORG); return _ss.apply(this, arguments); }; }
+  window.__fu = {recNo, recText, fixPdf, autoRecs, syncRecs};
+  /* a hand edit in the table makes that row the reviewer's own */
+  document.addEventListener("change", e => { const el = e.target; const k = el?.dataset && (el.dataset.fut ?? el.dataset.fuc); if (k == null) return;
+    setTimeout(() => { const {a, s} = sumState(SUM_ORG); const r = s.fu?.recs?.[+k]; if (r && r.auto) { r.auto = false; sumSave(a); } }, 0); }, true);
   /* the two report formats, chosen in one place instead of hunting through the summaries */
   $("#result").insertAdjacentHTML("beforebegin", `<div id="expBar" class="sumbox" style="margin:8px 0"><b>إصدار التقرير (Word)</b> <span class="hint" id="expOrg"></span>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"><button class="btn sm pri" id="expFull" type="button">التقرير النهائي للاعتماد المؤسسي · نموذج معهد الأغذية</button><button class="btn sm pri" id="expFollow" type="button">تقرير إعادة الاعتماد · نموذج معهد الورق</button></div>
-    <p class="hint" style="margin:6px 0 0">بيانات الغلاف وفريق المراجعة ونبذة المنشأة تُدخل مرة واحدة من «ملخص المعيار» ← «بيانات الغلاف والتوثيق»، وتُستخدم في الصيغتين. وتقرير إعادة الاعتماد يحتاج نصوص التوصيات وربط كل توصية بمعيارها الفرعي.</p></div>`);
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"><button class="btn sm pri" id="expFull" type="button">التقرير النهائي للاعتماد المؤسسي</button><button class="btn sm pri" id="expFollow" type="button">تقرير إعادة الاعتماد</button></div>
+    <p class="hint" style="margin:6px 0 0">بيانات الغلاف وفريق المراجعة ونبذة المنشأة تُدخل مرة واحدة من «ملخص المعيار» ← «بيانات الغلاف والتوثيق»، وتُستخدم في الصيغتين. وفي تقرير إعادة الاعتماد تستخرج الأداة التوصيات بنفسها من ملفات رد المنشأة («التوصية الأولى»، «التوصية الثانية»…) وتربط كل توصية بمعيارها الفرعي، ويبقى جدول التوصيات في «ملخص المنشأة» للمراجعة فقط.</p></div>`);
   /* always on screen, so the two formats are never hidden; before any evidence the buttons explain what they need */
-  const expPaint = () => { const has = LOG.some(x => x.mode === "inst"); $("#expFull").disabled = $("#expFollow").disabled = !has;
-    if (!has) { $("#expOrg").textContent = "· يظهر التقرير بعد تدقيق الشواهد أو استيرادها"; return; } SUM_ORG = null; sumEntries(); $("#expOrg").textContent = `· المنشأة: ${SUM_ORG}`; };
+  const expPaint = () => { const has = LOG.some(x => x.mode === "inst"); 
+    if (!has) { $("#expOrg").textContent = "· لا توجد شواهد بعد: يُصدَّر النموذج فارغاً للاطلاع عليه"; return; } SUM_ORG = null; sumEntries(); $("#expOrg").textContent = `· المنشأة: ${SUM_ORG}`; };
   { const _rl = renderLog; renderLog = function(){ _rl(); expPaint(); }; }
-  $("#expFull").onclick = () => { SUM_ORG = null; sumEntries(); ssExport(INST.map(z => z.n)); };
+  const blank = () => !LOG.some(x => x.mode === "inst");
+  $("#expFull").onclick = () => { SUM_ORG = blank() ? "[اسم المنشأة التدريبية]" : null; sumEntries(); ssExport(INST.map(z => z.n)); };
   $("#expFollow").onclick = () => {
-    SUM_ORG = null; sumEntries(); const {a, s} = sumState(SUM_ORG);
+    SUM_ORG = blank() ? "[اسم المنشأة التدريبية]" : null; sumEntries(); syncRecs(SUM_ORG); const {a, s} = sumState(SUM_ORG);
+    /* no evidence yet: the bare template, so the format can be checked */
+    if (blank()) { s.fu.on = true; sumSave(a); ssExportFollow(); return; }
     const FU = ssFollow(SUM_ORG);
-    if (FU.on && FU.recs.some(r => r.t && r.code)) { ssExportFollow(); return; }
+    /* a recommendation whose text was not found in the evidence still goes out, with its text left in brackets to complete */
+    if (FU.on && FU.recs.length && FU.recs.every(r => r.code)) { ssExportFollow(); return; }
     /* not set up yet: switch the summary to re-accreditation and take the user to where the recommendations go */
     if (!s.fu.on) { s.fu.on = true; sumSave(a); }
     renderSummary(); const b = $("#sumBox"); b.hidden = false; ($("#fuAdd") || b).scrollIntoView({behavior:"smooth", block:"center"});
-    toast("أضف نصوص التوصيات واربط كل توصية بمعيارها الفرعي، ثم اضغط «تقرير إعادة الاعتماد» مرة أخرى");
+    toast(FU.recs.length ? "بعض التوصيات لم يُعثر على نصها أو معيارها في الشواهد — أكملها في الجدول ثم اضغط «تقرير إعادة الاعتماد» مرة أخرى" : "لم يُعثر في الشواهد على أرقام توصيات (مثل «التوصية الأولى») — ارفع ملفات رد المنشأة على التوصيات، أو أضفها في الجدول");
   };
   expPaint();
   paint();
