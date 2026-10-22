@@ -2390,6 +2390,7 @@ const PB4 = {
   sugOpen:"يقترح فريق المراجعة الخارجي على {F} "
 };
 /* عبارات إضافية من أحدث تقرير معتمد */
+PB4.affirmMixed = ["، مع الحاجة إلى تحليل أسباب الانخفاض المسجل ووضع إجراءات تحسين مرتبطة به", "، وإن كانت بعض النتائج تستدعي متابعة أسباب تراجعها وتحليلها"];
 PB4.opener.push("تبين لفريق المراجعة الخارجية للاعتماد المؤسسي، من خلال دراسة الوثائق المُقدَّمة على منصة اعتماد التدريب، وفحص الشواهد الإضافية خلال الزيارة والجولة الميدانية، فضلاً عن إجراء مقابلات مع المدربين والمتدربين والخريجين وأصحاب العمل، أن ");
 PB4.lead.e.push("وعلى مستوى الوجود، اطّلع الفريق على ");
 PB4.lead.p.push("وقد اطلع فريق المراجعة الخارجي في مستوى التطبيق على ", "وعلى مستوى التطبيق، تبيّن لفريق المراجعة من خلال فحص ");
@@ -2418,7 +2419,8 @@ const isFemWord = w => { const f = String(w || "").trim().split(/\s+/)[0] || "";
 function numSentence(n, pick){
   const w = String(n.what || "").trim(); const x = String(n.value || "").trim(); if (!w || !x) return "";
   const fem = isFemWord(w); const b = fem ? "بلغت" : "بلغ";
-  const wy = n.year && !w.includes(String(n.year)) ? `${w} لعام ${n.year}` : w;
+  const yr = y => /^[0-9٠-٩]{4}\s*(هـ|م)?$/.test(String(y).trim()) ? "عام " + y : y;
+  const wy = n.year && !w.includes(String(n.year)) ? (/^[0-9٠-٩]{4}/.test(String(n.year).trim()) && /^[0-9٠-٩]{4}\s*(هـ|م)?$/.test(String(n.year).trim()) ? `${w} لعام ${n.year}` : `${w} في ${n.year}`) : w;
   const v = numParse(x); let s;
   const dg = v && v.pct != null && /رضا|تقييم|متوسط/.test(w) ? PB4.degWord.find(([lim]) => v.pct >= lim)[1] : "";
   if (dg && dg !== "بدرجة منخفضة") s = pick(PB4.num.deg).replace("{d}", dg).replace("{b2}", "وبنسبة بلغت");
@@ -2426,7 +2428,7 @@ function numSentence(n, pick){
   s = s.replace("{b}", b).replace("{w}", wy).replace("{x}", x);
   if (!fem) s = s.replace(/^حيث جاءت/, "حيث جاء").replace(/^وقد جاءت/, "وقد جاء");
   if (n.target) { const t = numParse(n.target); if (v && t) { const k = v.v > t.v ? "up" : v.v === t.v ? "eq" : "down"; let c = pick(PB4.num[k]).replace("{t}", n.target); if (!fem) c = c.replace("متجاوزةً", "متجاوزاً").replace("محققةً", "محققاً"); s += c; } else s += `، مقابل مستهدف (${n.target})`; }
-  if (n.prev) { const p = numParse(n.prev); const py = n.prev_year ? `عام ${n.prev_year}` : "القياس السابق"; if (v && p) { const k = v.v > p.v ? "rise" : v.v < p.v ? "fall" : "same"; s += pick(PB4.num[k]).replace("{p}", n.prev).replace("{py}", py); } }
+  if (n.prev) { const p = numParse(n.prev); const py = n.prev_year ? yr(n.prev_year) : "القياس السابق"; if (v && p) { const k = v.v > p.v ? "rise" : v.v < p.v ? "fall" : "same"; s += pick(PB4.num[k]).replace("{p}", n.prev).replace("{py}", py); } }
   if (n.respondents) s += pick(PB4.num.resp).replace("{r}", n.respondents);
   return s;
 }
@@ -2485,7 +2487,9 @@ function composeSub(x, bundle, s, F, pick){
     if (fresh.length > 3) seg += pick(PB4.more).replace("{n}", AR(fresh.length - 3));
     const v = sc[k];
     if (fBlocked) seg += "، إلا أن مستوى الفاعلية لا يُحتسب لعدم استيفاء مستويي الوجود والتطبيق للمستوى [3]";
-    else if (v != null && v >= 3) { if (!viaRef) seg += pick(PB4.affirm[k]); if (s.conf[x.code]) seg += pick(PB4.field); }
+    else if (v != null && v >= 3) {
+      const mixed = k === "f" && items.some(r => (r.numbers || []).some(n => { const a = numParse(n.value), p = numParse(n.prev), t = numParse(n.target); return a && ((p && a.v < p.v) || (t && a.v < t.v)); }));
+      if (!viaRef) seg += pick(mixed ? PB4.affirmMixed : PB4.affirm[k]); if (s.conf[x.code]) seg += pick(PB4.field); }
     else { const g = gapClause(items[0], k) || PB4.gapDefault[k]; seg += pick(/^(لم|لا|ليس)\s/.test(g) ? PB4.gapc.neg : PB4.gapc.pos) + g; }
     cell[k] = (seg + ".").replace(/\s+/g, " ").replace(/،\s*،/g, "،").replace(/\.\./g, ".");
   }
@@ -2585,6 +2589,7 @@ function ssRender(){
     ${R.c ? `<p>متوسط تقييم المعيار ${AR(trunc2(R.c.avg))} · <span class="${stCls(R.c.st)}">${ST_LAB(R.c.st)}</span>${R.c.note ? ` <span class="hint">${R.c.note}</span>` : ""}${R.selfAvg != null ? ` · <span class="hint">التقييم الذاتي ${AR(trunc2(R.selfAvg))}</span>` : ""}</p>` : '<p class="hint">لم تُدخل شواهد لهذا المعيار بعد. دقّق الشواهد أولاً وستظهر هنا تحت كل مستوى.</p>'}
     <div class="hint">افتتاحية المعيار (تُكتب في بداية ملخص الوجود لأول معيار فرعي، كما في التقارير):</div>${ta("open", R.open, 3)}
     ${cards}
+    ${ssFollowHTML()}
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0"><button class="btn sm" id="ssGen" type="button">صياغة جديدة للمقترح</button><button class="btn sm" id="ssAI" type="button">تحسين الصياغة بالذكاء</button><button class="btn sm" id="ssCopy" type="button">نسخ المعيار</button><button class="btn sm pri" id="ssDl1" type="button">تصدير هذا المعيار (Word)</button><button class="btn sm pri" id="ssDlAll" type="button">تصدير التقرير كاملاً (Word)</button></div>
     <details class="sscard"><summary><b>بيانات الغلاف والتوثيق</b> <span class="hint">(تُكتب في التقرير المصدَّر؛ وما يُترك فارغاً يظهر بين قوسين للاستكمال)</span></summary>
       <label class="hint">المنطقة / المدينة <input type="text" data-ssmeta="region" value="${esc(SS_META().s.region || "")}"></label>
@@ -2601,6 +2606,7 @@ function ssRender(){
   $("#ssOrg").onchange = e => { SUM_ORG = e.target.value; ssRender(); };
   $("#ssStd").onchange = e => { SS_STD = +e.target.value; ssRender(); };
   $("#ssNoun").onchange = e => { const M = SS_META(); M.s.noun = e.target.value.trim(); store.set(SSK, M.a); ssRender(); };
+  ssFollowBind(box);
   box.querySelectorAll("[data-ssmeta]").forEach(el => el.onchange = () => { const M = SS_META(); M.s[el.dataset.ssmeta] = el.value.trim(); store.set(SSK, M.a); });
   $("#ssTerms").onchange = e => { store.set(UTK, e.target.value); toast("حُفظت المصطلحات"); };
   box.querySelectorAll("[data-ssed]").forEach(el => el.oninput = () => { s.ed[el.dataset.ssed] = el.value; save(); });
@@ -2796,6 +2802,128 @@ async function ssExport(nums){
   finally { btns.forEach(b => b.disabled = false); }
 }
 
+/* ---------- conditional-accreditation follow-up: «تقرير متابعة الاعتماد المؤسسي المشروط» ---------- */
+const ORDF = ["الأولى","الثانية","الثالثة","الرابعة","الخامسة","السادسة","السابعة","الثامنة","التاسعة","العاشرة","الحادية عشرة","الثانية عشرة","الثالثة عشرة","الرابعة عشرة","الخامسة عشرة"];
+const FU_OPEN = [
+  "فحص فريق المراجعة الخارجية للاعتماد المؤسسي وثائق التوصية والشواهد الإضافية التي تم توفيرها قبل الزيارة وأثناءها، وناقش المعنيين بإعداد شواهد هذه التوصية.",
+  "اطلع فريق المراجعة الخارجية للاعتماد المؤسسي على الشواهد والأدلة المقدمة لهذه التوصية، والشواهد الإضافية التي تم توفيرها أثناء الزيارة، وناقش المعنيين بإعدادها.",
+  "من خلال المراجعة وفحص الأدلة والشواهد المقدمة لهذه التوصية والمناقشات مع المعنيين بإعدادها، وقف فريق المراجعة الخارجية للاعتماد المؤسسي على ما يلي."];
+const FU_CLOSE = {
+  "كامل":["وبناءً على ما سبق، يرى فريق المراجعة أن {F} {v:قد امتثل/قد امتثلت} لهذه التوصية امتثالاً كاملاً.","وعليه فقد تحقق امتثال {F} لهذه التوصية بشكل كامل."],
+  "جوهري":["وبناءً على ما سبق، يرى فريق المراجعة أن {F} {v:قد امتثل/قد امتثلت} لهذه التوصية امتثالاً جوهرياً، مع بقاء فرص للتحسين."],
+  "حد أدنى":["وبناءً على ما سبق، يرى فريق المراجعة أن امتثال {F} لهذه التوصية لا يزال في حده الأدنى، ولم تكتمل متطلباتها بعد."],
+  "عدم امتثال":["وبناءً على ما سبق، يرى فريق المراجعة أن {F} لم {v:يمتثل/تمتثل} لهذه التوصية بالشكل المطلوب."]};
+const FU_ST = ["كامل", "جوهري", "حد أدنى", "عدم امتثال"];
+const FU_LAB = {"كامل":"الامتثال الكامل", "جوهري":"الامتثال الجوهري", "حد أدنى":"الحد الأدنى من الامتثال", "عدم امتثال":"عدم الامتثال"};
+/* the follow-up as the report will carry it: one block per recommendation, built from the evidence of its linked sub-standard */
+function ssFollow(org){
+  const sum = sumState(org).s; const fu = sum.fu || {on:false, recs:[]};
+  const M = ssState(org, "meta"); const me = M.s; me.ed = me.ed || {};
+  const F = ssNoun(org); const pick = picker(me.seed || 1); const cache = {};
+  const per = latestPer(LOG.filter(x => x.mode === "inst" && orgKey(x.org) === orgKey(org)));
+  const recs = (fu.recs || []).map((r, i) => {
+    const code = r.code || ""; let z = null;
+    if (code) { const m = INST.find(q => q.subs.some(x => x.code === code)); if (m) { cache[m.n] = cache[m.n] || ssStd(m, org); z = cache[m.n].subs.find(q => q.x.code === code); } }
+    const auto = z && z.L != null ? (z.L >= 3 ? "كامل" : z.L === 2 ? "حد أدنى" : "عدم امتثال") : (code && per[code] ? (L => L == null ? "" : L >= 3 ? "كامل" : L === 2 ? "حد أدنى" : "عدم امتثال")(instLv(per[code])) : "");
+    const st = r.st || auto;
+    const body = z && z.has ? LVK.map(([k]) => z.cells[k]).join(" ") : "";
+    const gen = body ? pick(FU_OPEN) + " " + body + (st ? " " + fill(pick(FU_CLOSE[st]), F) : "") : "";
+    const key = "fu|" + i + "|";
+    return {i, t:r.t || "", code, st, auto, z, sum:ssVal(me, key + "sum", gen),
+      P:ssVal(me, key + "P", z ? z.P : ""), R:ssVal(me, key + "R", z ? z.R : ""), S:ssVal(me, key + "S", z ? z.S : ""), note:ssVal(me, key + "note", "")};
+  });
+  const done = recs.length && recs.every(r => r.st);
+  const dec = !done ? "" : recs.every(r => r.st === "كامل" || r.st === "جوهري") ? "منح" : "سحب";
+  return {on:!!fu.on, recs, F, M, dec};
+}
+function ssFollowHTML(){
+  const FU = ssFollow(SUM_ORG); if (!FU.on) return "";
+  const ta = (key, val, rows) => `<textarea data-fued="${esc(key)}" rows="${rows}" style="width:100%;font:inherit;line-height:1.8">${esc(val)}</textarea>${FU.M.s.ed[key] != null ? `<button class="btn sm ghost" data-fureset="${esc(key)}" type="button">إرجاع الصياغة المقترحة</button>` : ""}`;
+  return `<h3 style="margin-top:14px">تقرير متابعة الاعتماد المشروط <small class="hint">توصية بتوصية، بقالب «تقرير متابعة الاعتماد المؤسسي المشروط»</small></h3>
+    ${FU.recs.length ? "" : '<p class="hint">أضف نصوص التوصيات وربط كل توصية بمعيارها الفرعي من «ملخص المنشأة» (نوع المراجعة: متابعة اعتماد مشروط).</p>'}
+    ${FU.recs.map(r => `<details class="sscard" open><summary><b>التوصية ${ORDF[r.i] || r.i + 1}</b> ${esc(r.t.slice(0, 120))} — ${r.code ? "المعيار الفرعي " + dcode(r.code) : '<span class="hint">لم تُربط بمعيار فرعي</span>'} · ${r.st ? `<span class="${stCls(r.st)}">${FU_LAB[r.st]}</span>${r.auto && r.st !== r.auto ? "" : ' <span class="hint">(تلقائي)</span>'}` : '<span class="hint">لم تُحدد حالة الامتثال</span>'}</summary>
+      <div class="hint">ملخص عن التوصية (الوجود ← التطبيق ← الفاعلية من شواهد المعيار المرتبط):</div>${ta("fu|" + r.i + "|sum", r.sum, 6)}
+      <div class="hint">الإشادات:</div>${ta("fu|" + r.i + "|P", r.P, 2)}<div class="hint">التوصيات:</div>${ta("fu|" + r.i + "|R", r.R, 2)}<div class="hint">المقترحات:</div>${ta("fu|" + r.i + "|S", r.S, 2)}
+      <div class="hint">ملاحظات جدول الامتثال:</div>${ta("fu|" + r.i + "|note", r.note, 1)}</details>`).join("")}
+    ${FU.recs.length ? `<p>توصية الفريق المقترحة: <b>${FU.dec === "منح" ? "منح المنشأة التدريبية اعتماداً كاملاً" : FU.dec === "سحب" ? "لم تُستوفَ كل التوصيات — القرار للفريق" : "—"}</b></p><button class="btn sm pri" id="fuDl" type="button">تصدير تقرير المتابعة (Word)</button>` : ""}`;
+}
+function ssFollowBind(box){
+  const save = (k, v) => { const M = ssState(SUM_ORG, "meta"); M.s.ed = M.s.ed || {}; if (v == null) delete M.s.ed[k]; else M.s.ed[k] = v; store.set(SSK, M.a); };
+  box.querySelectorAll("[data-fued]").forEach(el => el.oninput = () => save(el.dataset.fued, el.value));
+  box.querySelectorAll("[data-fureset]").forEach(el => el.onclick = () => { save(el.dataset.fureset, null); ssRender(); });
+  $("#fuDl")?.addEventListener("click", () => ssExportFollow());
+}
+function ssBuildFollow(){
+  const D = window.docx; if (!D) throw new Error("docx");
+  const FS = {ascii:"Sakkal Majalla", hAnsi:"Sakkal Majalla", cs:"Sakkal Majalla", eastAsia:"Sakkal Majalla"};
+  const AL = D.AlignmentType, DX = D.WidthType.DXA, HC = "3C3D97", GR = "3BB874", RED = "C00000", LB = "D9E2F3", GY = "D9D9D9";
+  const run = (t, o = {}) => new D.TextRun({text:String(t), font:FS, size:o.size || 24, bold:!!o.bold, color:o.color, rightToLeft:true});
+  const P = (t, o = {}) => new D.Paragraph({bidirectional:true, heading:o.h, alignment:o.al || AL.BOTH, spacing:{before:o.sb || 0, after:o.sa == null ? 80 : o.sa, line:o.line || 276}, keepNext:!!o.keep, pageBreakBefore:!!o.pb, children:[run(t, o)]});
+  const Ps = (t, o) => String(t == null ? "" : t).split(/\r?\n/).map(x => P(x, o));
+  const bd = {style:D.BorderStyle.SINGLE, size:4, color:"8496B0"}, BD = {top:bd, bottom:bd, left:bd, right:bd};
+  const C = (t, o = {}) => new D.TableCell({children:Ps(t, {size:o.size || 24, bold:o.bold, al:o.al || (o.bold ? AL.CENTER : AL.BOTH), sa:0}), width:{size:o.w, type:DX}, columnSpan:o.span,
+    verticalAlign:D.VerticalAlign.CENTER, shading:o.fill ? {type:D.ShadingType.CLEAR, fill:o.fill, color:"auto"} : undefined, borders:BD, margins:{top:60, bottom:60, left:100, right:100}});
+  const T = (cw, rows) => new D.Table({visuallyRightToLeft:true, width:{size:cw.reduce((a, b) => a + b, 0), type:DX}, columnWidths:cw, rows:rows.map(r => new D.TableRow({children:r, cantSplit:true}))});
+  const H1 = t => P(t, {h:D.HeadingLevel.HEADING_1, size:28, bold:true, color:HC, al:AL.START, sb:240, sa:120, keep:true});
+  const FU = ssFollow(SUM_ORG), M = FU.M.s, F = FU.F; const fac = String(SUM_ORG || "").trim() || "[اسم المنشأة التدريبية]";
+  const from = (M.from || "").trim() || "[التاريخ]", to = (M.to || "").trim();
+  const n = FU.recs.length, nFull = FU.recs.filter(r => r.st === "كامل").length;
+  const kids = [];
+  kids.push(P("", {sa:1400}));
+  kids.push(P("تقرير متابعة الاعتماد المؤسسي المشروط", {size:56, bold:true, color:HC, al:AL.CENTER, sa:200}));
+  kids.push(P(fac, {size:28, bold:true, color:GR, al:AL.CENTER, sa:80}));
+  kids.push(P((M.region || "").trim() || "[المنطقة / المدينة]", {size:28, al:AL.CENTER, sa:400}));
+  kids.push(P("تاريخ إعداد التقرير: " + ((M.rdate || "").trim() || new Date().toLocaleDateString("ar-SA-u-ca-gregory-nu-latn")), {size:28, al:AL.CENTER, sa:80}));
+  kids.push(P("مسودة أُعدّت من مدقق الشواهد وتتطلب مراجعة فريق المراجعة قبل الرفع", {size:20, color:RED, al:AL.CENTER}));
+  kids.push(P("مقدمة:", {h:D.HeadingLevel.HEADING_1, size:28, bold:true, color:HC, al:AL.START, pb:true, sa:120}));
+  kids.push(P("قام فريق المراجعة الخارجية بتنفيذ زيارة مراجعة للاعتماد المؤسسي المشروط لـ" + fac + "، " + (to ? "خلال الفترة من " + from + " إلى " + to : "بتاريخ " + from) + "، وذلك لمتابعة وضمان امتثال " + F + " للتوصيات الواردة في خطاب الاعتماد المؤسسي المشروط وتقديم الإشادات والتوصيات والاقتراحات حسب ما تمخضت عنه المراجعة الخارجية."));
+  kids.push(P("[يُستكمل: نبذة عن " + fac + " (التأسيس، عدد المنسوبين والمدربين والمتدربين، البرامج)].", {color:"808080"}));
+  const ID = ["نوع المنشأة التدريبة", "تاريخ بداية عمل المنشأة", "معلومات الاتصال", "طبيعة المنشأة", "الفئة المستهدفة", "عدد البرامج المقدمة"];
+  kids.push(T([3487, 6542], ID.map(x => [C(x, {w:3487, bold:true, fill:LB}), C("", {w:6542})])));
+  kids.push(P("ويتضمن هذا التقرير ملاحظات الفريق استناداً على المعلومات التي قدمت إليه من قبل " + fac + "، وملاحظات الفريق أثناء الزيارة. وقد استند الفريق في بناء هذا التقرير على امتثال " + F + " للتوصيات الواردة في خطاب الاعتماد المؤسسي المشروط.", {sb:160}));
+  kids.push(H1("ملخص تنفيذي:"));
+  kids.push(P("تمت زيارة " + fac + " لغرض متابعة وضمان امتثال " + F + " للتوصيات الواردة في خطاب الاعتماد المؤسسي المشروط، وتمت خلال الزيارة مراجعة جميع التوصيات (" + n + ")، وتخللتها نقاشات مع إدارة " + F + " والمعنيين بإعداد الشواهد. ويتضمن هذا التقرير تفصيلاً لامتثال " + F + " للتوصيات استناداً إلى ما تم تقديمه من أدلة وشواهد وما أضيف له من أدلة اطلع عليها فريق المراجعة خلال اللقاء وبعده" + (FU.recs.every(r => r.st) ? "، وقد أظهرت نتائج المراجعة الامتثال الكامل في (" + nFull + ") من أصل (" + n + ") توصيات." : ".")));
+  kids.push(P("تقويم الممارسات وفق توصيات الاعتماد المؤسسي المشروط", {h:D.HeadingLevel.HEADING_1, size:28, bold:true, color:HC, al:AL.START, pb:true, sa:160}));
+  for (const r of FU.recs) {
+    kids.push(P("التوصية " + (ORDF[r.i] || r.i + 1) + ": " + r.t, {size:28, bold:true, color:RED, sb:200, keep:true}));
+    kids.push(P("(يقوم الفريق هنا بعرض ملاحظاته على التوصية، وتشمل الإشادات والتوصيات والمقترحات (إن وجدت).", {size:22, color:RED, keep:true}));
+    kids.push(T([2081, 8079], [["ملخص عن التوصية", r.sum], ["الإشادات", r.P], ["التوصيات", r.R], ["المقترحات", r.S]].map(([l, v]) => [C(l, {w:2081, bold:true, fill:LB, size:28}), C(String(v || "").trim() || "لا يوجد", {w:8079})])));
+  }
+  /* compliance */
+  const CWF = [1440, 2556, 835, 845, 835, 854, 2839];
+  const cr = [[C("ملخص امتثال المنشأة التدريبية", {w:10204, span:7, bold:true, fill:GY, size:28})],
+    [C("اسم المنشأة التدريبية:", {w:1440, bold:true, fill:GY}), C(fac, {w:2556 + 835 + 845, span:3, bold:true}), C("التاريخ:", {w:835, bold:true, fill:GY}), C((M.rdate || "").trim(), {w:854 + 2839, span:2})]];
+  FU.recs.forEach(r => {
+    cr.push([C("التوصية " + (ORDF[r.i] || r.i + 1) + ":", {w:3996, span:2, bold:true, fill:GY}), ...FU_ST.map((s, j) => C(FU_LAB[s], {w:CWF[2 + j], bold:true, fill:GY, size:18})), C("ملاحظات", {w:2839, bold:true, fill:GY, size:18})]);
+    cr.push([C(r.t, {w:3996, span:2, size:22}), ...FU_ST.map((s, j) => C(r.st === s ? "✓" : "", {w:CWF[2 + j], bold:true, size:28, al:AL.CENTER})), C(r.note, {w:2839, size:22})]);
+  });
+  kids.push(P("", {pb:true, sa:0})); kids.push(T(CWF, cr));
+  /* decision */
+  kids.push(P("توصيات فريق المراجعة الخارجية للاعتماد المؤسسي المشروط:", {size:28, bold:true, sb:240}));
+  kids.push(P("اسم المنشأة التدريبية: " + fac, {size:24}));
+  kids.push(P((FU.dec === "منح" ? "☒" : "☐") + "  منح المنشأة التدريبية اعتماد كامل", {size:28}));
+  kids.push(P("☐  سحب اعتماد المنشأة التدريبية.", {size:28}));
+  kids.push(P("ملخص عن سبب رفض اعتماد المنشأة التدريبية:", {size:24, bold:true}));
+  kids.push(P(FU.dec === "سحب" ? "[يُستكمل: لم تُستوفَ كل التوصيات، والقرار لفريق المراجعة]" : "", {size:24, color:"808080"}));
+  /* team */
+  const team = String(M.team || "").split(/\n+/).map(s => s.trim()).filter(Boolean);
+  const dr = [[C("فريق المراجعة", {w:10204, span:4, bold:true, fill:GY, size:28})], [C("الصفة", {w:1419, bold:true, fill:GY}), C("الاسم", {w:3679, bold:true, fill:GY}), C("التاريخ", {w:2549, bold:true, fill:GY}), C("التوقيع", {w:2557, bold:true, fill:GY})]];
+  (team.length ? team : ["", ""]).forEach((nm, i) => dr.push([C(i ? "عضو" : "رئيس الفريق", {w:1419, bold:true}), C(nm, {w:3679}), C("", {w:2549}), C("", {w:2557})]));
+  kids.push(P("", {sa:120})); kids.push(T([1419, 3679, 2549, 2557], dr));
+  const footer = new D.Footer({children:[new D.Paragraph({alignment:AL.CENTER, bidirectional:true, children:[run("تقرير متابعة الاعتماد المؤسسي المشروط — " + fac + "     |     ", {size:18, color:"808080"}), new D.TextRun({children:[D.PageNumber.CURRENT], font:FS, size:18, color:"808080"})]})]});
+  return new D.Document({creator:"علي الأحمري", title:"تقرير متابعة الاعتماد المؤسسي المشروط — " + fac, styles:{default:{document:{run:{font:FS, size:24}}}, paragraphStyles:[{id:"Heading1", name:"Heading 1", basedOn:"Normal", next:"Normal", quickFormat:true, run:{font:FS, size:28, bold:true, color:HC}}]},
+    sections:[{properties:{page:{size:{width:11906, height:16838, orientation:D.PageOrientation.PORTRAIT}, margin:{top:1440, bottom:1440, left:851, right:851}}}, footers:{default:footer}, children:kids}]});
+}
+async function ssExportFollow(){
+  if (!window.docx) { toast("تعذّر تحميل مكتبة Word"); return; }
+  const b = $("#fuDl"); if (b) b.disabled = true;
+  try {
+    const blob = await window.docx.Packer.toBlob(ssBuildFollow());
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "تقرير متابعة الاعتماد المشروط - " + String(SUM_ORG || "").replace(/[\\/:*?"<>|]+/g, " ").trim() + ".docx"; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+    toast("صُدِّر تقرير المتابعة — راجعه قبل الرفع");
+  } catch (e) { toast("تعذّر إنشاء ملف Word"); if (window.console) console.error(e); }
+  finally { if (b) b.disabled = false; }
+}
 /* ---------- per-evidence brief: new fields requested from the engine ---------- */
 const V4_FIELDS = `
 "ev_phrase": "نبذة الشاهد بأسلوب تقارير فريق المراجعة، عبارة اسمية تصلح بعد «اطلع الفريق على»: نوع الوثيقة واسمها وجهة إصدارها وتاريخها، ثم ما تتضمنه أو ما تثبته، مثل: «سياسة … المعتمدة بتاريخ … والتي توضح …» أو «تقرير تحليل استبانة … لعام … والذي أظهر …». لا تذكر ما ليس في الشاهد",
