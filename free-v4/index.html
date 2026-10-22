@@ -3052,7 +3052,7 @@ async function ssExportFollow(){
 const V4_FIELDS = `
 "ev_phrase": "نبذة الشاهد بأسلوب تقارير فريق المراجعة، عبارة اسمية تصلح بعد «اطلع الفريق على»: نوع الوثيقة واسمها ورقمها أو رمزها وجهة إصدارها وتاريخ اعتمادها أو تحديثها (أو تاريخ المحضر أو التقرير)، والأعداد الواردة فيها (عدد المحاضر، المستجيبين من أصل، المتدربين، الشركات…)، ثم ما تتضمنه أو ما تثبته، ولا تُغفل التاريخ والرقم متى وردا في الشاهد، مثل: «سياسة … المعتمدة بتاريخ … والتي توضح …» أو «تقرير تحليل استبانة … لعام … والذي أظهر …». لا تذكر ما ليس في الشاهد",
 "numbers": [{"what":"المقيس بالعربية مثل «نسبة رضا المتدربين عن …» أو «متوسط …» أو «نسبة التوظيف»","value":"القيمة كما في الشاهد مثل 4.47 من 5 أو 87%","target":"المستهدف إن ذُكر وإلا فارغ","prev":"قيمة سابقة للمقارنة إن ذُكرت وإلا فارغ","prev_year":"سنة القيمة السابقة أو فارغ","year":"سنة القياس أو فارغ","respondents":"عدد المستجيبين مثل 141 من 230 أو فارغ"}] — حتى 4 أرقام هي الأهم للحكم، أو [] إن لم توجد أرقام,
-"docs": [{"title":"اسم الوثيقة كما ورد فيها","ref":"رقمها أو رمزها كما ورد مثل TOP-PO-25 أو فارغ","approved":"تاريخ الاعتماد كما ورد أو فارغ","updated":"تاريخ التحديث أو المراجعة أو فارغ","date":"تاريخ المحضر أو التقرير أو التعميم أو فارغ","undated":"true إن خلت الوثيقة من أي تاريخ وإلا false"}] — وثيقة لكل ملف رئيس، حتى 6,
+"docs": [{"title":"اسم الوثيقة كما ورد فيها","type":"نوعها: سياسة أو دليل أو إجراء أو لائحة أو خطة أو خطة تشغيلية أو محضر اجتماع أو تقرير أو قياس رضا / استبانة أو تعميم / قرار أو سجل / كشف / قائمة أو جدول أو نموذج أو شهادة أو عقد / اتفاقية أو أخرى","status":"معتمدة إن ظهر اعتمادها من صاحب الصلاحية، أو غير معتمدة، أو لم يتضح، أو لا ينطبق للمحاضر والتقارير والقياسات","ref":"رقمها أو رمزها كما ورد مثل TOP-PO-25 أو فارغ","approved":"تاريخ الاعتماد كما ورد أو فارغ","updated":"تاريخ التحديث أو المراجعة أو فارغ","date":"تاريخ المحضر أو التقرير أو التعميم أو فارغ","undated":"true إن خلت الوثيقة من أي تاريخ وإلا false"}] — وثيقة لكل ملف رئيس، حتى 6,
 "unreadable": "true إن كان الملف الرئيس مصوراً أو غير مقروء بحيث لا يمكن الحكم على محتواه، وعندها لا تُقدّر المستوى بناءً عليه وإلا false",
 "counts": [{"what":"المعدود بالعربية مثل «المحاضر» أو «المستجيبين للاستبانة» أو «المتدربين المختبرين»","value":"العدد","of":"الإجمالي إن ذُكر وإلا فارغ"}] — حتى 4 أعداد ذات دلالة، أو [],
 "gap_clause": {"existence":"إن قلّ الوجود عن 3: جملة واحدة تبدأ بفعل تصف القصور مثل «لم يتم اعتماد السياسة أو تحديثها» وإلا فارغ","application":"…","effectiveness":"إن قلّت الفاعلية عن 3: مثل «لم يتم تحليل نتائج القياس ووضع خطط تحسين مزمنة» وإلا فارغ"}`;
@@ -3062,7 +3062,7 @@ const V4_FIELDS = `
     const out = _n(r); if (MODE !== "inst" || !out) return out;
     out.ev_phrase = String(r?.ev_phrase || "").trim();
     out.numbers = (Array.isArray(r?.numbers) ? r.numbers : []).map(n => ({what:String(n?.what || "").trim(), value:String(n?.value ?? "").trim(), target:String(n?.target ?? "").trim(), prev:String(n?.prev ?? "").trim(), prev_year:String(n?.prev_year ?? "").trim(), year:String(n?.year ?? "").trim(), respondents:String(n?.respondents ?? "").trim()})).filter(n => n.what && n.value && /\d|[٠-٩]/.test(n.value)).slice(0, 4);
-    out.docs = (Array.isArray(r?.docs) ? r.docs : []).map(d => ({title:String(d?.title || "").trim(), ref:String(d?.ref || "").trim(), approved:String(d?.approved || "").trim(), updated:String(d?.updated || "").trim(), date:String(d?.date || "").trim(), undated:d?.undated === true || d?.undated === "true"})).filter(d => d.title).slice(0, 6);
+    out.docs = (Array.isArray(r?.docs) ? r.docs : []).map(d => ({title:String(d?.title || "").trim(), type:String(d?.type || "").trim(), status:String(d?.status || "").trim(), ref:String(d?.ref || "").trim(), approved:String(d?.approved || "").trim(), updated:String(d?.updated || "").trim(), date:String(d?.date || "").trim(), undated:d?.undated === true || d?.undated === "true"})).filter(d => d.title).slice(0, 6);
     out.unreadable = r?.unreadable === true || r?.unreadable === "true";
     out.counts = (Array.isArray(r?.counts) ? r.counts : []).map(c => ({what:String(c?.what || "").trim(), value:String(c?.value ?? "").trim(), of:String(c?.of ?? "").trim()})).filter(c => c.what && /\d|[٠-٩]/.test(c.value)).slice(0, 4);
     const g = r?.gap_clause; out.gap_clause = g && typeof g === "object" ? {existence:String(g.existence || ""), application:String(g.application || ""), effectiveness:String(g.effectiveness || "")} : {};
@@ -3074,11 +3074,93 @@ const V4_FIELDS = `
     const sec = [...document.querySelectorAll("#sheet .sec h3")].find(h => h.textContent.trim() === "ما هذا الشاهد")?.parentElement; if (!sec) return;
     sec.insertAdjacentHTML("beforeend", `${r.ev_phrase ? `<p><b>نبذة بصياغة التقرير:</b> ${esc(r.ev_phrase)}</p>` : ""}${docLine(r)}${r.numbers?.length ? `<p class="hint">الأرقام المستخرجة: ${r.numbers.map(n => esc(`${n.what}: ${n.value}${n.target ? " (المستهدف " + n.target + ")" : ""}${n.prev ? " (السابق " + n.prev + (n.prev_year ? " لعام " + n.prev_year : "") + ")" : ""}${n.respondents ? " · المستجيبون " + n.respondents : ""}`)).join(" · ")}</p>` : ""}`);
   }; }
+/* ===== لوحة «سجل الشواهد»: كل وثيقة بنوعها ومحتواها وتاريخها ورقمها واعتمادها ===== */
+const DTYPES = [["محضر اجتماع", /^(محضر|محاضر)/], ["قياس رضا / استبانة", /رضا|استبان|استطلاع/], ["تعميم / قرار", /^(تعميم|تعاميم|قرار|خطاب)/], ["خطة تشغيلية", /الخطة التشغيلية|خطة تشغيلية|خطتها التشغيلية/],
+  ["خطة", /^(خطة|خطط)/], ["سياسة", /^(سياسة|سياسات)/], ["دليل", /^(دليل|أدلة)/], ["إجراء", /^(إجراء|اجراء|إجراءات)/], ["لائحة", /^(لائحة|لوائح)/], ["تقرير", /^(تقرير|تقارير|تقريري)/],
+  ["سجل / كشف / قائمة", /^(سجل|كشف|قائمة|قوائم|إحصائيات|احصائيات|بيانات)/], ["جدول", /^(جدول|جداول)/], ["نموذج", /^(نموذج|نماذج)/], ["شهادة", /^شهاد/], ["عقد / اتفاقية", /^(عقد|عقود|اتفاقي|مذكرة تفاهم)/], ["مراسلة / تعميم داخلي", /^(مراسل|بريد|رسالة)/], ["ورشة / برنامج / فعالية", /^(ورشة|ورش|دورة|دورات|برنامج|برامج|جلسة|جلسات|فعالية)/], ["آراء / موافقات", /^(مرئيات|آراء|موافق)/]];
+function docType(t){
+  const s = String(t || "").replace(/[«»"]/g, "").trim(); if (!s) return "أخرى";
+  if (/^(تقرير|تقارير|تحليل|استبان|قياس|نتائج)/.test(s) && /رضا|استبان|استطلاع/.test(s)) return "قياس رضا / استبانة";
+  for (const [n, re] of DTYPES) if (re.source.startsWith("^") && re.test(s)) return n;
+  for (const [n, re] of DTYPES) if (new RegExp(re.source.replace(/^\^/, "")).test(s)) return n;
+  return "أخرى";
+}
+const NOAPPR = /محضر|رضا|تقرير|سجل|جدول|شهادة|مراسلة|نموذج|ورشة|آراء/;
+function apprOf(d, txt, type){
+  if (d && d.status) return d.status;
+  if (d && d.approved) return "معتمدة";
+  if (NOAPPR.test(type)) return "لا ينطبق";
+  if (/غير معتمد|لم يتم اعتماد|لم تُعتمد|لم تعتمد/.test(txt)) return "غير معتمدة";
+  if (/معتمد|اعتماد|بقرار|المعتمدة/.test(txt)) return "معتمدة";
+  return NOAPPR.test(type) ? "لا ينطبق" : "لم يتضح";
+}
+const firstDate = t => { DATE_RE.lastIndex = 0; const m = latin(t || "").match(DATE_RE); DATE_RE.lastIndex = 0; if (m) return fmtDates(m[0]); const y = latin(t || "").match(new RegExp(`((${MON_G.join("|")})\\s*)?\\b(20|14)\\d{2}\\b`)); return y ? y[0] : ""; };
+const LVN = {e:"الوجود", p:"التطبيق", f:"الفاعلية"};
+/* one row per document named by the engine, else one row per entry */
+function regRows(list){
+  const rows = [];
+  for (const r of list) {
+    const lv = entryLevels(r); const K = LVK.find(x => x[0] === lv.slice(-1)[0]); const sc = K ? r.quality?.[K[1]]?.score : r.level;
+    const base = {code:r.sub_code, lv:lv.map(k => LVN[k]).join("، "), sc, files:(r.files || []).join("، "), id:entryId(r), unreadable:!!r.unreadable};
+    const ds = (r.docs || []).filter(d => d && d.title);
+    const brief = String(r.ev_phrase || r.doc_summary || "").trim();
+    if (ds.length) ds.forEach((d, i) => { const type = d.type || docType(d.title); const dt = [d.approved && "اعتماد " + fmtDates(d.approved), d.updated && "تحديث " + fmtDates(d.updated), d.date && fmtDates(d.date)].filter(Boolean).join(" · ") || (i === 0 ? firstDate(brief) : "");
+      rows.push({...base, title:d.title, type, brief:i === 0 ? brief : "", date:dt || (d.undated ? "غير مؤرخ" : ""), ref:d.ref || "", appr:apprOf(d, i === 0 ? brief : d.title, type)}); });
+    else { const title = brief.split(/[،,(]|\s(?=بتاريخ|بتاريخي|بتواريخ|المعتمد|المعتمدة|برقم|والذي|والتي|التي|الذي|خلال)/)[0].trim().split(/\s+/).slice(0, 12).join(" ") || base.files; const type = docType(title || base.files);
+      rows.push({...base, title, type, brief, date:firstDate(brief), ref:"", appr:apprOf(null, brief, type)}); }
+  }
+  return rows;
+}
+let REG_STD = "all", REG_TYPE = "all";
+function regRender(){
+  const box = $("#regBox"); if (!box) return;
+  if (MODE !== "inst") { box.innerHTML = '<div class="warn">سجل الشواهد خاص بالمسار المؤسسي.</div>'; return; }
+  const {orgs, list} = sumEntries();
+  const all = regRows(list.filter(r => REG_STD === "all" || String(r.sub_code).split("-")[1] === REG_STD));
+  const rows = all.filter(x => REG_TYPE === "all" || x.type === REG_TYPE).sort((a, b) => String(a.code).split("-").reverse().join(".").localeCompare(String(b.code).split("-").reverse().join("."), "en", {numeric:true}));
+  const by = {}; all.forEach(x => by[x.type] = (by[x.type] || 0) + 1);
+  const nA = all.filter(x => x.appr === "معتمدة").length, nU = all.filter(x => !x.date).length, nNA = all.filter(x => x.appr === "غير معتمدة" || x.appr === "لم يتضح").length;
+  const ach = v => `<span class="chip ${v === "معتمدة" ? "ok" : v === "غير معتمدة" ? "bad" : v === "لم يتضح" ? "part" : ""}">${esc(v)}</span>`;
+  box.innerHTML = `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><h3 style="flex:1 1 100%;margin:0">سجل الشواهد <small class="hint">كل وثيقة بنوعها ومحتواها وتاريخها ورقمها وحالة اعتمادها</small></h3>
+      <label class="hint">المنشأة <select id="regOrg">${orgs.map(o => `<option ${o === SUM_ORG ? "selected" : ""}>${esc(o)}</option>`).join("")}</select></label>
+      <label class="hint">المعيار <select id="regStd"><option value="all">كل المعايير</option>${INST.map(m => `<option value="${m.n}" ${String(m.n) === REG_STD ? "selected" : ""}>${AR(m.n)}: ${esc(m.title)}</option>`).join("")}</select></label>
+      <label class="hint">النوع <select id="regType"><option value="all">كل الأنواع</option>${Object.keys(by).map(t => `<option ${t === REG_TYPE ? "selected" : ""}>${esc(t)}</option>`).join("")}</select></label>
+      <button class="btn sm ghost" id="regClose" type="button">إغلاق</button></div>
+    <p>${AR(all.length)} وثيقة · معتمدة ${AR(nA)} · غير معتمدة أو لم يتضح ${AR(nNA)} · دون تاريخ ${AR(nU)}</p>
+    <p>${Object.entries(by).sort((a, b) => b[1] - a[1]).map(([t, n]) => `<span class="chip">${esc(t)} ${AR(n)}</span>`).join(" ")}</p>
+    <div class="tw"><table><thead><tr><th>#</th><th>المعيار الفرعي</th><th>المستوى</th><th>الوثيقة</th><th>النوع</th><th>المحتوى</th><th>التاريخ</th><th>الرقم</th><th>الاعتماد</th><th>التقدير</th></tr></thead><tbody>
+    ${rows.map((x, i) => `<tr><td>${AR(i + 1)}</td><td>${dcode(x.code)}</td><td>${esc(x.lv)}</td><td><b>${esc(x.title)}</b><br><span class="hint">${esc(x.files)}</span></td><td>${esc(x.type)}</td><td>${esc(x.brief)}${x.unreadable ? '<br><span class="chip part">⚠ تعذرت قراءته آلياً</span>' : ""}</td><td>${x.date ? esc(x.date) : '<span class="chip part">دون تاريخ</span>'}</td><td>${esc(x.ref)}</td><td>${ach(x.appr)}</td><td>${x.sc == null ? "—" : AR(x.sc)}</td></tr>`).join("")}
+    </tbody></table></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0"><button class="btn sm pri" id="regDoc" type="button">تصدير السجل (Word)</button><button class="btn sm" id="regCsv" type="button">تصدير السجل (Excel)</button></div>`;
+  $("#regOrg").onchange = e => { SUM_ORG = e.target.value; regRender(); };
+  $("#regStd").onchange = e => { REG_STD = e.target.value; regRender(); };
+  $("#regType").onchange = e => { REG_TYPE = e.target.value; regRender(); };
+  $("#regClose").onclick = () => { box.hidden = true; };
+  const fname = ext => "سجل الشواهد - " + String(SUM_ORG || "").replace(/[\\/:*?"<>|]+/g, " ").trim() + ext;
+  const dl = (blob, name) => { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000); };
+  const H = ["#", "المعيار الفرعي", "المستوى", "الوثيقة", "الملفات", "النوع", "المحتوى", "التاريخ", "الرقم", "الاعتماد", "التقدير"];
+  const vals = (x, i) => [i + 1, dcode(x.code), x.lv, x.title, x.files, x.type, x.brief, x.date || "دون تاريخ", x.ref, x.appr, x.sc ?? ""];
+  $("#regCsv").onclick = () => { const q = v => `"${String(v ?? "").replace(/"/g, '""')}"`; dl(new Blob(["﻿" + [H, ...rows.map(vals)].map(r => r.map(q).join(",")).join("\r\n")], {type:"text/csv;charset=utf-8"}), fname(".csv")); };
+  $("#regDoc").onclick = async () => {
+    const D = window.docx; if (!D) { toast("مكتبة Word غير محمّلة"); return; }
+    const FS = {ascii:"Sakkal Majalla", hAnsi:"Sakkal Majalla", cs:"Sakkal Majalla", eastAsia:"Sakkal Majalla"};
+    const P = (t, o = {}) => new D.Paragraph({bidirectional:true, alignment:o.al || D.AlignmentType.START, spacing:{after:o.sa ?? 60}, children:[new D.TextRun({text:String(t), font:FS, size:o.size || 20, bold:!!o.bold, color:o.color, rightToLeft:true})]});
+    const W = [400, 700, 900, 1900, 1100, 3600, 1300, 1000, 900, 600]; const bd = {style:D.BorderStyle.SINGLE, size:4, color:"8496B0"};
+    const C = (t, i, head) => new D.TableCell({width:{size:W[i], type:D.WidthType.DXA}, shading:head ? {type:D.ShadingType.CLEAR, fill:"002060", color:"auto"} : undefined, borders:{top:bd, bottom:bd, left:bd, right:bd}, margins:{top:40, bottom:40, left:60, right:60}, children:[P(t, {bold:head, color:head ? "FFFFFF" : undefined, size:head ? 20 : 18, sa:0})]});
+    const HH = ["#", "المعيار الفرعي", "المستوى", "الوثيقة", "النوع", "المحتوى", "التاريخ", "الرقم", "الاعتماد", "التقدير"];
+    const tbl = new D.Table({visuallyRightToLeft:true, columnWidths:W, width:{size:W.reduce((a, b) => a + b, 0), type:D.WidthType.DXA}, rows:[new D.TableRow({tableHeader:true, children:HH.map((h, i) => C(h, i, true))}), ...rows.map((x, i) => new D.TableRow({cantSplit:true, children:[i + 1, dcode(x.code), x.lv, x.title, x.type, x.brief, x.date || "دون تاريخ", x.ref, x.appr, x.sc ?? "—"].map((v, j) => C(v, j))}))]});
+    const doc = new D.Document({sections:[{properties:{page:{size:{orientation:D.PageOrientation.LANDSCAPE}, margin:{top:720, bottom:720, left:720, right:720}}}, children:[
+      P("سجل الشواهد", {size:36, bold:true, color:"002060", al:D.AlignmentType.CENTER}), P(String(SUM_ORG || ""), {size:26, bold:true, al:D.AlignmentType.CENTER, sa:120}),
+      P(`${all.length} وثيقة · معتمدة ${nA} · غير معتمدة أو لم يتضح ${nNA} · دون تاريخ ${nU} · ` + Object.entries(by).map(([t, n]) => `${t} ${n}`).join("، "), {size:20, sa:160}), tbl]}]});
+    dl(await D.Packer.toBlob(doc), fname(".docx"));
+  };
+}
 (function(){
-  $("#sumBtn").insertAdjacentHTML("afterend", `<button class="btn sm pri" id="stdSumBtn" type="button">ملخص المعيار</button>`);
-  $("#sumBox").insertAdjacentHTML("afterend", `<div id="stdSumBox" class="sumbox" hidden></div>`);
+  $("#sumBtn").insertAdjacentHTML("afterend", `<button class="btn sm pri" id="stdSumBtn" type="button">ملخص المعيار</button><button class="btn sm pri" id="regBtn" type="button">سجل الشواهد</button>`);
+  $("#sumBox").insertAdjacentHTML("afterend", `<div id="regBox" class="sumbox" hidden></div><div id="stdSumBox" class="sumbox" hidden></div>`);
+  $("#regBtn").onclick = () => { const b = $("#regBox"); if (!b.hidden) { b.hidden = true; return; } SUM_ORG = null; sumEntries(); regRender(); b.hidden = false; b.scrollIntoView({behavior:"smooth", block:"start"}); };
   $("#stdSumBtn").onclick = () => { const b = $("#stdSumBox"); if (!b.hidden) { b.hidden = true; return; } SUM_ORG = null; sumEntries(); SS_STD = null; ssRender(); b.hidden = false; b.scrollIntoView({behavior:"smooth", block:"start"}); };
-  { const _rl = renderLog; renderLog = function(){ _rl(); const b = $("#stdSumBox"); if (b && !b.hidden) ssRender(); }; }
+  { const _rl = renderLog; renderLog = function(){ _rl(); const b = $("#stdSumBox"); if (b && !b.hidden) ssRender(); const g = $("#regBox"); if (g && !g.hidden) regRender(); }; }
 })();
 /* ===== V4 end ===== */
 
