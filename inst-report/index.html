@@ -3191,7 +3191,8 @@ function regRender(){
   const recText = t => { const L = String(t || "").replace(/\[صفحة \d+\]/g, "").split(/\n/); const i = L.findIndex(x => recNo(x) && x.replace(/[\s‎‏‪-‮]/g, "").length < 40); if (i < 0) return "";
     const out = []; for (const x of L.slice(i + 1, i + 9)) { if (!x.trim() || /مستو[ىي]\s*الجودة|^\s*(الوجود|التطبيق|الفاعلية)\s*$/.test(x)) { if (out.length) break; continue; } out.push(x); }
     return fixPdf(out.join(" ")).slice(0, 500); };
-  { const _bp = buildPrompt; buildPrompt = function(){ return _bp() + `\n\nإضافة لازمة: إن كان الشاهد رداً على توصية من تقرير مراجعة سابق (اعتماد مشروط) — كأن يبدأ الملف بـ«التوصية الأولى» أو «التوصية الثانية» ثم نصها، أو يُذكر رقم التوصية في اسم الملف — فأضف إلى كائن JSON الحقل "prior_rec": {"n": رقم التوصية, "text": "نص التوصية كما ورد في الملف حرفياً، مع تصحيح الحروف المقلوبة من استخراج PDF فقط دون تغيير المعنى"}. وإن لم يكن كذلك فاجعل "prior_rec": null.`; }; }
+  let RT_TYPE = store.get("aud-instrtype", "") || ""; const RT_NOW = () => RT_TYPE;
+  { const _bp = buildPrompt; buildPrompt = function(){ return _bp() + (RT_NOW() === "final" ? "" : `\n\nإضافة لازمة: إن كان الشاهد رداً على توصية من تقرير مراجعة سابق (اعتماد مشروط) — كأن يبدأ الملف بـ«التوصية الأولى» أو «التوصية الثانية» ثم نصها، أو يُذكر رقم التوصية في اسم الملف — فأضف إلى كائن JSON الحقل "prior_rec": {"n": رقم التوصية, "text": "نص التوصية كما ورد في الملف حرفياً، مع تصحيح الحروف المقلوبة من استخراج PDF فقط دون تغيير المعنى"}. وإن لم يكن كذلك فاجعل "prior_rec": null.`); }; }
   { const _nz = normalise; normalise = function(r){ const o = _nz(r); const pr = r && r.prior_rec; if (pr && typeof pr === "object" && (+pr.n || pr.text)) o.prior_rec = {n:+pr.n || 0, text:String(pr.text || "").trim()}; return o; }; }
   /* stamp a fresh result with its recommendation, from the engine's copy, the file names or the file text */
   { const _rr = renderResult; renderResult = function(r){
@@ -3227,7 +3228,7 @@ function regRender(){
   /* the two report formats, chosen in one place instead of hunting through the summaries */
   $("#result").insertAdjacentHTML("beforebegin", `<div id="expBar" class="sumbox" style="margin:8px 0"><b>إصدار التقرير (Word)</b> <span class="hint" id="expOrg"></span>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"><button class="btn sm pri" id="expFull" type="button">التقرير النهائي للاعتماد المؤسسي</button><button class="btn sm pri" id="expFollow" type="button">تقرير إعادة الاعتماد</button></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px"><span class="hint">توصيات إعادة الاعتماد:</span> <span class="hint" id="recSrc"></span>
+    <div id="recRow" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px"><span class="hint">توصيات إعادة الاعتماد:</span> <span class="hint" id="recSrc"></span>
       <button class="btn sm" id="recFileBtn" type="button">رفع ملف التوصيات</button><input type="file" id="recFile" accept=".pdf,.docx,.doc,.xlsx,.xls,.csv,.txt" hidden>
       <button class="btn sm ghost" id="recHand" type="button">إدخال يدوي أو مراجعة</button></div>
     <p class="hint" style="margin:6px 0 0">بيانات الغلاف وفريق المراجعة ونبذة المنشأة تُدخل مرة واحدة من «ملخص المعيار» ← «بيانات الغلاف والتوثيق»، وتُستخدم في الصيغتين. وفي تقرير إعادة الاعتماد تستخرج الأداة التوصيات بنفسها من ملفات رد المنشأة («التوصية الأولى»، «التوصية الثانية»…) وتربط كل توصية بمعيارها الفرعي، ويبقى جدول التوصيات في «ملخص المنشأة» للمراجعة فقط.</p></div>`);
@@ -3303,6 +3304,26 @@ function regRender(){
     toast(FU.recs.length ? "بعض التوصيات لم يُعثر على نصها أو معيارها في الشواهد — أكملها في الجدول ثم اضغط «تقرير إعادة الاعتماد» مرة أخرى" : "لم يُعثر في الشواهد على أرقام توصيات (مثل «التوصية الأولى») — ارفع ملفات رد المنشأة على التوصيات، أو أضفها في الجدول");
   };
   expPaint();
+  /* ---- the report type is chosen first: it picks the template, shows only that report's controls and tells the engine what kind of review this is ---- */
+  const RT_LAB = {final:"التقرير النهائي للاعتماد المؤسسي", reaccr:"تقرير إعادة الاعتماد"};
+  $("#expBar").insertAdjacentHTML("beforebegin", `<div id="rtBox" class="sumbox" style="margin:8px 0"><b>نوع التقرير المطلوب</b> <span class="hint" id="rtNow"></span> <button class="btn sm ghost" id="rtChange" type="button" hidden>تغيير</button>
+    <div id="rtPick" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;margin-top:8px">
+      <button class="btn" data-rt="final" type="button" style="text-align:start;display:grid;gap:4px"><b>${RT_LAB.final}</b><span class="hint">مراجعة خارجية كاملة: المعايير الثمانية بمستويات الوجود والتطبيق والفاعلية</span></button>
+      <button class="btn" data-rt="reaccr" type="button" style="text-align:start;display:grid;gap:4px"><b>${RT_LAB.reaccr}</b><span class="hint">متابعة الاعتماد المشروط: توصية بتوصية من ملفات رد المنشأة</span></button></div>
+    <p class="hint" id="rtHint" style="margin:6px 0 0">اختر نوع التقرير قبل رفع الشواهد، ليركّز التدقيق على مفرداته ويُملأ نموذجه.</p></div>`);
+  const rtPaint = () => {
+    const t = RT_NOW(); $("#rtPick").hidden = $("#rtHint").hidden = !!t; $("#rtChange").hidden = !t; $("#rtNow").textContent = t ? "· " + RT_LAB[t] : "";
+    $("#expBar").hidden = !t; $("#expFull").hidden = t === "reaccr"; $("#expFollow").hidden = t === "final"; $("#recRow").hidden = t === "final";
+  };
+  const rtSet = t => { RT_TYPE = t; store.set("aud-instrtype", t);
+    if (t) { SUM_ORG = blank() ? "[اسم المنشأة التدريبية]" : null; sumEntries(); const {a, s} = sumState(SUM_ORG); s.fu = s.fu || {on:false, recs:[]}; s.fu.on = t === "reaccr"; sumSave(a); if (t === "reaccr") syncRecs(SUM_ORG); }
+    rtPaint(); expPaint(); if (t) toast("نوع التقرير: " + RT_LAB[t]); };
+  document.querySelectorAll("[data-rt]").forEach(b => b.onclick = () => rtSet(b.dataset.rt));
+  $("#rtChange").onclick = () => { $("#rtPick").hidden = $("#rtHint").hidden = false; };
+  { const _bp = buildPrompt; buildPrompt = function(){ const t = RT_NOW(); return _bp() + (t === "final"
+      ? "\n\nسياق المراجعة: مراجعة خارجية كاملة للاعتماد المؤسسي (التقرير النهائي). احكم على الشاهد بالمعيار الفرعي ومستوياته الثلاثة، واكتب النبذة بمفردات تقارير فرق المراجعة الخارجية."
+      : t === "reaccr" ? "\n\nسياق المراجعة: متابعة اعتماد مؤسسي مشروط (تقرير إعادة الاعتماد). الشاهد مقدَّم رداً على توصية من خطاب الاعتماد المشروط؛ ركّز في الحكم والنبذة على مدى معالجة المنشأة لما طلبته التوصية في الوجود والتطبيق والفاعلية، واذكر ما عولج منها وما بقي." : ""); }; }
+  rtPaint();
   paint();
 })();
 /* ===== INST-REPORT end ===== */
