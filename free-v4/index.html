@@ -2320,6 +2320,8 @@ const TERMS4 = {
   "التقديرات والأوصاف":["بدرجة عالية","راضٍ تماماً","نسبة رضا ممتازة","رضا جيد","نسبة متوسطة","بدرجة منخفضة","مجال للتحسين","فرص التحسين","نقاط القوة","بشكل فاعل","بدقة وثبات","بشكل منهجي وفاعل","واضحة وفاعلة","شامل ومتكامل","مرونة عالية","التميز"],
   "التشديد والتأكيد والإفادة":["مما يؤكد","مما يعكس","مما يدل على","مما يبين","وهو ما يؤكد","ويدعم ذلك","وهذا ما أكده","وقد أكد ذلك","يُعد","جزء لا يتجزأ من","تجدر الإشارة إلى","ويجدر بالذكر","على سبيل المثال لا الحصر","فضلاً عن","علاوة على ذلك","بالإضافة إلى ذلك","ومن جهة أخرى","حيث","إذ","كما"],
   "الفجوات والتحفظ":["إلا أنه","غير أن","بالرغم من","على الرغم من","لم يتبين للفريق","لم يتضح","لم يجد الفريق","لم يتم تزويد الفريق بما يثبت","لم تقدم المنشأة ما يثبت","يفتقر إلى","محدود","قصور في","تفاوت","تكدس","لا يعكس","لم تتضمن","لم توضح","عدد الاستجابات قليل","دون تحليل","دون مستهدفات","تكرار نقاط التحسين نفسها","لا تزال الحاجة قائمة"],
+  "الربط بين المستويات":["وتطبيقاً لما ورد في","وللتحقق من تطبيق ما ورد في","وترجمةً لما ورد في","واستناداً إلى","وللتحقق من أثر هذه الممارسات","ولقياس انعكاس ما سبق على النتائج","وامتداداً لما سبق","وعلى صعيد الفاعلية","ومن خلال ما سبق يتضح","وبناءً على ما تم الاطلاع عليه من شواهد","وقد انعكست فاعلية تطبيق","مما يكشف عن ترابط واضح بين"],
+  "التوثيق والتواريخ والأعداد":["برقم","المعتمد بتاريخ","المعتمد في","والمحدث بتاريخ","المؤرخ في","بتاريخي","بتواريخ","غير مؤرخ","وثيقة رسمية معتمدة ومؤرخة","الإصدار","من أصل","بعدد استجابات بلغ","بلغ عدد","ارتفع من … في عام … إلى … في عام","انخفض من … إلى …","مقارنةً بالأعوام السابقة"],
   "صيغ النتائج والأحكام":["يشيد فريق المراجعة الخارجي بـ","ينبغي على المنشأة التدريبية","يقترح فريق المراجعة الخارجي على المنشأة التدريبية","لاستكمال متطلبات المعيار","مستوفى بتميز [5]","مستوفى بإتقان [4]","مستوفى [3]","مستوفى جزئياً [2]","غير مستوفى [1]","لا ينطبق","الامتثال الكامل","الامتثال الجوهري","الحد الأدنى من الامتثال","عدم الامتثال","اعتماد كامل","اعتماد مشروط"]
 };
 const UTK = "aud-terms4";
@@ -2378,7 +2380,7 @@ const PB4 = {
     rise:["، بارتفاع عن {py} الذي سجل ({p})","، وذلك بارتفاع عن ({p}) في {py}","، مقارنةً بـ({p}) في {py}"],
     fall:["، بانخفاض عن {py} الذي سجل ({p})","، مع ملاحظة انخفاض عن ({p}) في {py}"],
     same:["، دون تغير يُذكر عن {py} ({p})"],
-    resp:["، وبعدد استجابات بلغ ({r})","، وشارك فيه ({r})","، بعدد مستجيبين ({r})"]},
+    resp:["، وبعدد استجابات بلغ ({r})","، بعدد مستجيبين ({r})"]},
   degWord:[[85,"بدرجة عالية"],[70,"بدرجة جيدة"],[60,"بدرجة متوسطة"],[0,"بدرجة منخفضة"]],
   /* صيغ التوصيات والإشادات والمقترحات كما في التقارير */
   rec:{
@@ -2404,6 +2406,61 @@ function rng(seed){ let x = (seed * 2654435761) >>> 0 || 1; return () => ((x = (
 function picker(seed){ const R = rng(seed), used = new Set(); return a => { const fresh = a.filter(x => !used.has(x)); const pool = fresh.length ? fresh : a; const v = pool[Math.floor(R() * pool.length)]; used.add(v); return v; }; }
 function nounOf(org, s){ if (s && s.noun) return s.noun.trim(); const w = String(org || "").trim().split(/\s+/)[0] || ""; return /^(المعهد|الكلية|المركز|الأكاديمية|المنشأة|المدرسة|الجامعة)$/.test(w) ? w : "المنشأة التدريبية"; }
 const femNoun = n => /(ة|ية)(\s|$)/.test(String(n).split(/\s+/)[0]) ;
+/* الترابط بين المستويات (من التقارير النهائية المعتمدة) */
+PB4.link = {
+  p:["وتطبيقاً لما ورد في {t}، اطّلع الفريق في مستوى التطبيق على ", "وللتحقق من تطبيق ما ورد في {t} على أرض الواقع، اطّلع الفريق على ", "وترجمةً لما ورد في {t}، اطّلع فريق المراجعة الخارجي في مستوى التطبيق على ", "واستناداً إلى {t}، استعرض الفريق في مستوى التطبيق "],
+  f:["وللتحقق من أثر هذه الممارسات، اطّلع الفريق في مستوى الفاعلية على ", "ولقياس انعكاس ما سبق على النتائج، اطّلع الفريق في مستوى الفاعلية على ", "وامتداداً لما سبق، وللوقوف على فاعلية ما ورد في {t}، اطّلع الفريق على ", "وعلى صعيد الفاعلية، وللتحقق من أثر ما ورد في {t}، اطّلع الفريق على "]};
+PB4.tie = ["، وبذلك تتكامل مستويات الوجود والتطبيق والفاعلية في هذا المعيار الفرعي", "، مما يكشف عن ترابط واضح بين السياسات المعتمدة وتطبيقها وقياس أثرها", "، وهو ما يعكس دورة متكاملة تبدأ بالتوثيق والاعتماد وتمتد إلى التطبيق وقياس الأثر والتحسين"];
+PB4.cnt = ["، وبلغ عدد {w} ({v}){o}", "، حيث بلغ عدد {w} ({v}){o}"];
+PB4.anchorDefault = "الخطط والسياسات المعتمدة في مستوى الوجود";
+/* التواريخ والأرقام بحسب الدليل الإرشادي لكتابة التقرير: «15 يناير 2025» والأرقام 123 */
+const MON_G = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+const MON_H = ["محرم","صفر","ربيع الأول","ربيع الآخر","جمادى الأولى","جمادى الآخرة","رجب","شعبان","رمضان","شوال","ذو القعدة","ذو الحجة"];
+const DATE_RE = /(?<![\d\/.])(\d{1,2})\s*([\/.])\s*(\d{1,2})\s*\2\s*((?:14|19|20)\d{2})(?![\d\/])|(?<![\d\/.])((?:14|19|20)\d{2})\s*([\/.])\s*(\d{1,2})\s*\6\s*(\d{1,2})(?![\d\/])|(?<![\w-])((?:19|20)\d{2})-(\d{2})-(\d{2})(?![\w-])/g;
+function fmtDate(d, m, y){
+  d = +d; m = +m; y = +y; if (m > 12 && d <= 12) [d, m] = [m, d];
+  if (!(m >= 1 && m <= 12 && d >= 1 && d <= 31)) return null;
+  return y < 1500 ? `${d} ${MON_H[m - 1]} ${y}هـ` : `${d} ${MON_G[m - 1]} ${y}`;
+}
+const fmtDates = t => latin(t).replace(DATE_RE, (s, d1, _a, m1, y1, y2, _b, m2, d2, y3, m3, d3) => (y1 ? fmtDate(d1, m1, y1) : y2 ? fmtDate(d2, m2, y2) : fmtDate(d3, m3, y3)) || s).replace(/(\d)\s*هـ\s*هـ/g, "$1هـ").replace(/(\d{4})\s*م(?=[\s،.)]|$)/g, "$1");
+const hasDate = t => { DATE_RE.lastIndex = 0; const ok = DATE_RE.test(latin(t)) || new RegExp(`(${MON_G.join("|")}|${MON_H.join("|")})\\s*\\d{4}|عام\\s*\\d{4}|\\b(14|20)\\d{2}\\b`).test(latin(t)); DATE_RE.lastIndex = 0; return ok; };
+const PLUR = /^(محاضر|تقارير|نماذج|جداول|قوائم|سياسات|إجراءات|اجراءات|أدلة|خطط|لوائح|سجلات|كشوف|تعاميم|قرارات|مصفوفات)/;
+const docFem = t => { const w = String(t || "").replace(/[«»"]/g, "").trim(); return isFemWord(w) || PLUR.test(w) || /^\S+ات(\s|$)/.test(w); };
+/* the dated, numbered reference of one document, only the parts the brief does not already carry */
+function docTail(d, pick, T){
+  const fem = docFem(d.title); const g = (m, f) => fem ? f : m; const N = fmtDates(T); let s = "";
+  const ref = latin(d.ref || "").trim(); if (ref && !N.includes(ref)) s += ` برقم (${ref})`;
+  const A = d.approved ? fmtDates(d.approved).trim() : "", U = d.updated ? fmtDates(d.updated).trim() : "", D0 = d.date ? fmtDates(d.date).trim() : "";
+  if (A && !N.includes(A)) s += pick([` ${g("المعتمد", "المعتمدة")} بتاريخ ${A}`, ` ${g("المعتمد", "المعتمدة")} في ${A}`]);
+  if (U && !N.includes(U)) s += ` ${A ? "و" : ""}${g("المحدث", "المحدثة")} بتاريخ ${U}`;
+  const many = (D0.match(/\sو(?=\d)/g) || []).length;
+  if (D0 && !A && !U && !N.includes(D0)) s += many ? ` ${many > 1 ? "بتواريخ" : "بتاريخي"} ${D0}` : pick([` بتاريخ ${D0}`, ` ${g("المؤرخ", "المؤرخة")} في ${D0}`]);
+  if (!A && !U && !D0 && d.undated && !/غير مؤرخ/.test(T)) s += ` (${g("غير مؤرخ", "غير مؤرخة")})`;
+  return s;
+}
+/* weave each document's number and dates into the brief, then the counts */
+function withDocs(t, r, pick){
+  let T = String(t || "");
+  for (const d of (r.docs || []).filter(d => d && d.title)) {
+    const ti = String(d.title).replace(/[«»"]/g, "").trim(); const tail = docTail(d, pick, T); if (!tail) continue;
+    const i = T.indexOf(ti);
+    /* place the number and date where the document's name ends: before the next comma, coordinated item or relative clause */
+    if (i >= 0) { const e = i + ti.length; const rest = T.slice(e); const m = rest.match(/،|\s(?=التي|الذي|والتي|والذي|بتاريخ|المعتمد|برقم)/); const end = m ? m.index : rest.length; const at = end <= 35 && !/\sو\S/.test(rest.slice(0, end)) ? e + end : e; T = T.slice(0, at) + tail + T.slice(at); }
+    else T += pick(PB4.chain) + `«${ti}»` + tail;
+  }
+  for (const c of (r.counts || []).filter(c => c && c.what && c.value)) {
+    const v = latin(c.value).trim(); if (new RegExp(`(^|[^\\d.])${v.replace(/[.]/g, "\\.")}([^\\d.]|$)`).test(latin(T))) continue;
+    T += pick(PB4.cnt).replace("{w}", c.what.trim()).replace("{v}", v).replace("{o}", c.of ? ` من أصل (${latin(c.of).trim()})` : "");
+  }
+  return T;
+}
+/* what the application and effectiveness rows point back to */
+function anchorOf(r){
+  const d = (r?.docs || []).find(d => d && /^(سياسة|سياسات|دليل|أدلة|خطة|إجراء|لائحة|لوائح)/.test(String(d.title).replace(/[«»"]/g, "").trim())); if (d) return `«${String(d.title).replace(/[«»"]/g, "").trim()}»`;
+  const t = evPhrase(r || {}).split(/\s(?=المعتمد|المعتمدة|والتي|والذي|التي|الذي|بتاريخ|برقم|رقم|المحدث|المحدثة|للفترة)|[،,(؛]/)[0].trim();
+  const ok = x => { const n = x.split(/\s+/).length; return n >= 2 && n <= 9; };
+  if (ok(t)) return t; const t2 = t.split(/\s(?=و\S)/)[0].trim(); return ok(t2) ? t2 : PB4.anchorDefault;
+}
 function fill(t, F, extra){
   const fem = femNoun(F);
   return String(t).replace(/\{v:([^/}]+)\/([^}]+)\}/g, (m, a, b) => fem ? b : a).replace(/\{F\}/g, F).replace(/\{(\w+)\}/g, (m, k) => extra && extra[k] != null ? extra[k] : m);
@@ -2429,7 +2486,7 @@ function numSentence(n, pick){
   if (!fem) s = s.replace(/^حيث جاءت/, "حيث جاء").replace(/^وقد جاءت/, "وقد جاء");
   if (n.target) { const t = numParse(n.target); if (v && t) { const k = v.v > t.v ? "up" : v.v === t.v ? "eq" : "down"; let c = pick(PB4.num[k]).replace("{t}", n.target); if (!fem) c = c.replace("متجاوزةً", "متجاوزاً").replace("محققةً", "محققاً"); s += c; } else s += `، مقابل مستهدف (${n.target})`; }
   if (n.prev) { const p = numParse(n.prev); const py = n.prev_year ? yr(n.prev_year) : "القياس السابق"; if (v && p) { const k = v.v > p.v ? "rise" : v.v < p.v ? "fall" : "same"; s += pick(PB4.num[k]).replace("{p}", n.prev).replace("{py}", py); } }
-  if (n.respondents) s += pick(PB4.num.resp).replace("{r}", n.respondents);
+  if (n.respondents) { const rr = latin(n.respondents).match(/(\d+(?:\.\d+)?)\s*(?:من|\/)\s*(?:أصل\s*)?(\d+(?:\.\d+)?)/); s += pick(PB4.num.resp).replace("{r}", rr ? `${rr[1]}) من أصل (${rr[2]}` : n.respondents); }
   return s;
 }
 /* entries of the log → per sub-standard, per level */
@@ -2467,6 +2524,8 @@ function composeSub(x, bundle, s, F, pick){
   const whyOf = (r, k) => String(r.quality?.[LVK.find(z => z[0] === k)[1]]?.why || "").trim().replace(/[.\s]+$/, "");
   const numsAt = (r, k) => topLv(r) === k ? (r.numbers || []) : [];
   const noConj = t => t.replace(/^[وف]?قد\s+/, "").replace(/^[وف](?=(في|على|لم|ل|إ|أ|ا))/, "");
+  const anchor = B.e.length ? anchorOf(B.e[0]) : "";
+  const allMet = (sc.e ?? 0) >= 3 && (sc.p ?? 0) >= 3 && (sc.f ?? 0) >= 3;
   for (const [k] of LVK) {
     const items = B[k]; let seg = "";
     const fBlocked = k === "f" && ((sc.e ?? 1) < 3 || (sc.p ?? 1) < 3);
@@ -2479,9 +2538,10 @@ function composeSub(x, bundle, s, F, pick){
     else {
       const lst = top.length ? top : old.slice(0, 1);
       let lead = pick(PB4.lead[k]); if (k === "e") lead = noConj(lead);
-      seg += lead + evPhrase(lst[0]);
+      if (k !== "e" && anchor && (k === "p" || B.p.length)) lead = pick(PB4.link[k]).replace("{t}", anchor);
+      seg += lead + withDocs(evPhrase(lst[0]), lst[0], pick);
       const n0 = numsAt(lst[0], k)[0]; if (n0) { const ns = numSentence(n0, pick); if (ns) seg += "، " + ns; }
-      for (const r of lst.slice(1)) { seg += pick(PB4.chain) + evPhrase(r); const n = numsAt(r, k)[0]; if (n && k === "f") { const ns = numSentence(n, pick); if (ns) seg += "، " + ns; } }
+      for (const r of lst.slice(1)) { seg += pick(PB4.chain) + withDocs(evPhrase(r), r, pick); const n = numsAt(r, k)[0]; if (n && k === "f") { const ns = numSentence(n, pick); if (ns) seg += "، " + ns; } }
     }
     items.forEach(r => seen.add(entryId(r)));
     if (fresh.length > 3) seg += pick(PB4.more).replace("{n}", AR(fresh.length - 3));
@@ -2489,9 +2549,9 @@ function composeSub(x, bundle, s, F, pick){
     if (fBlocked) seg += "، إلا أن مستوى الفاعلية لا يُحتسب لعدم استيفاء مستويي الوجود والتطبيق للمستوى [3]";
     else if (v != null && v >= 3) {
       const mixed = k === "f" && items.some(r => (r.numbers || []).some(n => { const a = numParse(n.value), p = numParse(n.prev), t = numParse(n.target); return a && ((p && a.v < p.v) || (t && a.v < t.v)); }));
-      if (!viaRef) seg += pick(mixed ? PB4.affirmMixed : PB4.affirm[k]); if (s.conf[x.code]) seg += pick(PB4.field); }
+      if (!viaRef) seg += pick(mixed ? PB4.affirmMixed : k === "f" && allMet ? PB4.tie : PB4.affirm[k]); if (s.conf[x.code]) seg += pick(PB4.field); }
     else { const g = gapClause(items[0], k) || PB4.gapDefault[k]; seg += pick(/^(لم|لا|ليس)\s/.test(g) ? PB4.gapc.neg : PB4.gapc.pos) + g; }
-    cell[k] = (seg + ".").replace(/\s+/g, " ").replace(/،\s*،/g, "،").replace(/\.\./g, ".");
+    cell[k] = fmtDates(seg + ".").replace(/\s+/g, " ").replace(/،\s*،/g, "،").replace(/\.\./g, ".");
   }
   return cell;
 }
@@ -2549,6 +2609,17 @@ function ssStd(m, org){
   return {m, a, s, F, out, subs, open:ssVal(s, "open", out.open), c:compl(lvs), selfAvg: selfs.length ? selfs.reduce((p, q) => p + q, 0) / selfs.length : null};
 }
 const SS_META = () => ssState(SUM_ORG, "meta");
+/* UI: the document's number and dates, and the guide's checks (dated evidence; opinion surveys within three years) */
+function docLine(r){
+  const ds = r.docs || []; const bits = ds.map(d => [d.title, d.ref && "رقم " + d.ref, d.approved && "اعتماد " + fmtDates(d.approved), d.updated && "تحديث " + fmtDates(d.updated), d.date && "بتاريخ " + fmtDates(d.date)].filter(Boolean).join(" · "));
+  (r.counts || []).forEach(c => bits.push(`عدد ${c.what}: ${c.value}${c.of ? " من أصل " + c.of : ""}`));
+  const txt = [r.ev_phrase, r.doc_summary, ...ds.map(d => [d.approved, d.updated, d.date].join(" "))].join(" ");
+  const warn = [];
+  if (!hasDate(txt)) warn.push("لم يظهر تاريخ للشاهد، والدليل الإرشادي يشترط أن يكون الشاهد مؤرخاً");
+  const yrs = (latin(txt).match(/\b20\d{2}\b/g) || []).map(Number); const vy = +((() => { try { return String(SS_META().s.from || ""); } catch (e) { return ""; } })().match(/20\d{2}/) || [new Date().getFullYear()])[0];
+  if (/استبان|رضا|استطلاع/.test(txt) && yrs.length && vy - Math.max(...yrs) > 3) warn.push("قياس الرأي أقدم من ثلاث سنوات");
+  return (bits.length ? `<br><span class="hint">${esc(bits.join(" | "))}</span>` : "") + warn.map(w => `<br><span class="chip part">⚠ ${esc(w)}</span>`).join("");
+}
 function ssNoun(org){ const m = ssState(org, "meta").s; if (m.noun) return m.noun; const w = String(org || "").trim().split(/\s+/)[0] || ""; const map = {"معهد":"المعهد","كلية":"الكلية","مركز":"المركز","أكاديمية":"الأكاديمية","اكاديمية":"الأكاديمية","منشأة":"المنشأة"}; return /^(المعهد|الكلية|المركز|الأكاديمية|المنشأة)$/.test(w) ? w : map[w] || "المنشأة التدريبية"; }
 const ST_LAB = st => st === "كامل" ? "الامتثال الكامل" : st === "جوهري" ? "الامتثال الجوهري" : st === "حد أدنى" ? "الحد الأدنى من الامتثال" : st === "عدم امتثال" ? "عدم الامتثال" : "";
 const RATE_LAB = {1:"غير مستوفي [1]", 2:"مستوفي جزئياً [2]", 3:"مستوفي [3]", 4:"مستوفي بإتقان [4]", 5:"مستوفي بتميز [5]"};
@@ -2568,7 +2639,7 @@ function ssRender(){
   const cards = R.subs.map(({x, b, L, na, cells, P, R:Rc, S}) => {
     const lvRows = LVK.map(([k, K, nm]) => {
       const items = b.B[k];
-      const ev = items.map(r => `<li><b>${esc((r.files || []).join("، ") || "شاهد")}</b> ${chip(r.quality?.[K]?.score ?? null)}<br>${esc(r.doc_summary || "")}${r.numbers?.length ? `<br><span class="hint">${r.numbers.map(n => esc(`${n.what}: ${n.value}${n.target ? " (المستهدف " + n.target + ")" : ""}${n.prev ? " (السابق " + n.prev + ")" : ""}`)).join(" · ")}</span>` : ""} <button class="btn sm ghost" data-ssex="${esc(entryId(r))}" type="button" title="استبعاد من الملخص">استبعاد</button></li>`).join("");
+      const ev = items.map(r => `<li><b>${esc((r.files || []).join("، ") || "شاهد")}</b> ${chip(r.quality?.[K]?.score ?? null)}<br>${esc(r.doc_summary || "")}${docLine(r)}${r.numbers?.length ? `<br><span class="hint">${r.numbers.map(n => esc(`${n.what}: ${n.value}${n.target ? " (المستهدف " + n.target + ")" : ""}${n.prev ? " (السابق " + n.prev + ")" : ""}`)).join(" · ")}</span>` : ""} <button class="btn sm ghost" data-ssex="${esc(entryId(r))}" type="button" title="استبعاد من الملخص">استبعاد</button></li>`).join("");
       const mx = k === "f" ? 5 : 3; const ov = s.ov[x.code]?.[k] ?? "";
       return `<tr><td><b>${nm}</b></td><td>${items.length ? `<ul class="list">${ev}</ul>` : '<span class="hint">لا توجد شواهد مُدخلة لهذا المستوى</span>'}
         <div class="hint" style="margin-top:4px">ملخص مستوى ${nm} في التقرير:</div>${ta(x.code + "|" + k, cells[k], 4)}</td>
@@ -2813,6 +2884,12 @@ const FU_CLOSE = {
   "جوهري":["وبناءً على ما سبق، يرى فريق المراجعة أن {F} {v:قد امتثل/قد امتثلت} لهذه التوصية امتثالاً جوهرياً، مع بقاء فرص للتحسين."],
   "حد أدنى":["وبناءً على ما سبق، يرى فريق المراجعة أن امتثال {F} لهذه التوصية لا يزال في حده الأدنى، ولم تكتمل متطلباتها بعد."],
   "عدم امتثال":["وبناءً على ما سبق، يرى فريق المراجعة أن {F} لم {v:يمتثل/تمتثل} لهذه التوصية بالشكل المطلوب."]};
+/* ربط ملخص التوصية بنص التوصية نفسها */
+const FU_LINK = ["وللتحقق من معالجة ما تضمنته التوصية بشأن {g}، تتبّع الفريق الشواهد المقدمة على مستويات الجودة الثلاثة؛ ", "وفي ضوء ما نصّت عليه التوصية من {g}، تتبّع الفريق الشواهد من الوجود إلى التطبيق ثم الفاعلية؛ "];
+function recGist(t){
+  let g = String(t || "").trim().replace(/^\s*ينبغي\s+(على|أن)\s+(المنشأة التدريبية|\S+)\s+(أن\s+)?/, "").replace(/[.\s]+$/, "");
+  const w = g.split(/\s+/); return w.length > 22 ? `«${w.slice(0, 22).join(" ")}…»` : g;
+}
 const FU_ST = ["كامل", "جوهري", "حد أدنى", "عدم امتثال"];
 const FU_LAB = {"كامل":"الامتثال الكامل", "جوهري":"الامتثال الجوهري", "حد أدنى":"الحد الأدنى من الامتثال", "عدم امتثال":"عدم الامتثال"};
 /* the follow-up as the report will carry it: one block per recommendation, built from the evidence of its linked sub-standard */
@@ -2827,7 +2904,8 @@ function ssFollow(org){
     const auto = z && z.L != null ? (z.L >= 3 ? "كامل" : z.L === 2 ? "حد أدنى" : "عدم امتثال") : (code && per[code] ? (L => L == null ? "" : L >= 3 ? "كامل" : L === 2 ? "حد أدنى" : "عدم امتثال")(instLv(per[code])) : "");
     const st = r.st || auto;
     const body = z && z.has ? LVK.map(([k]) => z.cells[k]).join(" ") : "";
-    const gen = body ? pick(FU_OPEN) + " " + body + (st ? " " + fill(pick(FU_CLOSE[st]), F) : "") : "";
+    const lk = body && r.t ? pick(FU_LINK).replace("{g}", recGist(r.t)) : "";
+    const gen = body ? pick(FU_OPEN) + " " + lk + body + (st ? " " + fill(pick(FU_CLOSE[st]), F) : "") : "";
     const key = "fu|" + i + "|";
     return {i, t:r.t || "", code, st, auto, z, sum:ssVal(me, key + "sum", gen),
       P:ssVal(me, key + "P", z ? z.P : ""), R:ssVal(me, key + "R", z ? z.R : ""), S:ssVal(me, key + "S", z ? z.S : ""), note:ssVal(me, key + "note", "")};
@@ -2926,8 +3004,10 @@ async function ssExportFollow(){
 }
 /* ---------- per-evidence brief: new fields requested from the engine ---------- */
 const V4_FIELDS = `
-"ev_phrase": "نبذة الشاهد بأسلوب تقارير فريق المراجعة، عبارة اسمية تصلح بعد «اطلع الفريق على»: نوع الوثيقة واسمها وجهة إصدارها وتاريخها، ثم ما تتضمنه أو ما تثبته، مثل: «سياسة … المعتمدة بتاريخ … والتي توضح …» أو «تقرير تحليل استبانة … لعام … والذي أظهر …». لا تذكر ما ليس في الشاهد",
+"ev_phrase": "نبذة الشاهد بأسلوب تقارير فريق المراجعة، عبارة اسمية تصلح بعد «اطلع الفريق على»: نوع الوثيقة واسمها ورقمها أو رمزها وجهة إصدارها وتاريخ اعتمادها أو تحديثها (أو تاريخ المحضر أو التقرير)، والأعداد الواردة فيها (عدد المحاضر، المستجيبين من أصل، المتدربين، الشركات…)، ثم ما تتضمنه أو ما تثبته، ولا تُغفل التاريخ والرقم متى وردا في الشاهد، مثل: «سياسة … المعتمدة بتاريخ … والتي توضح …» أو «تقرير تحليل استبانة … لعام … والذي أظهر …». لا تذكر ما ليس في الشاهد",
 "numbers": [{"what":"المقيس بالعربية مثل «نسبة رضا المتدربين عن …» أو «متوسط …» أو «نسبة التوظيف»","value":"القيمة كما في الشاهد مثل 4.47 من 5 أو 87%","target":"المستهدف إن ذُكر وإلا فارغ","prev":"قيمة سابقة للمقارنة إن ذُكرت وإلا فارغ","prev_year":"سنة القيمة السابقة أو فارغ","year":"سنة القياس أو فارغ","respondents":"عدد المستجيبين مثل 141 من 230 أو فارغ"}] — حتى 4 أرقام هي الأهم للحكم، أو [] إن لم توجد أرقام,
+"docs": [{"title":"اسم الوثيقة كما ورد فيها","ref":"رقمها أو رمزها كما ورد مثل TOP-PO-25 أو فارغ","approved":"تاريخ الاعتماد كما ورد أو فارغ","updated":"تاريخ التحديث أو المراجعة أو فارغ","date":"تاريخ المحضر أو التقرير أو التعميم أو فارغ","undated":"true إن خلت الوثيقة من أي تاريخ وإلا false"}] — وثيقة لكل ملف رئيس، حتى 6,
+"counts": [{"what":"المعدود بالعربية مثل «المحاضر» أو «المستجيبين للاستبانة» أو «المتدربين المختبرين»","value":"العدد","of":"الإجمالي إن ذُكر وإلا فارغ"}] — حتى 4 أعداد ذات دلالة، أو [],
 "gap_clause": {"existence":"إن قلّ الوجود عن 3: جملة واحدة تبدأ بفعل تصف القصور مثل «لم يتم اعتماد السياسة أو تحديثها» وإلا فارغ","application":"…","effectiveness":"إن قلّت الفاعلية عن 3: مثل «لم يتم تحليل نتائج القياس ووضع خطط تحسين مزمنة» وإلا فارغ"}`;
 { const _bp = buildPrompt; buildPrompt = function(){ const p = _bp(); if (MODE !== "inst") return p; return p + `\n\n— قاموس مصطلحات التقارير النهائية المعتمدة (استخدم منه ما يناسب في ev_phrase وgap_clause والتعليل، ولا تُدخل مصطلحاً لا يدعمه الشاهد) —\n${termsText(IS_FREE ? 1800 : 5000)}\nوأضف أيضاً إلى كائن JSON نفسه هذه الحقول:${V4_FIELDS}`; }; }
 { const _sa = summaryAsk; summaryAsk = function(computed){ const p = _sa(computed); if (MODE !== "inst") return p; return p.replace(/\}\s*$/, "," + V4_FIELDS + "}"); }; }
@@ -2935,14 +3015,16 @@ const V4_FIELDS = `
     const out = _n(r); if (MODE !== "inst" || !out) return out;
     out.ev_phrase = String(r?.ev_phrase || "").trim();
     out.numbers = (Array.isArray(r?.numbers) ? r.numbers : []).map(n => ({what:String(n?.what || "").trim(), value:String(n?.value ?? "").trim(), target:String(n?.target ?? "").trim(), prev:String(n?.prev ?? "").trim(), prev_year:String(n?.prev_year ?? "").trim(), year:String(n?.year ?? "").trim(), respondents:String(n?.respondents ?? "").trim()})).filter(n => n.what && n.value && /\d|[٠-٩]/.test(n.value)).slice(0, 4);
+    out.docs = (Array.isArray(r?.docs) ? r.docs : []).map(d => ({title:String(d?.title || "").trim(), ref:String(d?.ref || "").trim(), approved:String(d?.approved || "").trim(), updated:String(d?.updated || "").trim(), date:String(d?.date || "").trim(), undated:d?.undated === true || d?.undated === "true"})).filter(d => d.title).slice(0, 6);
+    out.counts = (Array.isArray(r?.counts) ? r.counts : []).map(c => ({what:String(c?.what || "").trim(), value:String(c?.value ?? "").trim(), of:String(c?.of ?? "").trim()})).filter(c => c.what && /\d|[٠-٩]/.test(c.value)).slice(0, 4);
     const g = r?.gap_clause; out.gap_clause = g && typeof g === "object" ? {existence:String(g.existence || ""), application:String(g.application || ""), effectiveness:String(g.effectiveness || "")} : {};
     return out;
   }; }
 { const _rr = renderResult; renderResult = function(r){
     _rr(r);
-    if (!r || r.mode !== "inst" || (!r.ev_phrase && !r.numbers?.length)) return;
+    if (!r || r.mode !== "inst" || (!r.ev_phrase && !r.numbers?.length && !r.docs?.length)) return;
     const sec = [...document.querySelectorAll("#sheet .sec h3")].find(h => h.textContent.trim() === "ما هذا الشاهد")?.parentElement; if (!sec) return;
-    sec.insertAdjacentHTML("beforeend", `${r.ev_phrase ? `<p><b>نبذة بصياغة التقرير:</b> ${esc(r.ev_phrase)}</p>` : ""}${r.numbers?.length ? `<p class="hint">الأرقام المستخرجة: ${r.numbers.map(n => esc(`${n.what}: ${n.value}${n.target ? " (المستهدف " + n.target + ")" : ""}${n.prev ? " (السابق " + n.prev + (n.prev_year ? " لعام " + n.prev_year : "") + ")" : ""}${n.respondents ? " · المستجيبون " + n.respondents : ""}`)).join(" · ")}</p>` : ""}`);
+    sec.insertAdjacentHTML("beforeend", `${r.ev_phrase ? `<p><b>نبذة بصياغة التقرير:</b> ${esc(r.ev_phrase)}</p>` : ""}${docLine(r)}${r.numbers?.length ? `<p class="hint">الأرقام المستخرجة: ${r.numbers.map(n => esc(`${n.what}: ${n.value}${n.target ? " (المستهدف " + n.target + ")" : ""}${n.prev ? " (السابق " + n.prev + (n.prev_year ? " لعام " + n.prev_year : "") + ")" : ""}${n.respondents ? " · المستجيبون " + n.respondents : ""}`)).join(" · ")}</p>` : ""}`);
   }; }
 (function(){
   $("#sumBtn").insertAdjacentHTML("afterend", `<button class="btn sm pri" id="stdSumBtn" type="button">ملخص المعيار</button>`);
