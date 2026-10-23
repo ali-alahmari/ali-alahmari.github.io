@@ -351,7 +351,7 @@ function importSync_(q) {
     if (g('st') === 'وصل') { got++; return; }
     rows.push({ id: id, sub: sub, lv: lv, txt: txt, n: Number(g('n')) || 0 });
   });
-  rows.sort(function (a, b) { return a.n - b.n; });
+  rows.sort(function (a, b) { return bySub_(a, b) || (a.n - b.n); });
   return { ok: 1, name: clean_(name, 80), rows: rows.map(function (x) { return { id: x.id, sub: x.sub, lv: x.lv, txt: x.txt }; }), skip: skip, got: got };
 }
 
@@ -505,6 +505,12 @@ function approve_(q) {
   });
 }
 
+/* ترتيب الشواهد: المعيار ثم المعيار الفرعي (رقمياً: 1-2 قبل 1-10) ثم المستوى */
+function bySub_(a, b) {
+  var x = String(a.sub).split('-'), y = String(b.sub).split('-');
+  return ((+x[0] || 1e6) - (+y[0] || 1e6)) || ((+x[1] || 1e6) - (+y[1] || 1e6)) || ('epf'.indexOf(a.lv) - 'epf'.indexOf(b.lv));
+}
+
 /* محضر طلبات اليوم: ملف يُحفظ في مجلد اليوم لدى كل منشأة */
 function closeDay_(q) {
   return withLock_(function () {
@@ -518,6 +524,7 @@ function closeDay_(q) {
       var f = m.facilities[fid];
       var rows = Object.keys(f.rows).map(function (k) { return f.rows[k]; }).filter(function (r) { return r.rd === rd && r.ap !== 0; });
       if (!rows.length) return;
+      rows = rows.map(function (r, i) { return [r, i]; }).sort(function (a, b) { return bySub_(a[0], b[0]) || (a[1] - b[1]); }).map(function (x) { return x[0]; });
       var up = rows.filter(function (r) { return r.files.length || r.links.length; }).length;
       var h = '<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>طلبات ' + d.label + '</title></head><body style="font-family:Sakkal Majalla,Tahoma,sans-serif">'
         + '<h1>طلبات ' + d.label + '</h1><p>' + f.name + ' · زيارة ' + m.code + '</p><p>المطلوب ' + rows.length + ' · المرفوع ' + up + ' · المتبقي ' + (rows.length - up) + (d.dl ? ' · موعد التسليم ' + d.dl : '') + '</p>'
