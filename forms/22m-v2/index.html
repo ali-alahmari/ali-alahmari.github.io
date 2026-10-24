@@ -22301,7 +22301,7 @@ function renderEditors(){clearTimeout(edT);edT=setTimeout(async function(){var c
     codes.forEach(function(c){var m=SY.meta[c],el=$('[data-ed="'+c+'"]');if(!el)return;var nm=SH.on?(m.by||''):((m.by&&ps[m.by]&&ps[m.by].name)||''),tm='';try{tm=new Date(m.at).toLocaleString('ar-SA-u-ca-gregory-nu-latn',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'})}catch(e){}
       el.textContent=(nm||tm)?'آخر تعديل'+(nm?' بواسطة '+nm:'')+(tm?' · '+tm:''):''})},300)}
 var sumT=null;function lazySummary(){clearTimeout(sumT);sumT=setTimeout(function(){updStd();updTrainee();renderSummary()},200)}
-function applyField(c,lv,f,v){var k=c+'.'+lv+'.'+f;if((S.f[k]||'')===v)return false;var el=document.getElementById('f-'+c+'-'+lv+'-'+f);
+function applyField(c,lv,f,v){var k=c+'.'+lv+'.'+f;if((S.f[k]||'')===v)return false;var el=document.getElementById('f-'+c+'-'+lv+'-'+f)||(/^r\d*$/.test(lv)?$('[data-f="'+k+'"]'):null);
   if(el&&el===document.activeElement){DEF[k]=v;return false}
   S.f[k]=v;if(el){el.value=v;keepOpt(el,v);if(el.tagName==='TEXTAREA')autosize(el);else updHint(el)}return true}
 function applyEntries(qs){var chg={};
