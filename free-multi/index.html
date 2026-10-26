@@ -1144,7 +1144,7 @@ function isoClean(r, sc){
 }
 const INST_LV = (q) => {
   const E = q.existence?.score ?? null, A = q.application?.score ?? null, F = q.effectiveness?.score ?? null;
-  if (scope !== "full") { const v = {existence:E, application:A, effectiveness:F}[scope]; return {level: v ?? 1, partial:true, rule: `تقييم مستوى ${ {existence:"الوجود",application:"التطبيق",effectiveness:"الفاعلية"}[scope] } وحده — الدرجة الكلية للمعيار تتطلب المستويات الثلاثة`}; }
+  if (scope !== "full") { const v = {existence:E, application:A, effectiveness:F}[scope]; return {level: v ?? 1, partial:true, rule: `تقييم مستوى ${ {existence:"الوجود",application:"التطبيق",effectiveness:"الفاعلية"}[scope] } وحده`}; }
   const e = E ?? 1, a = A ?? 1;
   if (e <= 1 || a <= 1) return {level:1, rule:`${E==null?"لا يوجد شاهد على الوجود":A==null?"لا يوجد شاهد على التطبيق":"الوجود أو التطبيق = 1"} ← [1] غير مستوفى`};
   if (e === 2 || a === 2) return {level:2, rule:"الوجود ≥2 والتطبيق ≥2 وأحدهما = 2 ← [2] مستوفى جزئياً"};
@@ -1487,8 +1487,8 @@ function renderResult(r){
     return `<div class="rung ${on?"on":""} ${l===r.level?"cur":""}" style="${on?`background:${LVC[l]}`:""}"><b>${AR(l)}</b>${esc(nm)}</div>`;
   }).join("");
   const mchip = {"عالية":"ok","متوسطة":"part","ضعيفة":"bad","لا علاقة":"bad"}[r.match] || "na";
-  const qBlock = r.mode === "inst" ? `<div class="sec"><h3>مستويات الجودة الثلاثة</h3><div class="ql">${[["existence","الوجود",3],["application","التطبيق",3],["effectiveness","الفاعلية",5]].map(([k,n,mx]) => { const q = r.quality[k]; const s = q.score; const cls = s==null?"na":s>=3?"ok":s===2?"part":"bad";
-      return `<div class="qc"><div class="h"><span>${n}</span><span class="chip ${cls}">${s==null?"لا يوجد شاهد":`<span class="num">${AR(s)}</span> من ${AR(mx)}`}</span></div><p>${esc(q.why||"—")}</p></div>`; }).join("")}</div><p class="hint"><b>قاعدة الدرجة الكلية:</b> ${esc(r.rule)}</p></div>` : "";
+  const qBlock = r.mode === "inst" ? `<div class="sec"><h3>${r.scope && LV_AR[r.scope] ? "مستوى " + LV_AR[r.scope] : "مستويات الجودة الثلاثة"}</h3><div class="ql">${[["existence","الوجود",3],["application","التطبيق",3],["effectiveness","الفاعلية",5]].filter(x => !(r.scope && LV_AR[r.scope]) || x[0] === r.scope).map(([k,n,mx]) => { const q = r.quality[k]; const s = q.score; const cls = s==null?"na":s>=3?"ok":s===2?"part":"bad";
+      return `<div class="qc"><div class="h"><span>${n}</span><span class="chip ${cls}">${s==null?"لا يوجد شاهد":`<span class="num">${AR(s)}</span> من ${AR(mx)}`}</span></div><p>${esc(q.why||"—")}</p></div>`; }).join("")}</div><p class="hint"><b>${r.scope && LV_AR[r.scope] ? "طريقة الحكم" : "قاعدة الدرجة الكلية"}:</b> ${esc(String(r.rule || "").replace(/ — الدرجة الكلية للمعيار تتطلب المستويات الثلاثة/, ""))}</p></div>` : "";
   const ladderBlock = r.mode === "prog" && r.ladder.length ? `<div class="sec"><h3>سلّم التحقق <small>ما يثبت كل درجة في الشاهد</small></h3><ul class="list">${r.ladder.map(x => `<li><b>${AR(+x.lv||0)}</b> — <span class="chip ${x.met?"ok":"bad"}">${x.met?"متحقق":"غير متحقق"}</span> ${esc(x.note||"")}</li>`).join("")}</ul></div>` : "";
   const ctrls = CONTROLS.map(([k,n]) => { const c = r.controls?.[k] || {}; const ok = c.ok; const col = ok===true?"var(--ok)":ok===false?"var(--bad)":"var(--l0)";
     return `<div class="ctl"><span class="n"><i class="d" style="background:${col}"></i>${n}<span class="hint" style="margin-inline-start:auto">${ok===true?"مستوفى":ok===false?"غير مستوفى":"غير ظاهر"}</span></span><p>${esc(c.note||"")}</p></div>`; }).join("");
