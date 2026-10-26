@@ -162,6 +162,7 @@ select:focus,input:focus,textarea:focus{border-color:var(--accent);outline:none}
 .busy .stream{max-height:140px;overflow:hidden;font-family:var(--mono);font-size:11.5px;color:var(--ink-2);direction:ltr;text-align:left;width:100%;opacity:.7;white-space:pre-wrap;word-break:break-all}
 .log{display:grid;gap:8px}
 .log h3{font-size:17px}
+.logrow .ttl{overflow-wrap:anywhere;line-height:1.7}
 .logrow{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:10px;align-items:center;border:1px solid var(--rule);border-radius:10px;padding:8px 12px;background:var(--sheet);font-size:14px}
 .logrow .lv{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;color:#fff;font-family:var(--display);font-weight:700}
 .logrow .ttl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -593,7 +594,7 @@ const waitMsg = s => `بلغ الحد المجاني للدقيقة… انتظ�
 
 // Groq: OpenAI-compatible chat
 async function groqChat({model, messages, json = false, signal, onText, maxTokens = 4000}){
-  let body = {model, messages, temperature:(window.ZERO_T?0:0.1), max_completion_tokens:maxTokens};
+  let body = {model, messages, temperature:0, max_completion_tokens:maxTokens};
   if (json) body.response_format = {type:"json_object"};
   if (/gpt-oss/i.test(model) && PROV === "groq") body.reasoning_effort = "medium";
   for (let attempt = 0; attempt < 6; attempt++) {
@@ -628,7 +629,7 @@ function gemFallbacks(first){
   return out;
 }
 async function gemChat({model, parts, json = false, signal, onText, maxTokens = 8192}){
-  const body = {contents:[{role:"user", parts}], generationConfig:{temperature:(window.ZERO_T?0:0.1), maxOutputTokens:maxTokens}};
+  const body = {contents:[{role:"user", parts}], generationConfig:{temperature:0, maxOutputTokens:maxTokens}};
   if (json) body.generationConfig.responseMimeType = "application/json";
   const models = gemFallbacks(model);
   let lastErr = "free_busy";
@@ -674,7 +675,7 @@ async function puterChat({model, prompt, images = [], signal, onText, maxTokens 
   for (let attempt = 0; attempt < 4; attempt++) {
     if (signal?.aborted) throw new DOMException("aborted", "AbortError");
     try {
-      const opts = {model, max_tokens:maxTokens, temperature:(window.ZERO_T?0:0.1)};
+      const opts = {model, max_tokens:maxTokens, temperature:0};
       const r = images.length ? await pt.ai.chat(prompt, images, opts) : await pt.ai.chat(prompt, opts);
       if (signal?.aborted) throw new DOMException("aborted", "AbortError");
       const c = r?.message?.content ?? r?.text ?? r;
@@ -769,10 +770,11 @@ async function withFallback(fn, onText, signal){
       tried.add(PROV); if (isDeadErr(e)) dead.add(PROV);
       let switched = false;
       for (const next of ENGINE_ORDER) {
-        if (tried.has(next) || dead.has(next) || !engineUsable(next)) continue;
+        if (tried.has(next) || dead.has(next)) continue;
+        if (!engineUsable(next)) { const m = `${PROVS[next]?.name || next}: تُخطّي (لا مفتاح أو غير مهيأ)`; if (!TRAIL.includes(m)) TRAIL.push(m); continue; }
         const from = P().name;
         try { await switchEngine(next); switched = true; onText?.(`${from}: ${errLabel(e)} — التحويل تلقائياً إلى ${P().name} (${CUR.judge})`, true); break; }
-        catch { tried.add(next); dead.add(next); }
+        catch (e2) { tried.add(next); dead.add(next); TRAIL.push(`${PROVS[next]?.name || next}: تعذّر التحويل (${errLabel(e2)})`); }
       }
       if (switched) continue;
       // every engine tried in this round: start over from the best one that is still alive
@@ -788,6 +790,14 @@ async function withFallback(fn, onText, signal){
   }
 }
 const apiChat = args => withFallback(() => apiChat0(args), args.onText, args.signal);
+let IMG_DROP = 0;
+const cutKeep = (t, n) => { t = String(t || ""); if (t.length <= n) return t; const i = t.lastIndexOf("\n", n); return t.slice(0, i > n * .6 ? i : n) + "\n[… قُصّ باقي القراءة البصرية لطولها]"; };
+// توزيع عادل لحصة الصور: صفحة من كل ملف بالتناوب حتى لا يستهلك أول ملف الحصة كلها
+function pickImages(files, cap){
+  const q = files.map(f => [...(f.images || []), ...(f.sigImages || [])]); const total = q.reduce((a, l) => a + l.length, 0); const out = [];
+  for (let i = 0; out.length < cap; i++) { let any = false; for (const l of q) { if (i < l.length && out.length < cap) { out.push(l[i]); any = true; } } if (!any) break; }
+  return {imgs: out, dropped: Math.max(0, total - out.length)};
+}
 const readImages = (images, signal, onText, step) => withFallback(() => readImages0(images, signal, onText, step), onText, signal);
 function restoreEngine(){ if (RUN_START && RUN_START !== PROV) { PROV = RUN_START; apiKey = getKey(PROV); } CUR = {}; RUN_START = null; }
 const budgetChars = () => ({github:14000, cohere:120000, zai:60000, puter:120000, gemini:90000, pollinations:80000, nvidia:80000, openrouter:60000, mistral:60000, sambanova:40000, cerebras:40000, groq:12000, cloudflare:24000, kilo:80000, ovh:50000, llm7:25000, hf:40000}[PROV] || 30000);
@@ -797,7 +807,28 @@ function parseJSON(t){
   try { return JSON.parse(t); } catch {}
   const m = t.match(/```(?:json)?\s*([\s\S]*?)```/); if (m) { try { return JSON.parse(m[1]); } catch {} }
   const a = t.indexOf("{"), b = t.lastIndexOf("}"); if (a >= 0 && b > a) { try { return JSON.parse(t.slice(a, b + 1)); } catch {} }
+  const sv = a >= 0 ? salvageJSON(t.slice(a)) : null; // ردّ مقطوع: يُسترجع ما اكتمل منه ويُعلَّم
+  if (sv) { LAST_SALVAGED = true; return sv; }
   throw new Error("bad_json");
+}
+let LAST_SALVAGED = false;
+function salvageJSON(t){
+  // يقطع عند آخر قيمة مكتملة ثم يغلق الأقواس المفتوحة
+  let inStr = false, esc = false, stack = [], lastGood = -1, lastStack = [];
+  for (let i = 0; i < t.length; i++) {
+    const ch = t[i];
+    if (inStr) { if (esc) esc = false; else if (ch === "\\") esc = true; else if (ch === '"') { inStr = false; lastGood = i; lastStack = stack.slice(); } continue; }
+    if (ch === '"') inStr = true;
+    else if (ch === "{" || ch === "[") stack.push(ch);
+    else if (ch === "}" || ch === "]") { stack.pop(); lastGood = i; lastStack = stack.slice(); }
+    else if (/[\d]|true|null|false/.test(ch) && (t[i + 1] === "," || t[i + 1] === "}" || t[i + 1] === "]")) { lastGood = i; lastStack = stack.slice(); }
+  }
+  if (lastGood < 5) return null;
+  let body = t.slice(0, lastGood + 1).replace(/[,:\s]+$/, "");
+  // قيمة مفتاح بلا قيمة: "key" في آخر النص → احذفه
+  body = body.replace(/,\s*"[^"]*"\s*$/, "");
+  for (let k = lastStack.length - 1; k >= 0; k--) body += lastStack[k] === "{" ? "}" : "]";
+  try { return JSON.parse(body); } catch { return null; }
 }
 
 /* ---------- facts the page extracts itself (no AI) ---------- */
@@ -1225,7 +1256,7 @@ $("#runBtn").onclick = async () => {
   if (local && !model) { toast("اختر نموذج الحكم"); return; }
   ctl = new AbortController(); const signal = ctl.signal;
   $("#runBtn").disabled = true; $("#stopBtn").hidden = false;
-  const t0 = Date.now(); const steps = [];
+  const t0 = Date.now(); const steps = []; LAST_SALVAGED = false; IMG_DROP = 0;
   $("#result").innerHTML = `<div class="sheet busy"><div class="spin" aria-hidden="true"></div><p class="stage" id="stg">تجهيز…</p><ol class="steps2" id="stepList"></ol><p class="hint" id="tm"></p><div class="stream" id="strm"></div></div>`;
   const stage = t => { const s = $("#stg"); if (s) s.textContent = t; };
   const show = t => { const s = $("#strm"); if (s) s.textContent = String(t).slice(-400); };
@@ -1289,12 +1320,15 @@ ${ev}`;
     let res;
     if (!local) {
       // 3a) API: one strong pass with images attached, then the page's own checks
-      const imgs = ok.flatMap(f => [...f.images, ...(f.sigImages || [])]);
+      const _pick = pickImages(ok, PROV === "puter" ? 12 : PROV === "gemini" ? 16 : 8); const imgs = _pick.imgs; IMG_DROP = _pick.dropped;
       const visTxt = await readImages(imgs, signal, show, step);
       if (visTxt) { const vf = factsOf(allText + "\n" + visTxt, $("#orgName").value.trim()); Object.assign(facts, vf); hay2 = normAr(allText + "\n" + visTxt); }
       step(`الحكم والتعليل (${P().name})`);
-      const prompt = buildPrompt() + (visTxt ? `\n\n— القراءة البصرية للصفحات الممسوحة والصور —\n${visTxt.slice(0, 12000)}` : "") + `\n\n— حقائق استخرجها البرنامج آلياً من النص —\n${factsText(facts)}\n\nأجب بكائن JSON واحد فقط.`;
-      res = normalise(parseJSON(await apiChat({prompt, signal, onText:show})));
+      const prompt = buildPrompt() + (visTxt ? `\n\n— القراءة البصرية للصفحات الممسوحة والصور —\n${cutKeep(visTxt, 12000)}` : "") + `\n\n— حقائق استخرجها البرنامج آلياً من النص —\n${factsText(facts)}\n\nأجب بكائن JSON واحد فقط.`;
+      { const raw = parseJSON(await apiChat({prompt, signal, onText:show}));
+        // ردّ مقطوع لا يحوي أي درجة: لا يُعتمد (كان يتحول إلى [2] افتراضياً) بل يُعاد الطلب على المحرك التالي
+        if (MODE === "inst" && LAST_SALVAGED && !["existence","application","effectiveness"].some(k => raw?.quality?.[k]?.score != null)) throw new Error("bad_json");
+        res = normalise(raw); }
       step(`الحكم والتعليل (${P().name})`, "done");
     } else {
       // 3b) Local: one narrow question per step over a shared, cached prefix, then a written summary
@@ -1358,10 +1392,14 @@ ${docsBlock(ok, budget)}
     res.controls.currency = {ok:facts.recent, note:facts.recent === null ? "لا يمكن الحكم دون تاريخ" : facts.recent ? "يخص العام الحالي أو السابق" : "تاريخه أقدم من العام السابق"};
     if (facts.orgMatch !== null) res.controls.linkage = {ok:facts.orgMatch, note:facts.orgMatch ? "اسم المنشأة مذكور في الشاهد" : "اسم المنشأة غير مذكور في نص الشاهد"};
     res.foundCheck = res.found.map(t => { const qs = quotesIn(t); return {t, st: !qs.length ? "none" : qs.every(q => quoteOk(q, hay2)) ? "ok" : "bad"}; });
+    if (MODE === "inst" && res.quality?.effectiveness?.score === 5 && !(res.foundCheck || []).some(x => x.st === "ok")) { // حارس الدرجة 5: يلزمها اقتباس متحقَّق منه
+      res.quality.effectiveness.score = 4; res.quality.effectiveness.why = (res.quality.effectiveness.why || "") + " (خُفّضت من ٥ إلى ٤: لا يوجد في الملفات اقتباس متحقَّق منه يدعم الدرجة العليا)";
+      const L5 = INST_LV(res.quality); res.level = L5.level; res.rule = L5.rule;
+    }
     res.sub_code = FORCE_SUB || AUTO_SUB || $("#subSel").value;
     res.engine = `${P().name} · ${LAST_MODEL || CUR.judge || $("#mApi").value}${RUN_START && RUN_START !== PROV ? " (تحويل تلقائي من " + PROVS[RUN_START].name + ")" : ""}`;
     res.secs = Math.round((Date.now() - t0) / 1000);
-    res.imgDropped = 0; res.files = ok.map(f => f.name);
+    res.imgDropped = IMG_DROP; res.salvaged = LAST_SALVAGED; res.files = ok.map(f => f.name);
     res.mode = MODE; res.phase = phase; res.scope = scope; res.org = $("#orgName").value.trim(); res.at = new Date().toISOString();
     renderResult(res);
     LOG.unshift(res); LOG = LOG.slice(0, 300); store.set("aud-instlog", LOG); renderLog();
@@ -1500,6 +1538,7 @@ function renderResult(r){
     <div class="sec" id="visBox"><h3>تحقّق بصري منك <small>افتح الملف وأجب؛ يُحتسب في محددات القبول والتقرير</small></h3>
       ${[["approval","هل يظهر التوقيع أو الاعتماد من صاحب الصلاحية؟"],["linkage","هل يظهر شعار المنشأة أو ختمها؟"]].map(([k,q]) => `<div class="vq"><span>${q}</span><div class="seg" style="width:170px;flex:none">${[["yes","نعم"],["no","لا"]].map(([v,t]) => `<button type="button" data-vk="${k}" data-vv="${v}" aria-pressed="${r.visual?.[k]===v}">${t}</button>`).join("")}</div></div>`).join("")}
       <p class="hint">${r.visual ? `سُجّل تحقّقك ${r.visual.at ? "في " + esc(r.visual.at) : ""}، ويظهر في المحددات أعلاه وفي التقرير المنزَّل.` : "النماذج المجانية قد لا ترى الصور، فتأكد بنفسك من التوقيع والختم."}</p></div>
+    ${r.salvaged ? `<div class="sec"><p class="warn">انقطع ردّ المحرك قبل اكتماله، فاستُرجع ما اكتمل منه فقط؛ قد تنقص بعض الحقول. أعد التدقيق أو غيّر المحرك للحصول على ردّ كامل.</p></div>` : ""}
     ${r.imgDropped ? `<div class="sec"><p class="warn">لم تُرسل ${AR(r.imgDropped)} صورة/صفحة لتجاوز الحد المسموح في الطلب الواحد؛ قُرئ النص المستخرج منها فقط إن وُجد.</p></div>` : ""}
     <div class="foot"><button class="btn sm" id="cpBtn">نسخ الحكم والتعليل</button><button class="btn sm ghost" id="newBtn">شاهد جديد</button>
       <span class="hint" style="margin-inline-start:auto;align-self:center">تقدير آلي مساعد من نموذج ذكاء اصطناعي مجاني، والحكم النهائي لفريق المراجعة.</span></div>
@@ -1528,7 +1567,7 @@ function renderLog(){
   const list = LOG.filter(x => x.mode === MODE);
   $("#logBox").hidden = !list.length;
   $("#logList").innerHTML = list.map((r, i) => { const v = verdictOf(r.level, r.sub_code); const st = subTitle(r.mode, r.sub_code);
-    return `<div class="logrow"><span class="lv" style="background:${LVC[r.level]}">${AR(r.level)}</span><span class="ttl" title="${esc(st.sub)}">${esc(st.sub)} <span class="hint">· ${esc(r.files.join("، "))}</span></span><span class="chip ${v.cls}">${v.t}</span><button class="btn sm ghost" data-i="${LOG.indexOf(r)}">عرض</button></div>`; }).join("");
+    return `<div class="logrow"><span class="lv" style="background:${LVC[r.level]}">${AR(r.level)}</span><span class="ttl" title="${esc(st.sub + " — " + r.files.join("، "))}">${esc(st.sub)} <span class="hint">· ${r.scope && r.scope !== "full" && LV_AR[r.scope] ? "مستوى " + LV_AR[r.scope] + " فقط · " : ""}${esc(r.files.length > 1 ? AR(r.files.length) + " ملفات: " : "")}${esc(r.files.join("، "))}${r.at ? " · " + esc(new Date(r.at).toLocaleString("ar-SA-u-nu-latn", {dateStyle:"short", timeStyle:"short"})) : ""}${r.engine ? " · " + esc(r.engine) : ""}</span></span><span class="chip ${v.cls}">${v.t}</span><button class="btn sm ghost" data-i="${LOG.indexOf(r)}">عرض</button></div>`; }).join("");
   $("#logList").querySelectorAll("button").forEach(b => b.onclick = () => { const r = LOG[+b.dataset.i]; phase = r.phase; renderResult(r); });
 }
 $("#clrBtn").onclick = () => { LOG = LOG.filter(x => x.mode !== MODE); store.set("aud-instlog", LOG); renderLog(); toast("مُسح السجل"); };
