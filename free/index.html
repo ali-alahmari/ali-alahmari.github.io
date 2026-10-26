@@ -1127,6 +1127,15 @@ function isoClean(r, sc){
   if (r.quality) Object.keys(LV_AR).forEach(k => { if (k !== sc) r.quality[k] = {score:null, why:""}; });
   return r;
 }
+function migLog(r){ // تحويل السجلات القديمة: ترقيم 1-3 وعزل المستوى المحدد (مرة واحدة لكل سجل)
+  if (!r || r.cv2 || r.mode !== "inst") return;
+  const T = ["match_note","doc_summary","recommendation","commendation","suggestion","rationale"], A = ["found","gaps","next","to_next_level"];
+  T.forEach(k => { if (typeof r[k] === "string") r[k] = isoNum(swapCodes(r[k])); });
+  A.forEach(k => { if (Array.isArray(r[k])) r[k] = r[k].map(x => typeof x === "string" ? isoNum(swapCodes(x)) : x); });
+  if (r.scope && LV_AR[r.scope] && r.quality) isoClean(r, r.scope);
+  r.rule = String(r.rule || "").replace(/ — الدرجة الكلية للمعيار تتطلب المستويات الثلاثة/, "");
+  r.cv2 = 1;
+}
 const INST_LV = (q) => {
   const E = q.existence?.score ?? null, A = q.application?.score ?? null, F = q.effectiveness?.score ?? null;
   if (scope !== "full") { const v = {existence:E, application:A, effectiveness:F}[scope]; return {level: v ?? 1, partial:true, rule: `تقييم مستوى ${ {existence:"الوجود",application:"التطبيق",effectiveness:"الفاعلية"}[scope] } وحده`}; }
@@ -1442,6 +1451,7 @@ function normalise(r){
     out.ladder = Array.isArray(r.ladder) ? r.ladder : [];
   }
   if (MODE === "inst") { // عزل أرقام المعايير (1-3) من انقلاب الاتجاه داخل النص العربي
+    out.cv2 = 1;
     ["match_note","doc_summary","recommendation","commendation","suggestion","rationale"].forEach(k => { out[k] = isoNum(out[k]); });
     ["found","gaps","next"].forEach(k => { out[k] = out[k].map(isoNum); });
   }
@@ -1529,6 +1539,7 @@ async function copyText(t){
 }
 
 function renderLog(){
+  try { if (MODE === "inst") LOG.forEach(migLog); } catch {}
   const list = LOG.filter(x => x.mode === MODE);
   $("#logBox").hidden = !list.length;
   $("#logList").innerHTML = list.map((r, i) => { const v = verdictOf(r.level, r.sub_code); const st = subTitle(r.mode, r.sub_code);
@@ -1554,7 +1565,7 @@ $("#repBtn").onclick = () => {
   const body = list.map(r => { const st = subTitle(r.mode, r.sub_code); const v = verdictOf(r.level, r.sub_code);
     const ul = a => a.length ? "<ul>" + a.map(x => `<li>${esc(x)}</li>`).join("") + "</ul>" : "<p>لا يوجد.</p>";
     return `<section><h2>${esc(st.sub)}</h2><p class="m">${esc(st.std)}${r.org?" · "+esc(r.org):""} · ${fnames(r.files)}</p>
-    <table><tr><th>المستوى</th><td>${r.level} — ${esc(v.s)}</td><th>الحكم</th><td>${esc(v.t)}</td></tr>${r.rule?`<tr><th>قاعدة الاحتساب</th><td colspan="3">${esc(r.rule)}</td></tr>`:""}${r.quality?`<tr><th>الوجود</th><td>${r.quality.existence.score??"—"}</td><th>التطبيق</th><td>${r.quality.application.score??"—"}</td></tr><tr><th>الفاعلية</th><td colspan="3">${r.quality.effectiveness.score??"—"}</td></tr>`:""}</table>
+    <table><tr><th>المستوى</th><td>${r.level} — ${esc(v.s)}</td><th>الحكم</th><td>${esc(v.t)}</td></tr>${r.rule?`<tr><th>قاعدة الاحتساب</th><td colspan="3">${esc(r.rule)}</td></tr>`:""}${r.quality?(r.scope && LV_AR[r.scope] ? `<tr><th>${LV_AR[r.scope]}</th><td colspan="3">${r.quality[r.scope].score??"—"}</td></tr>` : `<tr><th>الوجود</th><td>${r.quality.existence.score??"—"}</td><th>التطبيق</th><td>${r.quality.application.score??"—"}</td></tr><tr><th>الفاعلية</th><td colspan="3">${r.quality.effectiveness.score??"—"}</td></tr>`):""}</table>
     <h3>التعليل</h3><p>${esc(r.rationale)}</p>${r.visual?`<p class="m">التحقق البصري من المدقق: التوقيع/الاعتماد ${r.visual.approval==="yes"?"ظاهر":r.visual.approval==="no"?"غير ظاهر":"لم يُحدَّد"} · الشعار/الختم ${r.visual.linkage==="yes"?"ظاهر":r.visual.linkage==="no"?"غير ظاهر":"لم يُحدَّد"}</p>`:""}<h3>ما ثبت</h3>${ul(r.found)}<h3>ما ينقص</h3>${ul(r.gaps)}<h3>للصعود درجة</h3>${ul(r.next)}
     ${r.recommendation?`<h3>التوصية</h3><p class="rec">${esc(r.recommendation)}</p>`:""}${r.commendation?`<h3>الإشادة</h3><p class="rec">${esc(r.commendation)}</p>`:""}${r.suggestion?`<h3>المقترح</h3><p class="rec">${esc(r.suggestion)}</p>`:""}${r.suggestion?`<h3>المقترح</h3><p class="rec">${esc(r.suggestion)}</p>`:""}${r.suggestion?`<h3>المقترح</h3><p class="rec">${esc(r.suggestion)}</p>`:""}</section>`; }).join("");
   const html = `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="author" content="علي الأحمري"><title>تقرير تدقيق الشواهد</title><style>body{font-family:"Sakkal Majalla","Traditional Arabic",Tahoma,sans-serif;font-size:18px;line-height:1.7;color:#14251F;max-width:900px;margin:30px auto;padding:0 20px}h1{color:#0D5A46}h2{color:#0D5A46;border-bottom:2px solid #8A6A1F;padding-bottom:4px;margin-top:34px}h3{margin:14px 0 4px}.m{color:#4A5C55}table{border-collapse:collapse;width:100%}th,td{border:1px solid #D5DDD7;padding:6px 10px;text-align:right}th{background:#EBEFEA;width:18%}.rec{background:#F3EAD3;padding:8px 12px;border-right:4px solid #8A6A1F}</style></head><body><h1>تقرير تدقيق شواهد ${MODE==="inst"?"الاعتماد المؤسسي":"الاعتماد البرامجي"}</h1><p class="m">مُعِدّ التقرير: وحدة الجودة بمنطقة مكة المكرمة · عدد المعايير المدققة: ${list.length} · ${new Date().toLocaleDateString("ar-SA")}</p><p class="m">تقدير آلي مساعد للمدقق مبني على ${MODE==="inst"?"ملف مقاييس التقويم للمراجعة الخارجية V2.1":"محددات ومقاييس التحقق للاعتماد البرامجي"}، والحكم النهائي لفريق المراجعة.</p>${body}</body></html>`;
