@@ -1171,7 +1171,7 @@ function isoClean(r, sc){
   const keep = (t) => typeof t !== "string" ? t : t.split(/(?<=[.!؟。؛])\s+/).filter(x => !re.test(" " + x)).join(" ").trim();
   ["doc_summary","match_note","rationale","recommendation","commendation","suggestion"].forEach(k => { if (r[k]) r[k] = keep(r[k]); });
   ["found","gaps","to_next_level"].forEach(k => { if (Array.isArray(r[k])) r[k] = r[k].filter(x => typeof x !== "string" || !re.test(" " + x)); });
-  if (r.quality) Object.keys(LV_AR).forEach(k => { if (k !== sc) delete r.quality[k]; });
+  if (r.quality) Object.keys(LV_AR).forEach(k => { if (k !== sc) r.quality[k] = {score:null, why:""}; });
   return r;
 }
 const INST_LV = (q) => {
