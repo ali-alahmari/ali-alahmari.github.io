@@ -1047,11 +1047,7 @@ function buildPrompt(){
   "match": "عالية|متوسطة|ضعيفة|لا علاقة",
   "match_note": "جملة: لماذا يخص الشاهد هذا المعيار أو لا",
   "doc_summary": "سطران: ما هذا الشاهد، ومن أصدره، ومتى",
-  "quality": {
-    "existence": {"score": 1|2|3|null, "why": "تعليل مختصر مستند إلى ما في الملف"},
-    "application": {"score": 1|2|3|null, "why": "…"},
-    "effectiveness": {"score": 1|2|3|4|5|null, "why": "…"}
-  },
+  "quality": ${qSchema(scope)},
   "found": ["عنصر متحقق من الشاهد مع اقتباس قصير بين علامتي «» ورقم الملف/الصفحة"],
   "gaps": ["عنصر ناقص من متطلبات المعيار"],
   "to_next_level": ["ما يلزم إضافته من شواهد للصعود درجة"],
@@ -1064,7 +1060,7 @@ function buildPrompt(){
   "rationale": "فقرة تعليل الحكم كما يكتبها رئيس فريق المراجعة",
   "confidence": 0-100
 }
-تعليمات النطاق: ${sc}`;
+تعليمات النطاق: ${sc}${isoLevelText(scope)}`;
   } else {
     const subs = c ? [c.sub] : PROG;
     std = (c ? "" : "اختر المعيار الفرعي الأنسب للشاهد من القائمة التالية ثم قيّمه عليه:\n") + subs.map(s => `المعيار الفرعي ${s.code} — ${s.axis} (المعيار الرئيس ${s.code.split(".")[0]}: ${PROG_STD[s.code.split(".")[0]]})\nالنص: ${s.text}\nالهدف: ${s.goal}\nسلّم التحقق:\n` + s.levels.map(l => `  ${l.lv} (${l.name}): ${l.desc} | الشواهد المطلوبة: ${l.ev}`).join("\n")).join("\n\n");
@@ -1119,6 +1115,28 @@ ${schema}`;
 }
 
 /* ---------- run ---------- */
+/* ---- عزل المستوى المحدد: لا تقييم ولا ذكر لغير المستوى المختار ---- */
+const LV_AR = {existence:"الوجود", application:"التطبيق", effectiveness:"الفاعلية"};
+function qSchema(sc){
+  const all = {existence:'{"score": 1|2|3|null, "why": "تعليل مختصر مستند إلى ما في الملف"}', application:'{"score": 1|2|3|null, "why": "…"}', effectiveness:'{"score": 1|2|3|4|5|null, "why": "…"}'};
+  const ks = (sc === "full" || sc === "single") ? Object.keys(all) : [sc];
+  return "{\n    " + ks.map(k => `"${k}": ${all[k]}`).join(",\n    ") + "\n  }";
+}
+function isoLevelText(sc){
+  if (!LV_AR[sc]) return "";
+  const others = Object.keys(LV_AR).filter(k => k !== sc).map(k => "«" + LV_AR[k] + "»").join(" و");
+  return `\nعزل المستوى (إلزامي): المقيَّم هو مستوى «${LV_AR[sc]}» فقط. لا تقيّم ${others} ولا تذكرهما ولا تذكر درجاتهما أو متطلباتهما أو «المستوى التالي» أو «الدرجة الكلية» في أي حقل (doc_summary وfound وgaps وto_next_level وrationale وrecommendation وcommendation وsuggestion وmatch_note). اقتصر في كل نص على ما يخص ${LV_AR[sc]} وحده.`;
+}
+function isoClean(r, sc){
+  if (!r || !LV_AR[sc]) return r;
+  const others = Object.keys(LV_AR).filter(k => k !== sc).map(k => LV_AR[k].replace(/^ال/, ""));
+  const re = new RegExp("(?:^|\\s)[وبلكف]?(?:ال)?(?:" + others.join("|") + "|المستوى التالي|الدرجة الكلية)(?![\\u0600-\\u06FF])");
+  const keep = (t) => typeof t !== "string" ? t : t.split(/(?<=[.!؟。؛])\s+/).filter(x => !re.test(" " + x)).join(" ").trim();
+  ["doc_summary","match_note","rationale","recommendation","commendation","suggestion"].forEach(k => { if (r[k]) r[k] = keep(r[k]); });
+  ["found","gaps","to_next_level"].forEach(k => { if (Array.isArray(r[k])) r[k] = r[k].filter(x => typeof x !== "string" || !re.test(" " + x)); });
+  if (r.quality) Object.keys(LV_AR).forEach(k => { if (k !== sc) delete r.quality[k]; });
+  return r;
+}
 const INST_LV = (q) => {
   const E = q.existence?.score ?? null, A = q.application?.score ?? null, F = q.effectiveness?.score ?? null;
   if (scope !== "full") { const v = {existence:E, application:A, effectiveness:F}[scope]; return {level: v ?? 1, partial:true, rule: `تقييم مستوى ${ {existence:"الوجود",application:"التطبيق",effectiveness:"الفاعلية"}[scope] } وحده — الدرجة الكلية للمعيار تتطلب المستويات الثلاثة`}; }
@@ -1204,7 +1222,7 @@ ${STEP_JSON} {"score":1|2|3,"quote":"اقتباس حرفي قصير أو فار�
 ${STEP_JSON} {"score":1|2|3|4|5,"quote":"اقتباس حرفي قصير أو فارغ","why":"جملة واحدة"}`
 };
 function summaryAsk(computed){
-  return `النتيجة المحسوبة من الخطوات السابقة (لا تغيّرها): ${computed}
+  return `النتيجة المحسوبة من الخطوات السابقة (لا تغيّرها): ${computed}${MODE === "inst" ? isoLevelText(scope) : ""}
 اكتب الآن ورقة الحكم. ${STEP_JSON}
 {"match":"عالية|متوسطة|ضعيفة|لا علاقة","match_note":"جملة: صلة الشاهد بالمعيار","doc_summary":"سطران: ما الشاهد ومن أصدره ومتى",
 "found":["عنصر متحقق مع اقتباس حرفي قصير بين «» من الشاهد"],"gaps":["عنصر ناقص من متطلبات المعيار"],"to_next_level":["ما يلزم من شواهد للصعود درجة"],
@@ -1346,6 +1364,7 @@ ${docsBlock(ok, budget)}
       if (MODE === "prog") { res.level = extra.level; res.ladder = extra.ladder; }
     }
     // 4) the page's own checks: facts override, quotes verified against the file text
+    if (MODE === "inst") isoClean(res, scope);
     res.facts = facts;
     res.controls = res.controls || {};
     res.controls.dated = {ok:facts.dated, note:facts.dated ? `آخر سنة مذكورة ${facts.lastH ? facts.lastH + "هـ" : ""} ${facts.lastG ? facts.lastG + "م" : ""}`.trim() : "لا يظهر تاريخ في نص الشاهد"};
