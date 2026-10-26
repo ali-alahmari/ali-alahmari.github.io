@@ -1328,7 +1328,7 @@ ${ev}`;
       const prompt = buildPrompt() + (visTxt ? `\n\n— القراءة البصرية للصفحات الممسوحة والصور —\n${cutKeep(visTxt, 12000)}` : "") + `\n\n— حقائق استخرجها البرنامج آلياً من النص —\n${factsText(facts)}\n\nأجب بكائن JSON واحد فقط.`;
       { const raw = parseJSON(await apiChat({prompt, signal, onText:show}));
         // ردّ مقطوع لا يحوي أي درجة: لا يُعتمد (كان يتحول إلى [2] افتراضياً) بل يُعاد الطلب على المحرك التالي
-        if (MODE === "inst" && LAST_SALVAGED && !["existence","application","effectiveness"].some(k => raw?.quality?.[k]?.score != null)) throw new Error("bad_json");
+        if (MODE === "inst" && LAST_SALVAGED && (!["existence","application","effectiveness"].some(k => raw?.quality?.[k]?.score != null) || String(raw?.rationale || "").trim().length < 40)) throw new Error("bad_json"); // الرد المقطوع لا يُعتمد إن فقد الدرجة أو التعليل
         res = normalise(raw); }
       step(`الحكم والتعليل (${P().name})`, "done");
     } else {
