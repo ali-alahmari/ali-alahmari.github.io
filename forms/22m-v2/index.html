@@ -481,6 +481,7 @@ select.in,.fld select,.rec select,.std-side select,.tm select{-webkit-appearance
 /* tabs */
 .tabs{background:color-mix(in srgb,var(--bg) 78%,transparent);-webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);padding-block:10px}
 .tabs-in{border-radius:20px;padding:6px;gap:4px;border:1px solid color-mix(in srgb,var(--line) 75%,transparent);box-shadow:0 10px 30px -14px rgba(10,40,37,.28)}
+.tabs-in{background-image:linear-gradient(to right,var(--surface) 30%,transparent),linear-gradient(to left,var(--surface) 30%,transparent),radial-gradient(farthest-side at 0 50%,rgba(10,40,37,.38),transparent),radial-gradient(farthest-side at 100% 50%,rgba(10,40,37,.38),transparent);background-position:left center,right center,left center,right center;background-size:36px 100%,36px 100%,18px 100%,18px 100%;background-repeat:no-repeat;background-attachment:local,local,scroll,scroll}
 .tab{border-radius:14px;padding:.62rem 1.15rem;transition:background-color .18s ease-out,color .18s ease-out,box-shadow .18s ease-out}
 .tab[aria-selected="true"]{background:linear-gradient(135deg,var(--brand),#12877C 60%,var(--brand-2));box-shadow:0 10px 20px -10px var(--brand)}
 .panel:not([hidden]){animation:v3in .22s cubic-bezier(.23,1,.32,1)}
