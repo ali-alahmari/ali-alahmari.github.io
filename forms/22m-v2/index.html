@@ -164,7 +164,8 @@ body{margin:0;background:var(--bg);color:var(--ink)}
 .std-side select{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:8px;padding:.2rem .5rem;max-width:170px}
 .std-side select option{color:#142B29;background:#fff}
 .std-side button{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:8px;padding:.2rem .7rem;cursor:pointer}
-@media (max-width:700px){.std-h{grid-template-columns:auto minmax(0,1fr)}.std-side{grid-column:1/-1;grid-auto-flow:column;justify-content:space-between;justify-items:start}}
+@media (max-width:700px){.std-h{grid-template-columns:auto minmax(0,1fr)}.std-side{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-start;gap:8px 10px;min-width:0}.std-side select{flex:1 1 140px;min-width:0;max-width:100%}.std-side button{flex:0 0 auto;white-space:nowrap}}
+.stp{white-space:nowrap;flex:0 0 auto;text-align:center}
 .std.collapsed .subs{display:none}
 .std.ro-std .sub{opacity:.8}
 .subs{display:grid;gap:16px;margin-top:14px}
