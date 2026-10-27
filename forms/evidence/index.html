@@ -19,6 +19,9 @@ button{font:inherit;color:inherit;cursor:pointer}
 .hero{background:linear-gradient(118deg,var(--deep),var(--emb) 58%,#0E7662);color:#FBF3D6;border-radius:26px;padding:22px 22px 20px;box-shadow:0 0 0 1px rgba(230,198,115,.6),0 0 0 7px rgba(230,198,115,.12),0 30px 60px -30px rgba(3,46,39,.7);position:relative;overflow:hidden}
 .hero::after{content:"";position:absolute;inset-inline:0;bottom:0;height:3px;background:linear-gradient(90deg,transparent,var(--gl) 20%,var(--gl) 80%,transparent)}
 .hero h1{font-size:2.3rem;font-weight:700}
+.hero .byline{display:flex;flex-direction:column;gap:1px;margin-top:12px;padding-block:2px;padding-inline-start:12px;border-inline-start:3px solid var(--gl);line-height:1.35;width:fit-content}
+.hero .byline .by-k{font-size:.8rem;font-weight:600;color:var(--gl)}
+.hero .byline .by-v{font-size:1rem;font-weight:700;color:#fff}
 .hero p{margin:4px 0 0;color:#EAF3EE}
 .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
 .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;font-size:.95rem;border:1px solid rgba(230,198,115,.5);background:rgba(230,198,115,.12);color:#F6E3A1}
@@ -111,6 +114,7 @@ body.viewonly [data-dayopen],body.viewonly [data-apall],body.viewonly #dayRec,bo
 <header class="hero">
   <h1>بوابة شواهد المنشأة</h1>
   <p>ارفع كل شاهد في موضعه الصحيح، ويصل مباشرة إلى مجلده عند فريق المراجعة.</p>
+  <div class="byline" aria-label="معدّ التقرير: المهندس/ علي الأحمري"><span class="by-k">معدّ التقرير</span><span class="by-v">المهندس/ علي الأحمري</span></div>
   <div class="meta"><span class="pill" id="mFac"></span><span class="pill" id="mDl"></span><span class="pill" id="mProg"></span></div>
 </header>
 <div class="card" id="keyCard" hidden style="margin:14px 0"><h2 style="font-size:1.3rem" id="keyHd">دخول فريق المراجعة</h2><p class="hint">اكتب كلمة السر للدخول.</p><div class="lk"><input type="password" id="keyIn" autocomplete="off" aria-label="كلمة السر"><button class="btn pri" type="button" id="keyGo">دخول</button></div><div class="err" id="keyErr" role="alert"></div></div>

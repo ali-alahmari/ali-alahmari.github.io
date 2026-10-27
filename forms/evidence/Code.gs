@@ -527,7 +527,7 @@ function closeDay_(q) {
       rows = rows.map(function (r, i) { return [r, i]; }).sort(function (a, b) { return bySub_(a[0], b[0]) || (a[1] - b[1]); }).map(function (x) { return x[0]; });
       var up = rows.filter(function (r) { return r.files.length || r.links.length; }).length;
       var h = '<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>طلبات ' + d.label + '</title></head><body style="font-family:Sakkal Majalla,Tahoma,sans-serif">'
-        + '<h1>طلبات ' + d.label + '</h1><p>' + f.name + ' · زيارة ' + m.code + '</p><p>المطلوب ' + rows.length + ' · المرفوع ' + up + ' · المتبقي ' + (rows.length - up) + (d.dl ? ' · موعد التسليم ' + d.dl : '') + '</p>'
+        + '<h1>طلبات ' + d.label + '</h1><p style="color:#0D6B63;font-weight:700">معدّ التقرير: المهندس/ علي الأحمري</p><p>' + f.name + ' · زيارة ' + m.code + '</p><p>المطلوب ' + rows.length + ' · المرفوع ' + up + ' · المتبقي ' + (rows.length - up) + (d.dl ? ' · موعد التسليم ' + d.dl : '') + '</p>'
         + '<table border="1" cellpadding="6" style="border-collapse:collapse"><tr><th>المعيار</th><th>المستوى</th><th>الشاهد</th><th>الحالة</th></tr>'
         + rows.map(function (r) { return '<tr><td>' + r.sub + '</td><td>' + LVN[r.lv] + '</td><td>' + r.txt + '</td><td>' + SL[(r.files.length || r.links.length) ? r.status : 'none'] + '</td></tr>'; }).join('')
         + '</table></body></html>';
