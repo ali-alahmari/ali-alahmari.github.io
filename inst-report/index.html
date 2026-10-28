@@ -2839,8 +2839,26 @@ const dkSeen0 = t => /^(?:خلو|غياب|عدم|افتقار|إرفاق|ضعف|
 function dkNoEv(raw){
   const t = DESK.trim((raw || []).join(" ")); if (!t || /^(?:(?:في|على)\s+مستوى\s+\S+\s*[،,]?\s*)?لا يوجد\.?$/.test(t)) return false;
   const ss = t.split(/(?<=[.؟?!])\s+|\s*\*\s*/).map(x => x.trim()).filter(x => x.length > 3);
-  const NEG = /^(?:(?:و?(?:في|على)\s+مستوى\s+(?:الوجود|التطبيق|الفاعلية|الفعالية)|و?فيما يخص\s+\S+)\s*[،,]?\s*)?(?:[\d٠-٩]{1,2}\s*[.\-]\s*)?(?:و?لم\s|و?لا\s|عدم\s|غياب\s|افتقار\s|خلو\s|قد ترغب|ما ينقص|و?يُ?طلب|و?المطلوب|ينبغي)/;
+  const NEG = /^(?:(?:و?(?:في|على)\s+مستوى\s+(?:الوجود|التطبيق|الفاعلية|الفعالية)|و?فيما يخص\s+\S+)\s*[،,]?\s*)?(?:[\d٠-٩]{1,2}\s*[.\-]\s*)?(?:و?لم\s|و?لا\s|عدم\s|غياب\s|افتقار\s|خلو\s|قد ترغب|ما ينقص|لاحظ الفريق ما يلي|و?يُ?طلب|و?المطلوب|ينبغي)/;
   return ss.length > 0 && ss.every(x => NEG.test(x));
+}
+/* تنبيه تعارض الدرجة مع المحتوى في كل المسارات (استيراد، أو إدخال يدوي، أو شواهد): يُحسب عند التصدير من نص المستويات والدرجات الحالية */
+function dkGradeWarn(z, s){
+  if (!z || z.na || z.L == null) return "";
+  const sc = (z.b && z.b.sc) || {}; const given = {}, ev = {}; const bad = [];
+  ["e", "p", "f"].forEach(k => {
+    const g = sc[k]; if (g == null) return; given[k] = +g; ev[k] = +g;
+    if (+g < 3) return;
+    let t = String((z.cells && z.cells[k]) || "");
+    if (k === "e" && t.includes("؛ إذ ")) t = t.slice(t.indexOf("؛ إذ ") + 4);
+    t = t.replace(/^[^،]{0,40}(?:مستوى|صعيد|جانب|يخص|يتصل)[^،]{0,25}،\s*/, "");
+    if (/لم يرصد الفريق ملاحظات/.test(t)) return;
+    if (dkNoEv([t])) { ev[k] = 2; bad.push(DK_LVNAME[k]); }
+  });
+  if (!bad.length) return "";
+  const Lg = z.L, Le = instLv({E:ev.e, A:ev.p, F:ev.f});
+  if (Le == null || Le >= Lg) return "";
+  return `[يُستكمل: تنبيه — الدرجة المعطاة لهذا المعيار الفرعي (${RATE_LAB[Lg] || Lg}) لا تتسق مع المحتوى؛ إذ لم تتضمن الشواهد ما يثبت ${dkJoin(bad)}، وهو ما يتوافق مع «${RATE_LAB[Le] || Le}». وقد كُتب الحكم وفق الشواهد الموجودة دون الرجوع إلى الدرجة المعطاة، ويجب مراجعة الدرجة قبل رفع التقرير]`;
 }
 function dkLevelText(k, lv, F){
   const c = DESK.condense(lv.notes, 600); let t = dkClean(c.main);
@@ -3118,11 +3136,11 @@ function ssModel(nums){
       const dc = dcode(z.x.code); subList.push([dc, z.x.text]);
       if (z.na) { subs.push({code:dc, paras:String(z.na) === "لا ينطبق" ? [{ph:"[يُستكمل: تعليل عدم الانطباق]"}] : ["لا ينطبق هذا المعيار الفرعي على المنشأة، " + RPT.clean(z.na)]}); return; }
       if (!z.has && !LVK.some(([k]) => R.s.ed && R.s.ed[z.x.code + "|" + k])) { subs.push({code:dc, paras:[{ph:"[يُستكمل: تقييم المعيار الفرعي وملخصه]"}]}); }
-      else { evaluated = true; subs.push({code:dc, paras:LVK.map(([k]) => RPT.clean(z.cells[k])).map(t => t.trim()).filter(Boolean).concat(R.s.ed && R.s.ed[z.x.code + "|W"] ? [{ph:R.s.ed[z.x.code + "|W"]}] : [])}); }
+      else { evaluated = true; subs.push({code:dc, paras:LVK.map(([k]) => RPT.clean(z.cells[k])).map(t => t.trim()).filter(Boolean).concat(dkGradeWarn(z, R.s) ? [{ph:dkGradeWarn(z, R.s)}] : [])}); }
       [["P","إشادة",pr],["R","توصية",rc],["S","مقترح",sg]].forEach(([f, type, arr]) => String(z[f] || "").split(/\n+/).map(s => s.trim()).filter(Boolean).forEach(s => { const t = RPT.recOpen(type, s, N); if (t && !/^لا يوجد/.test(s)) arr.push([dc, t]); }));
       if ((z.has || LVK.some(([k]) => R.s.ed && R.s.ed[z.x.code + "|" + k])) && !String(z.R || "").split(/\n+/).some(q => q.trim() && !/^لا يوجد/.test(q.trim()))) {
         const ov = (R.s.ov && R.s.ov[z.x.code]) || {}; const low = LVK.filter(([k]) => ov[k] != null && +ov[k] < 3).map(([k]) => ({e:"الوجود", p:"التطبيق", f:"الفاعلية"})[k]);
-        if ((z.L != null && z.L < 3) || low.length || (R.s.ed && R.s.ed[z.x.code + "|W"])) rc.push([dc, "[يُستكمل: تنبيه — لم تُعبَّأ توصية المعيار الفرعي (" + dc + ")، مع أن الفريق رصد فجوات" + (low.length ? " في مستوى " + (low.length < 2 ? low[0] : low.slice(0, -1).join("، ") + " و" + low[low.length - 1]) : "") + " تستوجب توصية واحدة مدمجة يجب استيفاؤها قبل رفع التقرير]", 1]);
+        if ((z.L != null && z.L < 3) || low.length || dkGradeWarn(z, R.s)) rc.push([dc, "[يُستكمل: تنبيه — لم تُعبَّأ توصية المعيار الفرعي (" + dc + ")، مع أن الفريق رصد فجوات" + (low.length ? " في مستوى " + (low.length < 2 ? low[0] : low.slice(0, -1).join("، ") + " و" + low[low.length - 1]) : "") + " تستوجب توصية واحدة مدمجة يجب استيفاؤها قبل رفع التقرير]", 1]);
       }
       if (z.L != null && z.L < 3) gaps.push({o:sub2(dc), lv:[]});
     });
