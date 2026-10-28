@@ -2801,19 +2801,69 @@ var DESK=(function(){
 })();
 
 /* ---------- استيراد المراجعة المكتبية في مسار الاعتماد المؤسسي ---------- */
-const DK_LEAD = {e:"في مستوى الوجود، ", p:"وفي مستوى التطبيق، ", f:"وفي مستوى الفاعلية، "};
+/* صياغة رسمية مترابطة (28 أكتوبر 2026): افتتاحية بالحكم لكل معيار فرعي، وأدوات ربط بين المستويات،
+   ولا توصيات ولا طلبات ولا أسئلة داخل السرد، والحكم وفق الشواهد لا وفق الدرجة المعطاة */
+const DK_LEAD = {
+  sub:["وفيما يخص المعيار الفرعي ({c})، ","وعلى صعيد المعيار الفرعي ({c})، ","وفي المعيار الفرعي ({c})، ","وبالنظر إلى المعيار الفرعي ({c})، "],
+  p:["وعلى صعيد التطبيق، ","وفيما يتصل بمستوى التطبيق، ","وعلى مستوى الممارسة الفعلية، ","وفي جانب التطبيق، "],
+  f:["وعلى صعيد الفاعلية، ","وفي جانب الفاعلية، ","وعلى مستوى قياس الفاعلية، ","وفيما يخص الفاعلية، "],
+  tail:{e:"، الأمر الذي يُضعف اكتمال الإطار المنظم لهذا الجانب", p:"، مما يحدّ من إثبات انتظام التطبيق واستمراريته", f:"، وهو ما يحول دون التحقق من إغلاق دائرة الجودة"}};
+const DK_VERDICT = {1:"لا {v:يستوفي/تستوفي} متطلبات هذا المعيار الفرعي", 2:"{v:يستوفي/تستوفي} الحد الأدنى من متطلبات هذا المعيار الفرعي", 3:"{v:يستوفي/تستوفي} متطلبات هذا المعيار الفرعي", 4:"{v:يستوفي/تستوفي} متطلبات هذا المعيار الفرعي بإتقان", 5:"{v:يستوفي/تستوفي} متطلبات هذا المعيار الفرعي بتميز"};
+const DK_LVNAME = {e:"الوجود", p:"التطبيق", f:"قياس الفاعلية"};
+const dkJoin = a => a.length < 2 ? a.join("") : a.slice(0, -1).join("، ") + " و" + a[a.length - 1];
+const dkSent = t => String(t || "").split(/(?<=[.؟?!])\s+/).map(s => s.trim()).filter(Boolean);
+/* كل طلب أو سؤال يتحول إلى رصد للفجوة، وكل توصية أو ملاحظة داخلية تُحذف من السرد */
+function dkClean(t){
+  t = String(t || "").replace(/^\s*(?:و?(?:في|على)\s+مستوى\s+(?:الوجود|التطبيق|الممارسة والتطبيق|الفاعلية|الفعالية|قياس الفاعلية)|و?فيما يخص\s+(?:الوجود|التطبيق|الفاعلية))\s*[،,:]?\s*/, "");
+  t = t.replace(/قد\s+ترغب\s+\S+\s+(?:في\s+)?ب?(?:إرفاق|ارفاق|تقديم|توفير)\s*/g, "لم تتضمن الشواهد ")
+       .replace(/قد\s+ترغب\s+\S+\s+(?:في\s+)?ب?/g, "لم يتبيّن للفريق ما يثبت ")
+       .replace(/و?(?:يُ|ي)طلب\s+(?:استكمال|تقديم|توفير|إرفاق)\s+/g, "ولم تتضمن الشواهد ")
+       .replace(/و?المطلوب\s+(?:تقديم|استكمال|توفير|إرفاق)\s+/g, "ولم تتضمن الشواهد ")
+       .replace(/و?(?:يُ|ي)طلب\s+(?:التحقق\s+من\s+)?/g, "ولم يتبيّن للفريق ما يثبت ")
+       .replace(/\.(?=[\u0600-\u06FF])/g, ". ")
+       .replace(/(^|\s)المراجع(?=\s)/g, "$1الفريق");
+  const out = [];
+  t.split(/(?<=[.؟?!])\s+|\s+(?=[\d٠-٩]+\s*[.\-]\s*\S)/).forEach(s => {
+    s = s.replace(/^[\d٠-٩]+\s*[.\-]\s*/, "").trim(); if (!s) return;
+    const q = s.match(/^(كيف|ما|ماذا|هل|متى|لماذا)\s+(.+?)[؟?]\s*$/);
+    if (q) { out.push("ولم يتضح للفريق " + (q[1] === "هل" ? "ما إذا " : q[1] + " ") + q[2].replace(/[؟?]/g, "") + "."); return; }
+    if (/[؟?]/.test(s)) return;
+    if (/ينبغي|يُوصى|يوصي|نوصي|يُقترح|يقترح|نقترح|يُرجى|يرجى|يستوجب المعالجة|يستلزم|قواعد التقييم|مقاييس التقويم الذاتي|معيار حرج|يُحكم|لذا يحكم|وعليه (?:تُمنح|يُمنح|يكون)|الحكم (?:مستوفى|مستوفي)|استحق مستوى|ويُراجع التقدير|لا يثبت بذاته|باختصار|(?:لذلك|لذا|وعليه|وبناءً عليه)[^.]*مستوف/.test(s)) return;
+    out.push(s.replace(/‏?\[\s*\d\s*\]‏?/g, "").replace(/\(\s*الملف\s*\d+\s*\)/g, "").replace(/الملف\s*\d+/g, "الشاهد"));
+  });
+  return out.join(" ").replace(/\s+/g, " ").replace(/\s+([،؛.])/g, "$1").replace(/([^.،؛\s])\s+(لم تتضمن الشواهد|لم يتبيّن للفريق ما يثبت)/g, "$1، كما $2").replace(/^لا يوجد\.?$/, "").trim();
+}
+const dkSeen = t0 => { const t = String(t0).replace(/^و(?=لم |لا |كما )/, ""); return dkSeen0(t); };
+const dkSeen0 = t => /^(?:خلو|غياب|عدم|افتقار|إرفاق|ضعف|قدم|قِدم|تكرار|تعارض)\s/.test(t) ? "لوحظ " + t : t;
+/* مستوى بلا شاهد إيجابي: كل ما فيه نفي أو طلب */
+function dkNoEv(raw){
+  const t = DESK.trim((raw || []).join(" ")); if (!t || /^(?:(?:في|على)\s+مستوى\s+\S+\s*[،,]?\s*)?لا يوجد\.?$/.test(t)) return false;
+  if (/اطلع|اطّلع|تضمن|يتضمن|تتضمن|أظهر|تُظهر|يُظهر|تظهر|يثبت|يُثبت|تثبت|توفر|يتوفر|تتوفر|بلغ|يحقق|وث[ّ]?ق|يعكس|يقارن|يجمع|يمثل|كان الشاهد|يحمل|نقطة قوة/.test(t)) return false;
+  return /(^|\s)(?:لم|لا|عدم|غياب|افتقار|خلو|قد ترغب|ما ينقص)/.test(t);
+}
 function dkLevelText(k, lv, F){
-  const c = DESK.condense(lv.notes, 600); let t = c.main;
-  if (c.miss.length) t = (t ? t + " ولم" : "لم") + " يتضح للفريق ما يلي: " + c.miss.slice(0, 3).map(x => DESK.shortRec(x, 150).t.replace(/[.\s]+$/, "")).join("؛ ") + ".";
+  const c = DESK.condense(lv.notes, 600); let t = dkClean(c.main);
+  if (c.miss.length) { const mi = c.miss.slice(0, 3).map(x => DESK.shortRec(dkClean(x) || x, 150).t.replace(/[.\s]+$/, "")).filter(Boolean); if (mi.length) t = (t ? t.replace(/[.\s]+$/, "") + "، غير أن الفريق لاحظ ما يلي: " : "لاحظ الفريق ما يلي: ") + mi.join("؛ ") + "."; }
   if (!t) return {t: "", cut: false};
-  t = (DK_LEAD[k] + t).replace(/المنشأة التدريبية/g, F); if (!/[.؟!]$/.test(t)) t += ".";
+  t = t.replace(/المنشأة التدريبية/g, F);
+  if (lv.rev && +lv.rev < 3 && !/الأمر الذي|مما ي|وهو ما/.test(t)) t = t.replace(/[.\s]+$/, "") + DK_LEAD.tail[k];
+  if (!/[.؟!]$/.test(t)) t += ".";
   return {t, cut: c.cut};
 }
-/* توصية واحدة لكل معيار فرعي: أدنى مستوى لم يتحقق، لأن ما بعده مبني عليه */
+/* توصية واحدة مدمجة لكل معيار فرعي (قاعدة نموذج 22م): تُدمج توصيات المستويات بترتيب الوجود ثم التطبيق ثم الفاعلية */
+function dkMergeRecs(recs){
+  const ord = {e:0, p:1, f:2, "":3};
+  const items = recs.slice().sort((a, b) => ord[a.l || ""] - ord[b.l || ""])
+    .map(r => DESK.trim(String(r.x).replace(/\((?:على|في)\s+مستوى[^)]*\)\s*/g, "").replace(/(?:على|في)\s+مستوى\s+(?:الوجود|التطبيق|الفاعلية|الفعالية)\s*/g, "")))
+    .filter((x, i, a) => x && a.indexOf(x) === i);
+  if (!items.length) return null;
+  const parts = items.map((x, i) => { let q = DESK.shortRec(x, items.length > 1 ? 420 : 480).t.replace(/[.\s]+$/, ""); if (i) q = q.replace(/^ينبغي\s+على\s+(?:المنشأة التدريبية|المنشأة|المعهد|الكلية|المركز|الأكاديمية)\s*/, ""); return q; });
+  return {t: parts.join("، و") + ".", cut: items.some(x => x.length > 420)};
+}
 function dkPickRec(recs, type){ const ord = {e:0, p:1, f:2, "":3}; const arr = recs.filter(r => r.t === type).sort((a, b) => ord[a.l || ""] - ord[b.l || ""]); return arr[0] || null; }
 function deskApplyInst(R){
   const org = SUM_ORG; if (!org) { toast("اختر المنشأة أولاً ثم استورد"); return null; }
-  const rep = {subs:0, levels:0, recs:0, sugg:0, praise:0, cut:0, skipped:[], warn:[], name:R.fac};
+  const rep = {subs:0, levels:0, recs:0, sugg:0, praise:0, cut:0, warn:0, norec:0, skipped:[], name:R.fac};
   const F = ssNoun(org);
   const M = SS_META(); const m0 = M.s;
   if (R.dateObj) { m0.from = DESK.fmt(R.dateObj); m0.to = DESK.fmt(DESK.addDays(R.dateObj, (R.days || 1) - 1)); }
@@ -2822,25 +2872,46 @@ function deskApplyInst(R){
   store.set(SSK, M.a);
   const SU = sumState(org); SU.s.self = SU.s.self || {};
   const byStd = {}; R.subs.forEach(sb => (byStd[sb.std] = byStd[sb.std] || []).push(sb));
+  let nSub = 0;
   INST.forEach(m => {
     const list = byStd[m.n] || []; if (!list.length) return;
     const T = ssState(org, m.n); T.s.ed = T.s.ed || {}; T.s.ov = T.s.ov || {};
-    T.s.ed.open = "تبين لفريق المراجعة الخارجية للاعتماد المؤسسي من خلال فحص وثائق الدراسة الذاتية على المنصة الإلكترونية والشواهد الإضافية التي تم توفيرها"; T.s.ed.deskPh = 1;
+    T.s.ed.open = "تبين لفريق المراجعة الخارجية للاعتماد المؤسسي، من خلال فحص وثائق الدراسة الذاتية على منصة المرقب والشواهد الإضافية التي تم توفيرها أثناء الزيارة، والمقابلات مع المعنيين بإعداد هذا المعيار"; T.s.ed.deskPh = 1;
     list.forEach(sb => {
       const code = sb.sub + "-" + sb.std; const x = m.subs.find(z => z.code === code);
       if (!x) { rep.skipped.push(sb.std + "-" + sb.sub); return; }
       rep.subs++; T.s.ov[code] = T.s.ov[code] || {};
-      const orgScores = [];
+      const orgScores = [], given = {}, ev = {}, txt = {};
       ["e", "p", "f"].forEach(k => {
-        const lv = sb.lv[k]; if (!lv) return;
-        if (lv.rev) T.s.ov[code][k] = +lv.rev;
+        const lv = sb.lv[k];
+        if (!lv) return;
+        T.s.ed[code + "|" + k] = "";
+        if (lv.rev) { T.s.ov[code][k] = +lv.rev; given[k] = +lv.rev; ev[k] = dkNoEv(lv.notes) ? Math.min(+lv.rev, 2) : +lv.rev; }
         if (lv.org) orgScores.push(+lv.org);
-        const r = dkLevelText(k, lv, F); if (r.t) { T.s.ed[code + "|" + k] = r.t; rep.levels++; if (r.cut) rep.cut++; }
+        const r = dkLevelText(k, lv, F); if (r.t) { txt[k] = r.t; rep.levels++; if (r.cut) rep.cut++; }
       });
+      /* الحكم في الافتتاحية من الشواهد؛ وإن خالفت الدرجة المعطاة الشواهد يُنبَّه بالأصفر */
+      const Lg = instLv({E:given.e, A:given.p, F:given.f}), Le = instLv({E:ev.e, A:ev.p, F:ev.f});
+      const L = Le ?? Lg; const dc = dcode(code);
+      delete T.s.ed[code + "|W"];
+      if (Lg != null && Le != null && Le < Lg) {
+        const lvls = ["e", "p", "f"].filter(k => given[k] != null && ev[k] < given[k]).map(k => DK_LVNAME[k]);
+        T.s.ed[code + "|W"] = `[يُستكمل: تنبيه — الدرجة المعطاة لهذا المعيار الفرعي (${RATE_LAB[Lg] || Lg}) لا تتسق مع المحتوى؛ إذ لم تتضمن الشواهد ما يثبت ${dkJoin(lvls)}، وهو ما يتوافق مع «${RATE_LAB[Le] || Le}». وقد كُتب الحكم وفق الشواهد الموجودة دون الرجوع إلى الدرجة المعطاة، ويجب مراجعة الدرجة قبل رفع التقرير]`;
+        rep.warn++;
+      }
+      const first = ["e", "p", "f"].find(k => txt[k]);
+      if (first || L != null) {
+        const head = fill(DK_LEAD.sub[nSub % 4], F, {c:dc}) + "فقد تبيّن للفريق أن " + F + " " + fill(DK_VERDICT[L] || DK_VERDICT[2], F);
+        nSub++;
+        if (!txt.e) T.s.ed[code + "|e"] = head + (sb.lv.e && !(given.e < 3) ? "؛ إذ لم يرصد الفريق ملاحظات على مستوى الوجود." : ".");
+        else T.s.ed[code + "|e"] = head + "؛ إذ " + dkSeen(txt.e);
+      }
+      ["p", "f"].forEach((k, j) => { if (txt[k]) T.s.ed[code + "|" + k] = DK_LEAD[k][(nSub + j) % 4] + dkSeen(txt[k]); });
       if (orgScores.length) SU.s.self[code] = Math.round(orgScores.reduce((a, b) => a + b, 0) / orgScores.length * 100) / 100;
       const lines = {P:[], R:[], S:[]};
       const pr = sb.recs.filter(r => r.t === "إشادة"); pr.forEach(r => { lines.P.push(DESK.shortRec(r.x, 260).t); rep.praise++; });
-      const rc = dkPickRec(sb.recs, "توصية"); if (rc) { const q = DESK.shortRec(rc.x.replace(/\((?:على|في)\s+مستوى[^)]*\)\s*/g, ""), 380); lines.R.push(q.t); rep.recs++; if (q.cut) rep.cut++; }
+      const rc = dkMergeRecs(sb.recs.filter(r => r.t === "توصية")); if (rc) { lines.R.push(rc.t); rep.recs++; if (rc.cut) rep.cut++; }
+      else if ((L != null && L < 3) || T.s.ed[code + "|W"] || ["e", "p", "f"].some(k => given[k] != null && given[k] < 3)) rep.norec++;
       const sg = dkPickRec(sb.recs, "مقترح"); if (sg) { const q = DESK.shortRec(sg.x, 380); lines.S.push(q.t); rep.sugg++; if (q.cut) rep.cut++; }
       ["P", "R", "S"].forEach(f => { T.s.ed[code + "|" + f] = lines[f].join("\n"); });
     });
@@ -2858,7 +2929,7 @@ async function deskPick(file){
     const mism = []; INST.forEach(m => { const want = R.stdLabel && R.stdLabel[m.n]; if (!want) return; const c = ssStd(m, SUM_ORG).c; const got = c ? ST_LAB(c.st) : ""; if (got && got.replace("الحد الأدنى من الامتثال", "الحد الأدنى") !== want.replace("الحد الأدنى من الامتثال", "الحد الأدنى")) mism.push(`${AR(m.n)} (الملف: ${want}، الأداة: ${got})`); });
     rep.mism = mism;
     ssRender();
-    toast(`استُوردت ${AR(rep.subs)} معياراً فرعياً و${AR(rep.levels)} ملخص مستوى و${AR(rep.recs)} توصية${nm}${rep.cut ? "، وقُصّرت " + AR(rep.cut) + " صياغة طويلة" : ""}${rep.skipped.length ? "، وتخطى " + rep.skipped.join(" ") : ""}${mism.length ? "، وتنبيه: اختلاف حالة المعيار " + mism.join("؛ ") : ""}`);
+    toast(`استُوردت ${AR(rep.subs)} معياراً فرعياً و${AR(rep.levels)} ملخص مستوى و${AR(rep.recs)} توصية${nm}${rep.cut ? "، وقُصّرت " + AR(rep.cut) + " صياغة طويلة" : ""}${rep.skipped.length ? "، وتخطى " + rep.skipped.join(" ") : ""}${rep.warn ? "، ونُبّه بالأصفر على " + AR(rep.warn) + " تعارض بين الدرجة والمحتوى" : ""}${rep.norec ? "، و" + AR(rep.norec) + " معيار فرعي بلا توصية (تنبيه أصفر في التقرير)" : ""}${mism.length ? "، وتنبيه: اختلاف حالة المعيار " + mism.join("؛ ") : ""}`);
     DESK.last = rep;
   } catch (e) { toast("تعذر الاستيراد: " + e.message); }
 }
@@ -2878,7 +2949,7 @@ async function ssPolish(m){
   const style = [PB4.opener[0], ...PB4.lead.e.slice(0, 2), ...PB4.lead.p.slice(0, 2), ...PB4.lead.f.slice(0, 2), ...PB4.affirm.f, ...PB4.gapc.neg, PB4.gapDefault.f, ...PB4.num.base.slice(0, 2), ...PB4.num.up.slice(0, 1), ...PB4.num.rise.slice(0, 1)].join("\n• ");
   const prompt = `أنت رئيس فريق مراجعة خارجية للاعتماد المؤسسي تكتب «التقويم التفصيلي للمعايير الفرعية» في التقرير النهائي: لكل معيار فرعي ثلاث خلايا (الوجود، التطبيق، الفعالية)، وتبدأ خلية الوجود لأول معيار فرعي بافتتاحية المعيار.
 أعد صياغة المسودة أدناه بأسلوب التقارير المعتمدة، مع ذكر الأرقام والمقارنات كما هي.
-قواعد صارمة: لا تضف أي معلومة أو رقم أو اسم وثيقة غير موجود في المسودة أو الحقائق. لا تغيّر أي حكم. سمِّ المنشأة «${R.F}». اكتب بالعربية الفصحى المهنية.
+قواعد صارمة: لا تضف أي معلومة أو رقم أو اسم وثيقة غير موجود في المسودة أو الحقائق. لا تغيّر أي حكم. سمِّ المنشأة «${R.F}». اكتب بالعربية الفصحى المهنية.\nقواعد الأسلوب (ملزمة): ابدأ خلية الوجود لكل معيار فرعي بجملة إثبات تنتهي بالحكم المستند إلى الشواهد (يستوفي / يستوفي الحد الأدنى من / لا يستوفي متطلبات هذا المعيار الفرعي) ثم «؛ إذ ...»، وابدأ خليتي التطبيق والفاعلية بأداة ربط متصلة بما قبلها (وعلى صعيد التطبيق، وفي جانب الفاعلية، ...) ونوّعها. اعرض ما ثبت أولاً، ثم انتقل إلى الفجوة بـ«غير أنه / إلا أن / بيد أن»، ثم لمّح إلى أثرها (الأمر الذي يُضعف... / مما يحدّ من...). لا تكتب داخل السرد أي توصية أو إشادة أو مقترح أو طلب أو سؤال (ينبغي، يُطلب، يوصي، يقترح، يرجى، ؟)؛ فمكانها خانات التوصيات المستقلة، وحوّل كل طلب أو سؤال إلى رصد لما لم تُظهره الشواهد. احذف الملاحظات الداخلية (الملف 1، باختصار، الدرجات بين أقواس، قواعد التقييم، وعليه تُمنح). إن خالفت الدرجة المعطاة ما تثبته الشواهد فاكتب الحكم وفق الشواهد، وأبقِ أي نص يبدأ بـ«[يُستكمل: تنبيه» كما هو.
 قاموس مصطلحات التقارير المعتمدة (استخدم منه كل ما يخدم القارئ لفهم الممارسة ومستوى تحققها، دون إضافة ما لا تدعمه الحقائق):
 ${termsText(7000)}
 عبارات من التقارير المعتمدة للاسترشاد بأسلوبها:
@@ -2959,7 +3030,7 @@ function buildReportDoc(M){var D=window.docx;if(!D)throw new Error('docx');var N
   var from=M.from||'[يُستكمل: تاريخ البداية]',to=M.to||'[يُستكمل: تاريخ النهاية]';
   var today=M.today,ph=function(x){return (x||'').trim()};
   var nSubs=M.nSubs;
-  var allPr=[],allRc=[],allSg=[];M.data.forEach(function(d){allPr=allPr.concat(d.pr);allRc=allRc.concat(d.rc);allSg=allSg.concat(d.sg)});allPr=dedupe(allPr);allRc=dedupe(allRc);allSg=dedupe(allSg);
+  var allPr=[],allRc=[],allSg=[];M.data.forEach(function(d){allPr=allPr.concat(d.pr);allRc=allRc.concat(d.rc.filter(function(x){return !x[2]}));allSg=allSg.concat(d.sg)});allPr=dedupe(allPr);allRc=dedupe(allRc);allSg=dedupe(allSg);
   /* cover */
   kids.push(P('',{sa:1600}));
   kids.push(P('تقرير فريق المراجعة الخارجية',{size:56,bold:true,color:NAVY,al:AL.CENTER,sa:80}));
@@ -3046,8 +3117,12 @@ function ssModel(nums){
       const dc = dcode(z.x.code); subList.push([dc, z.x.text]);
       if (z.na) { subs.push({code:dc, paras:String(z.na) === "لا ينطبق" ? [{ph:"[يُستكمل: تعليل عدم الانطباق]"}] : ["لا ينطبق هذا المعيار الفرعي على المنشأة، " + RPT.clean(z.na)]}); return; }
       if (!z.has && !LVK.some(([k]) => R.s.ed && R.s.ed[z.x.code + "|" + k])) { subs.push({code:dc, paras:[{ph:"[يُستكمل: تقييم المعيار الفرعي وملخصه]"}]}); }
-      else { evaluated = true; subs.push({code:dc, paras:LVK.map(([k]) => RPT.clean(z.cells[k])).map(t => t.trim()).filter(Boolean)}); }
+      else { evaluated = true; subs.push({code:dc, paras:LVK.map(([k]) => RPT.clean(z.cells[k])).map(t => t.trim()).filter(Boolean).concat(R.s.ed && R.s.ed[z.x.code + "|W"] ? [{ph:R.s.ed[z.x.code + "|W"]}] : [])}); }
       [["P","إشادة",pr],["R","توصية",rc],["S","مقترح",sg]].forEach(([f, type, arr]) => String(z[f] || "").split(/\n+/).map(s => s.trim()).filter(Boolean).forEach(s => { const t = RPT.recOpen(type, s, N); if (t && !/^لا يوجد/.test(s)) arr.push([dc, t]); }));
+      if ((z.has || LVK.some(([k]) => R.s.ed && R.s.ed[z.x.code + "|" + k])) && !String(z.R || "").split(/\n+/).some(q => q.trim() && !/^لا يوجد/.test(q.trim()))) {
+        const ov = (R.s.ov && R.s.ov[z.x.code]) || {}; const low = LVK.filter(([k]) => ov[k] != null && +ov[k] < 3).map(([k]) => ({e:"الوجود", p:"التطبيق", f:"الفاعلية"})[k]);
+        if ((z.L != null && z.L < 3) || low.length || (R.s.ed && R.s.ed[z.x.code + "|W"])) rc.push([dc, "[يُستكمل: تنبيه — لم تُعبَّأ توصية المعيار الفرعي (" + dc + ")، مع أن الفريق رصد فجوات" + (low.length ? " في مستوى " + (low.length < 2 ? low[0] : low.slice(0, -1).join("، ") + " و" + low[low.length - 1]) : "") + " تستوجب توصية واحدة مدمجة يجب استيفاؤها قبل رفع التقرير]", 1]);
+      }
       if (z.L != null && z.L < 3) gaps.push({o:sub2(dc), lv:[]});
     });
     const lab = R.c ? ST_LAB(R.c.st) : "";
