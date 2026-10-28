@@ -2683,7 +2683,7 @@ function ssRender(){
     <div class="hint">افتتاحية المعيار (تُكتب في بداية ملخص الوجود لأول معيار فرعي، كما في التقارير):</div>${ta("open", R.open, 3)}
     ${cards}
     ${ssFollowHTML()}
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0"><button class="btn sm" id="ssGen" type="button">صياغة جديدة للمقترح</button><button class="btn sm" id="ssAI" type="button">تحسين الصياغة بالذكاء</button><button class="btn sm" id="ssCopy" type="button">نسخ المعيار</button><button class="btn sm pri" id="ssDl1" type="button">تصدير هذا المعيار (Word)</button><button class="btn sm pri" id="ssDlAll" type="button">تصدير التقرير كاملاً (Word)</button></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0"><button class="btn sm" id="ssGen" type="button">صياغة جديدة للمقترح</button><button class="btn sm" id="ssDesk" type="button">استيراد تقرير المراجعة المكتبية</button><input type="file" id="ssDeskF" accept=".docx,.json" hidden><button class="btn sm" id="ssAI" type="button">تحسين الصياغة بالذكاء</button><button class="btn sm" id="ssCopy" type="button">نسخ المعيار</button><button class="btn sm pri" id="ssDl1" type="button">تصدير هذا المعيار (Word)</button><button class="btn sm pri" id="ssDlAll" type="button">تصدير التقرير كاملاً (Word)</button></div>
     <details class="sscard"><summary><b>بيانات الغلاف والتوثيق</b> <span class="hint">(تُكتب في التقرير المصدَّر؛ وما يُترك فارغاً يظهر بين قوسين للاستكمال)</span></summary>
       <label class="hint">المنطقة / المدينة <input type="text" data-ssmeta="region" value="${esc(SS_META().s.region || "")}"></label>
       <label class="hint">من تاريخ <input type="text" data-ssmeta="from" value="${esc(SS_META().s.from || "")}" style="width:120px"></label>
@@ -2705,6 +2705,8 @@ function ssRender(){
   $("#ssTerms").onchange = e => { store.set(UTK, e.target.value); toast("حُفظت المصطلحات"); };
   box.querySelectorAll("[data-ssed]").forEach(el => el.oninput = () => { s.ed[el.dataset.ssed] = el.value; save(); });
   box.querySelectorAll("[data-ssreset]").forEach(el => el.onclick = () => { delete s.ed[el.dataset.ssreset]; save(); ssRender(); });
+  $("#ssDesk").onclick = () => $("#ssDeskF").click();
+  $("#ssDeskF").onchange = e => { const fl = e.target.files[0]; e.target.value = ""; if (fl) deskPick(fl); };
   $("#ssGen").onclick = () => { s.seed = (s.seed || 1) + 1; save(); ssRender(); toast("صياغة جديدة للنصوص التي لم تعدّلها"); };
   $("#ssCopy").onclick = () => copyText(ssPlain(ssStd(m, SUM_ORG)));
   $("#ssDl1").onclick = () => ssExport([m.n]);
@@ -2714,6 +2716,153 @@ function ssRender(){
   box.querySelectorAll("[data-ssconf]").forEach(el => el.onchange = () => { s.conf[el.dataset.ssconf] = el.checked; save(); ssRender(); });
   box.querySelectorAll("[data-ssex]").forEach(el => el.onclick = () => { s.ex[el.dataset.ssex] = true; save(); ssRender(); toast("استُبعد الشاهد من هذا الملخص"); });
 }
+/* ---------- استيراد تقرير المراجعة المكتبية (docx من نموذج 22م) أو ملف بيانات 22م (JSON) ---------- */
+var DESK=(function(){
+  var MON=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  var LVN={'الوجود':'e','الممارسة':'p','التطبيق':'p','الفاعلية':'f'};
+  var ORDN=['الأول','الثاني','الثالث','الرابع','الخامس','السادس','السابع','الثامن'];
+  function u16(b,o){return b[o]|(b[o+1]<<8)}
+  function u32(b,o){return (b[o]|(b[o+1]<<8)|(b[o+2]<<16)|(b[o+3]<<24))>>>0}
+  function digits(s){return String(s==null?'':s).replace(/[٠-٩]/g,function(d){return '٠١٢٣٤٥٦٧٨٩'.indexOf(d)})}
+  function trim(s){return String(s==null?'':s).replace(/ /g,' ').replace(/\s+/g,' ').trim()}
+  /* قراءة word/document.xml من ملف docx دون مكتبات خارجية */
+  async function docXml(buf){var b=new Uint8Array(buf),e=b.length-22;while(e>=0&&u32(b,e)!==0x06054b50)e--;
+    if(e<0)throw new Error('الملف ليس بصيغة Word صالحة');
+    var cnt=u16(b,e+10),p=u32(b,e+16),hit=null;
+    for(var i=0;i<cnt;i++){if(u32(b,p)!==0x02014b50)break;var meth=u16(b,p+10),csz=u32(b,p+20),nl=u16(b,p+28),el=u16(b,p+30),cl=u16(b,p+32),lho=u32(b,p+42),
+      name=new TextDecoder().decode(b.subarray(p+46,p+46+nl));if(name==='word/document.xml')hit={m:meth,c:csz,o:lho};p+=46+nl+el+cl}
+    if(!hit)throw new Error('لم أجد نص المستند داخل الملف');
+    var ls=hit.o+30+u16(b,hit.o+26)+u16(b,hit.o+28),data=b.subarray(ls,ls+hit.c);
+    if(hit.m===0)return new TextDecoder().decode(data);
+    if(typeof DecompressionStream==='undefined')throw new Error('المتصفح لا يدعم فك الضغط، استخدم Chrome أو Edge حديثاً أو ملف JSON');
+    var out=await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer();
+    return new TextDecoder().decode(out)}
+  var W='http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+  function kids(el,tag){var o=[];for(var c=el.firstChild;c;c=c.nextSibling)if(c.nodeType===1&&c.localName===tag)o.push(c);return o}
+  function ptext(p){var t='';(function w(n){for(var c=n.firstChild;c;c=c.nextSibling){if(c.nodeType!==1)continue;if(c.localName==='t')t+=c.textContent;else if(c.localName==='tab'||c.localName==='br')t+=' ';else w(c)}})(p);return trim(t)}
+  function cellParas(tc){return kids(tc,'p').map(ptext).filter(function(x){return x})}
+  function tables(xml){var d=new DOMParser().parseFromString(xml,'application/xml');var body=d.getElementsByTagNameNS(W,'body')[0];
+    return kids(body,'tbl').map(function(tb){return kids(tb,'tr').map(function(tr){return kids(tr,'tc').map(cellParas)})})}
+  /* تحويل الدرجة: الوجود والممارسة 1–3، والفاعلية «غير متحققة» (تُحفظ 2) أو 3–5 */
+  function score(k,v,org){v=digits(trim(v));if(!v||v==='-'||v==='—')return '';if(/غير\s*متحقق/.test(v))return k==='f'?'2':'1';var n=parseFloat(v);if(isNaN(n))return '';n=Math.round(n);if(org)return String(Math.max(1,Math.min(5,n)));if(k==='f')return String(Math.max(2,Math.min(5,n)));return String(Math.max(1,Math.min(3,n)))}
+  function parseDate(txt){var m=digits(txt).match(/(\d{1,2})\s+(\S+)\s+(\d{4})/);if(!m)return null;var mi=MON.indexOf(m[2]);if(mi<0)return null;return {d:+m[1],m:mi,y:+m[3]}}
+  function fmt(o){return o?(o.d+' '+MON[o.m]+' '+o.y):''}
+  function addDays(o,n){var x=new Date(Date.UTC(o.y,o.m,o.d+n));return {d:x.getUTCDate(),m:x.getUTCMonth(),y:x.getUTCFullYear()}}
+  async function fromDocx(buf){var T=tables(await docXml(buf)),R={src:'docx',fac:'',dateObj:null,days:1,team:[],stdLabel:{},subs:[]},cur=null;
+    T.forEach(function(rows){if(!rows.length)return;var h=rows[0][0]||[],h0=h[0]||'';
+      if(rows[0].length===2&&/اسم المنشأة/.test(h0)){rows.forEach(function(r){var k=(r[0]||[])[0]||'',v=(r[1]||[]).join(' ');
+        if(/اسم المنشأة/.test(k))R.fac=trim(v);else if(/تاريخ بداية/.test(k))R.dateObj=parseDate(v);else if(/عدد أيام/.test(k))R.days=+digits(v).replace(/\D/g,'')||1});return}
+      if(/اسم المراجع/.test(h0)){rows.slice(1).forEach(function(r){var n=trim((r[0]||[]).join(' ')),ro=trim((r[1]||[]).join(' '));if(n)R.team.push({name:n,role:ro})});return}
+      var mm=h0.match(/^المعيار\s+(\S+)\s*·/);if(mm&&rows[0].length===2){var lab=(rows[0][1]||[])[1]||'';var oi=ORDN.indexOf(mm[1]);if(oi>=0)R.stdLabel[oi+1]=trim(lab);return}
+      var sm=h0.match(/^(\d)-(\d)\s*·\s*(.*?)(?:\s*●\s*معيار حرج)?$/);
+      if(sm&&rows[0].length===1){cur={std:+sm[1],sub:+sm[2],code:sm[1]+'-'+sm[2],text:trim(sm[3]),crit:/معيار حرج/.test(h0),lv:{e:null,p:null,f:null},recs:[]};R.subs.push(cur);
+        rows.slice(1).forEach(function(r){var first=(r[0]||[])[0]||'';
+          if(LVN[first]&&r.length>=4){var k=LVN[first],cp=r[3]||[],ni=-1,ei=cp.length;
+            cp.forEach(function(x,i){if(ni<0&&/^الملحوظات والمبررات/.test(x))ni=i});
+            if(ni>=0)for(var i=ni+1;i<cp.length;i++)if(/^(المقابلات|تعليل الفرق)/.test(cp[i])){ei=i;break}
+            cur.lv[k]={org:score(k,(r[1]||[]).join(''),1),rev:score(k,(r[2]||[]).join('')),raw:trim((r[2]||[]).join('')),notes:ni>=0?cp.slice(ni+1,ei):[]}}
+          else if(r.length===1&&/^(توصية|مقترح|إشادة)\s*·/.test(first)){var rp=r[0],t=null;
+            rp.forEach(function(x){var hm=x.match(/^(توصية|مقترح|إشادة)\s*·\s*مستوى الجودة:\s*(\S+)/);if(hm){t={t:hm[1],l:LVN[hm[2]]||'',x:''};cur.recs.push(t)}else if(t)t.x=trim(t.x+' '+x)})}});return}});
+    if(!R.subs.length)throw new Error('لم أجد معايير فرعية في الملف، تأكد أنه تقرير المراجعة المكتبية الصادر من نموذج 22م');
+    return R}
+  /* ملف بيانات 22م: {app:'etec22m', state:{setup, f}} */
+  function fromS(o){var S=o&&o.state?o.state:o;if(!S||!S.f||!S.setup)throw new Error('الملف ليس ملف بيانات نموذج 22م');
+    var R={src:'json',fac:trim(S.setup.facility),dateObj:null,days:+S.setup.days||1,team:[],stdLabel:{},subs:[]},m=String(S.setup.date||'').match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if(m)R.dateObj={y:+m[1],m:+m[2]-1,d:+m[3]};
+    (S.setup.team||[]).forEach(function(t){if(t&&trim(t.name))R.team.push({name:trim(t.name),role:trim(t.role)})});
+    var codes={};Object.keys(S.f).forEach(function(k){var c=k.match(/^(\d)-(\d)\./);if(c)codes[c[1]+'-'+c[2]]=1});
+    Object.keys(codes).sort().forEach(function(code){var c=code.split('-'),sb={std:+c[0],sub:+c[1],code:code,text:'',crit:false,lv:{e:null,p:null,f:null},recs:[]};
+      ['e','p','f'].forEach(function(k){var g=function(f){return S.f[code+'.'+k+'.'+f]};var rev=score(k,g('rev')||''),org=score(k,g('org')||'',1),nt=String(g('notes')||'').split(/\n+/).map(trim).filter(Boolean);
+        if(rev||org||nt.length)sb.lv[k]={org:org,rev:rev,raw:rev,notes:nt}});
+      for(var i=1;i<=9;i++){var t=S.f[code+'.r'+i+'.t'],x=trim(S.f[code+'.r'+i+'.x']);if(x)sb.recs.push({t:t||'توصية',l:S.f[code+'.r'+i+'.l']||'',x:x})}
+      R.subs.push(sb)});return R}
+  /* تكثيف ملحوظات المراجع إلى فقرة تصلح للتقرير النهائي */
+  function norm(t){return trim(String(t||'').replace(/\*\s*/g,' * '))}
+  function sentences(t){return t.split(/(?<=[.!؟])\s+/).map(trim).filter(Boolean)}
+  function dropInternal(ss){return ss.filter(function(s){return !/معيار حرج|مقاييس التقويم الذاتي|\(لم يُكتب تفسير\)/.test(s)})}
+  var MARK=/ما\s*ينقص(\s*الشواهد)?\s*:/;
+  var PRE=/^(?:الشاهد\s+)?(?:مقدم|قُدّم|قدم)(?:\s+الشاهد)?\s+لمستوى\s+\S+(?:\s+في\s+المعيار\s+الفرعي\s+[\d-]+)?\s*[.:،]?\s*/;
+  function condense(paras,cap){paras=(paras||[]).map(trim).filter(Boolean);var mainP=[],missP=[],inM=false;
+    paras.forEach(function(p){if(inM){missP.push(p);return}var m=p.search(MARK);if(m>=0){if(m>0)mainP.push(p.slice(0,m));missP.push(p.slice(m));inM=true}else mainP.push(p)});
+    var miss=[];missP.forEach(function(p){p=p.replace(MARK,'');p.split(/\s*\*\s*/).forEach(function(x){x=trim(x.replace(/^[•\-–]\s*/,''));if(x.length>8)miss.push(x)})});
+    var t=norm(mainP.join(' '));
+    var si=t.indexOf('باختصار');
+    if(si>=0){var inner=trim(t.slice(si+7).replace(/^\s*[:(（]\s*/,'').replace(/[\s.]*\)\s*\.?\s*$/,''));var before=trim(t.slice(0,si));t=inner.length>60?inner:(before||inner)}
+    t=trim(t.replace(PRE,''));
+    var ss=dropInternal(sentences(t).map(function(s){return trim(s.replace(PRE,''))}).filter(Boolean));if(!ss.length&&t)ss=sentences(t).slice(0,2);
+    var out=[],len=0,cut=false;for(var i=0;i<ss.length;i++){if(out.length&&len+ss[i].length>(cap||600)){cut=true;break}out.push(ss[i]);len+=ss[i].length+1}
+    return {main:out.join(' '),miss:miss,cut:cut}}
+  function bal(s){return (s.match(/\(/g)||[]).length<=(s.match(/\)/g)||[]).length}
+  function shortRec(x,cap){x=trim(x);if(x.length<=cap)return {t:x,cut:false};var s=sentences(x)[0]||x;if(s.length<=cap)return {t:s,cut:true};
+    var best=-1;for(var i=cap;i>80;i--){var ch=s.charAt(i);if((ch==='،'||ch==='؛')&&bal(s.slice(0,i))){best=i;break}}
+    var r=best>0?s.slice(0,best):s.slice(0,cap);while(!bal(r)){var q=r.lastIndexOf('(');if(q<0)break;r=r.slice(0,q)}
+    return {t:r.replace(/[\s،؛]+$/,'')+'.',cut:true}}
+  return {fromDocx:fromDocx,fromS:fromS,condense:condense,shortRec:shortRec,fmt:fmt,addDays:addDays,MON:MON,ORDN:ORDN,digits:digits,trim:trim}
+})();
+
+/* ---------- استيراد المراجعة المكتبية في مسار الاعتماد المؤسسي ---------- */
+const DK_LEAD = {e:"في مستوى الوجود، ", p:"وفي مستوى التطبيق، ", f:"وفي مستوى الفاعلية، "};
+function dkLevelText(k, lv, F){
+  const c = DESK.condense(lv.notes, 600); let t = c.main;
+  if (c.miss.length) t = (t ? t + " ولم" : "لم") + " يتضح للفريق ما يلي: " + c.miss.slice(0, 3).map(x => DESK.shortRec(x, 150).t.replace(/[.\s]+$/, "")).join("؛ ") + ".";
+  if (!t) return {t: "", cut: false};
+  t = (DK_LEAD[k] + t).replace(/المنشأة التدريبية/g, F); if (!/[.؟!]$/.test(t)) t += ".";
+  return {t, cut: c.cut};
+}
+/* توصية واحدة لكل معيار فرعي: أدنى مستوى لم يتحقق، لأن ما بعده مبني عليه */
+function dkPickRec(recs, type){ const ord = {e:0, p:1, f:2, "":3}; const arr = recs.filter(r => r.t === type).sort((a, b) => ord[a.l || ""] - ord[b.l || ""]); return arr[0] || null; }
+function deskApplyInst(R){
+  const org = SUM_ORG; if (!org) { toast("اختر المنشأة أولاً ثم استورد"); return null; }
+  const rep = {subs:0, levels:0, recs:0, sugg:0, praise:0, cut:0, skipped:[], warn:[], name:R.fac};
+  const F = ssNoun(org);
+  const M = SS_META(); const m0 = M.s;
+  if (R.dateObj) { m0.from = DESK.fmt(R.dateObj); m0.to = DESK.fmt(DESK.addDays(R.dateObj, (R.days || 1) - 1)); }
+  const mem = R.team.filter(t => !/معايشة|مراقب/.test(t.role)); mem.sort((a, b) => (/رئيس/.test(b.role) ? 1 : 0) - (/رئيس/.test(a.role) ? 1 : 0));
+  if (mem.length) m0.team = mem.map(t => t.name).join("\n");
+  store.set(SSK, M.a);
+  const SU = sumState(org); SU.s.self = SU.s.self || {};
+  const byStd = {}; R.subs.forEach(sb => (byStd[sb.std] = byStd[sb.std] || []).push(sb));
+  INST.forEach(m => {
+    const list = byStd[m.n] || []; if (!list.length) return;
+    const T = ssState(org, m.n); T.s.ed = T.s.ed || {}; T.s.ov = T.s.ov || {};
+    T.s.ed.open = "تبين لفريق المراجعة الخارجية للاعتماد المؤسسي من خلال فحص وثائق الدراسة الذاتية على المنصة الإلكترونية والشواهد الإضافية التي تم توفيرها"; T.s.ed.deskPh = 1;
+    list.forEach(sb => {
+      const code = sb.sub + "-" + sb.std; const x = m.subs.find(z => z.code === code);
+      if (!x) { rep.skipped.push(sb.std + "-" + sb.sub); return; }
+      rep.subs++; T.s.ov[code] = T.s.ov[code] || {};
+      const orgScores = [];
+      ["e", "p", "f"].forEach(k => {
+        const lv = sb.lv[k]; if (!lv) return;
+        if (lv.rev) T.s.ov[code][k] = +lv.rev;
+        if (lv.org) orgScores.push(+lv.org);
+        const r = dkLevelText(k, lv, F); if (r.t) { T.s.ed[code + "|" + k] = r.t; rep.levels++; if (r.cut) rep.cut++; }
+      });
+      if (orgScores.length) SU.s.self[code] = Math.round(orgScores.reduce((a, b) => a + b, 0) / orgScores.length * 100) / 100;
+      const lines = {P:[], R:[], S:[]};
+      const pr = sb.recs.filter(r => r.t === "إشادة"); pr.forEach(r => { lines.P.push(DESK.shortRec(r.x, 260).t); rep.praise++; });
+      const rc = dkPickRec(sb.recs, "توصية"); if (rc) { const q = DESK.shortRec(rc.x.replace(/\((?:على|في)\s+مستوى[^)]*\)\s*/g, ""), 380); lines.R.push(q.t); rep.recs++; if (q.cut) rep.cut++; }
+      const sg = dkPickRec(sb.recs, "مقترح"); if (sg) { const q = DESK.shortRec(sg.x, 380); lines.S.push(q.t); rep.sugg++; if (q.cut) rep.cut++; }
+      ["P", "R", "S"].forEach(f => { T.s.ed[code + "|" + f] = lines[f].join("\n"); });
+    });
+    store.set(SSK, T.a);
+  });
+  sumSave(SU.a);
+  return rep;
+}
+async function deskPick(file){
+  try {
+    let R; const name = file.name.toLowerCase();
+    if (name.endsWith(".json")) R = DESK.fromS(JSON.parse(await file.text())); else R = await DESK.fromDocx(await file.arrayBuffer());
+    const rep = deskApplyInst(R); if (!rep) return;
+    const nm = DESK.trim(R.fac) && DESK.trim(R.fac) !== DESK.trim(SUM_ORG) ? ` (اسم المنشأة في الملف: ${R.fac})` : "";
+    const mism = []; INST.forEach(m => { const want = R.stdLabel && R.stdLabel[m.n]; if (!want) return; const c = ssStd(m, SUM_ORG).c; const got = c ? ST_LAB(c.st) : ""; if (got && got.replace("الحد الأدنى من الامتثال", "الحد الأدنى") !== want.replace("الحد الأدنى من الامتثال", "الحد الأدنى")) mism.push(`${AR(m.n)} (الملف: ${want}، الأداة: ${got})`); });
+    rep.mism = mism;
+    ssRender();
+    toast(`استُوردت ${AR(rep.subs)} معياراً فرعياً و${AR(rep.levels)} ملخص مستوى و${AR(rep.recs)} توصية${nm}${rep.cut ? "، وقُصّرت " + AR(rep.cut) + " صياغة طويلة" : ""}${rep.skipped.length ? "، وتخطى " + rep.skipped.join(" ") : ""}${mism.length ? "، وتنبيه: اختلاف حالة المعيار " + mism.join("؛ ") : ""}`);
+    DESK.last = rep;
+  } catch (e) { toast("تعذر الاستيراد: " + e.message); }
+}
+
 function ssPlain(R){
   const out = [`المعيار ${R.m.n}: ${R.m.title}`];
   R.subs.forEach((z, i) => { if (!z.has && !z.na) return; out.push(`\n(${dcode(z.x.code)}) ${z.x.text}${z.na ? " — لا ينطبق" : z.L != null ? " — " + RATE_LAB[z.L] : ""}`);
@@ -2758,132 +2907,165 @@ function ssDecision(Rs){
   const nNon = sts.filter(x => x === "عدم امتثال").length, nMin = sts.filter(x => x === "حد أدنى").length;
   return !complete ? "" : nNon ? "رفض الاعتماد" : nMin >= 3 ? "رفض الاعتماد" : nMin >= 1 ? "اعتماد مشروط" : "اعتماد كامل";
 }
-function ssBuildDoc(nums){
-  const D = window.docx; if (!D) throw new Error("docx");
-  const font = n => ({ascii:n, hAnsi:n, cs:n, eastAsia:n});
-  const FB = font("DIN NEXT™ ARABIC BOLD"), FL = font("DIN NEXT™ ARABIC LIGHT"), FS = font("Sakkal Majalla");
-  const AL = D.AlignmentType, DX = D.WidthType.DXA, NAVY = "002060", BLUE = "8EAADB", GRY = "E7E6E6", GRY2 = "BFBFBF", WH = "FFFFFF", HC = "3C3D97";
-  const LVF = {e:"FFCCCC", p:"FFF2CC", f:"E2EFD9"}, LVN = {e:"الوجود", p:"التطبيق", f:"الفعالية"};
-  const run = (t, o = {}) => new D.TextRun({text:String(t), font:o.font || (o.bold ? FB : FL), size:o.size || 22, bold:!!o.bold, color:o.color, rightToLeft:true});
-  const P = (t, o = {}) => new D.Paragraph({bidirectional:true, heading:o.h, alignment:o.al || AL.BOTH, spacing:{before:o.sb || 0, after:o.sa == null ? 60 : o.sa, line:o.line || 276}, keepNext:!!o.keep, pageBreakBefore:!!o.pb, children:[run(t, o)]});
-  const Ps = (t, o) => String(t == null ? "" : t).split(/\r?\n/).map(x => P(x, o));
-  const bd = {style:D.BorderStyle.SINGLE, size:4, color:"8496B0"}, BD = {top:bd, bottom:bd, left:bd, right:bd};
-  const C = (t, o = {}) => new D.TableCell({children:o.kids || Ps(t, {size:o.size || 22, bold:o.bold, al:o.al || (o.bold ? AL.CENTER : AL.BOTH), sa:0, color:o.color, font:o.font}),
-    width:{size:o.w, type:DX}, columnSpan:o.span, rowSpan:o.rs, textDirection:o.dir,
-    verticalMerge:o.vm === "r" ? D.VerticalMergeType.RESTART : o.vm === "c" ? D.VerticalMergeType.CONTINUE : undefined,
-    verticalAlign:o.va || D.VerticalAlign.CENTER, shading:o.fill ? {type:D.ShadingType.CLEAR, fill:o.fill, color:"auto"} : undefined, borders:BD, margins:{top:60, bottom:60, left:100, right:100}});
-  const H = (t, o = {}) => C(t, Object.assign({bold:true, fill:NAVY, color:WH}, o));
-  const V = (t, w) => H(t, {w, vm:"r", dir:D.TextDirection.BOTTOM_TO_TOP_LEFT_TO_RIGHT, size:20});
-  const K = (w, o = {}) => C("", Object.assign({w, vm:"c"}, o));
-  const T = (cw, rows) => new D.Table({visuallyRightToLeft:true, width:{size:cw.reduce((a, b) => a + b, 0), type:DX}, columnWidths:cw, rows:rows.map(r => new D.TableRow({children:r, cantSplit:true}))});
-  const H1 = t => P(t, {h:D.HeadingLevel.HEADING_1, size:32, bold:true, color:HC, al:AL.START, sb:240, sa:120, pb:true, keep:true});
-  const H2 = t => P(t, {h:D.HeadingLevel.HEADING_2, size:28, bold:true, color:HC, al:AL.START, sb:240, sa:80, keep:true});
-  const NOTE = t => P(t, {size:20, color:"808080", sa:120});
-  const M = SS_META().s; const org = SUM_ORG; const fac = String(org || "").trim() || "[اسم المنشأة التدريبية]";
-  const from = (M.from || "").trim() || "[تاريخ البداية]", to = (M.to || "").trim() || "[تاريخ النهاية]";
-  const all = INST.map(m => ssStd(m, org)), Rs = all.filter(R => nums.includes(R.m.n));
-  const kids = [];
+const RPT = (function(){
+/* ---------- official report v2 (follows قالب تقرير فريق المراجعة الخارجية: ملخص المعيار + إشادات/توصيات/مقترحات، بلا درجات) ---------- */
+var RX_KEY='rep-extra-v1';
+function rxGet(){try{return JSON.parse(localStorage.getItem(RX_KEY)||'{}')}catch(e){return {}}}
+function rxSet(o){try{localStorage.setItem(RX_KEY,JSON.stringify(o))}catch(e){}}
+var AR_DIG='٠١٢٣٤٥٦٧٨٩';
+var NOAR='(?<![\\u0600-\\u06FF])',NOAR2='(?![\\u0600-\\u06FF])';
+var TYPOS=[['البرامح','البرامج'],['البرنامجح','البرنامج'],['نواتح','نواتج'],['نتائح','نتائج'],['ايجاد','إيجاد'],['بإحتياجات','باحتياجات'],['أثرهاباستخدام','أثرها باستخدام'],['الخارجيةلمراجعة','الخارجية لمراجعة'],['بارفاق','بإرفاق'],['الاجراءات','الإجراءات'],['اجراءات','إجراءات'],['اجراء','إجراء'],['مسؤل','مسؤول'],['التدريبة','التدريبية'],['خطه','خطة'],['مزمنه','مزمنة'],['اشاره','إشارة'],['الى','إلى'],['ان ','أن '],['تحليليها','تحليلها']];
+var TYPO_RX=TYPOS.map(function(p){var a=p[0];var rx;try{rx=new RegExp(NOAR+a.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+(a.slice(-1)===' '?'':NOAR2),'g')}catch(e){rx=new RegExp(a.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'g')}return [rx,p[1]]});
+/* wording clean-up: no internal markers, one voice, Western digits, common typos */
+function clean(t){t=String(t==null?'':t);
+  t=t.replace(/[٠-٩]/g,function(d){return AR_DIG.indexOf(d)});
+  t=t.replace(/‏?\[\s*\d\s*\]‏?/g,'');
+  t=t.replace(/★[^.\n]*/g,'');
+  t=t.replace(/\(\s*الملف\s*\d+\s*\)/g,'').replace(/الملف\s*\d+/g,'الشاهد');
+  t=t.replace(/ما ينقص\s*:\s*/g,'ولم يتضح للفريق ما يلي: ');
+  t=t.replace(/\s*\*\s+/g,'؛ ').replace(/:\s*؛\s*/g,': ');
+  TYPO_RX.forEach(function(p){t=t.replace(p[0],p[1])});
+  t=t.replace(/[ \t]+/g,' ').replace(/\s+([،؛.])/g,'$1').replace(/\.{2,}/g,'.').replace(/،\s*،/g,'،').trim();
+  return t}
+function facNoun(f){f=String(f||'').trim();
+  if(/^(ال)?معهد/.test(f))return 'المعهد';if(/^(ال)?مركز/.test(f))return 'المركز';if(/^(ال)?أكاديمية/.test(f))return 'الأكاديمية';if(/^(ال)?كلية/.test(f))return 'الكلية';if(/^(ال)?مدرسة/.test(f))return 'المدرسة';return 'المنشأة التدريبية'}
+function voice(t,N){return t.replace(/المنشأة التدريبية/g,N)}
+function recOpen(type,t,N){t=clean(t);if(!t)return '';
+  var r=(/^(يشيد|ينبغي|يقترح|نقترح|يوصي|قد ي|قد ت|يُقترح)/.test(t))?t:(type==='إشادة'?'يشيد فريق المراجعة الخارجي '+(/^ب/.test(t)?'':'ب')+t:type==='توصية'?'ينبغي على المنشأة التدريبية '+t:'يقترح فريق المراجعة الخارجي على المنشأة التدريبية '+t);
+  r=voice(r,N);if(!/[.؟!]$/.test(r))r+='.';return r}
+function nk(t){return String(t).replace(/[\s.،؛:]+/g,'').replace(/^(ينبغيعلى|يقترحفريقالمراجعةالخارجيعلى|يشيدفريقالمراجعةالخارجي)\S{0,18}?(?=ال|أن|ب)/,'')}
+function dedupe(items){var out=[],keys=[];items.forEach(function(it){var k=nk(it[1]);if(!k)return;for(var i=0;i<keys.length;i++){if(keys[i]===k||(k.length>40&&keys[i].indexOf(k)>=0))return;if(keys[i].length>40&&k.indexOf(keys[i])>=0){keys[i]=k;out[i]=it;return}}keys.push(k);out.push(it)});return out}
+var SUBORD=['الأول','الثاني','الثالث','الرابع','الخامس','السادس','السابع','الثامن','التاسع'];
+function subOrd(code){var n=parseInt(String(code).split('-').pop(),10);return SUBORD[n-1]||String(n)}
+function joinAr(a){return a.length<2?a.join(''):a.slice(0,-1).join('، ')+' و'+a[a.length-1]}
+
+function buildReportDoc(M){var D=window.docx;if(!D)throw new Error('docx');var N=M.N;
+  var FB={ascii:'DIN NEXT™ ARABIC BOLD',hAnsi:'DIN NEXT™ ARABIC BOLD',cs:'DIN NEXT™ ARABIC BOLD',eastAsia:'DIN NEXT™ ARABIC BOLD'},
+      FL={ascii:'DIN NEXT™ ARABIC LIGHT',hAnsi:'DIN NEXT™ ARABIC LIGHT',cs:'DIN NEXT™ ARABIC LIGHT',eastAsia:'DIN NEXT™ ARABIC LIGHT'},
+      FS={ascii:'Sakkal Majalla',hAnsi:'Sakkal Majalla',cs:'Sakkal Majalla',eastAsia:'Sakkal Majalla'};
+  var AL=D.AlignmentType,DX=D.WidthType.DXA,NAVY='002060',BLUE='8EAADB',GRY='E7E6E6',WH='FFFFFF',HC='3C3D97';
+  function run(t,o){o=o||{};return new D.TextRun({text:String(t),font:o.font||(o.bold?FB:FL),size:o.size||22,bold:!!o.bold,color:o.color,highlight:o.hl,rightToLeft:true})}
+  function P(t,o){o=o||{};var ch=Array.isArray(t)?t:[run(t,o)];return new D.Paragraph({bidirectional:true,heading:o.h,alignment:o.al||AL.BOTH,spacing:{before:o.sb||0,after:o.sa==null?80:o.sa,line:o.line||300},keepNext:!!o.keep,pageBreakBefore:!!o.pb,children:ch})}
+  /* text that may carry a highlighted «[يُستكمل…]» placeholder */
+  function PH(t,o){o=o||{};var parts=String(t).split(/(\[يُستكمل[^\]]*\])/);var ch=[];parts.forEach(function(p){if(!p)return;ch.push(run(p,/^\[يُستكمل/.test(p)?Object.assign({},o,{hl:'yellow'}):o))});return P(ch,o)}
+  var bd={style:D.BorderStyle.SINGLE,size:4,color:'8496B0'},BD={top:bd,bottom:bd,left:bd,right:bd};
+  function C(t,o){o=o||{};var ch=o.kids||String(t==null?'':t).split(/\r?\n/).map(function(x){return PH(x,{size:o.size||22,bold:o.bold,al:o.al||(o.bold?AL.CENTER:AL.BOTH),sa:0,color:o.color,font:o.font})});
+    return new D.TableCell({children:ch,width:{size:o.w,type:DX},columnSpan:o.span,rowSpan:o.rs,verticalAlign:o.va||D.VerticalAlign.CENTER,shading:o.fill?{type:D.ShadingType.CLEAR,fill:o.fill,color:'auto'}:undefined,borders:BD,margins:{top:60,bottom:60,left:100,right:100}})}
+  function H(t,o){o=o||{};return C(t,Object.assign({bold:true,fill:NAVY,color:WH},o))}
+  function T(cw,rows){var w=cw.reduce(function(a,b){return a+b},0);return new D.Table({visuallyRightToLeft:true,width:{size:w,type:DX},columnWidths:cw,rows:rows.map(function(r){return new D.TableRow({children:r,cantSplit:false})})})}
+  function H1(t){return P(t,{h:D.HeadingLevel.HEADING_1,size:32,bold:true,color:HC,al:AL.START,sb:240,sa:120,pb:true,keep:true})}
+  function H2(t){return P(t,{h:D.HeadingLevel.HEADING_2,size:28,bold:true,color:HC,al:AL.START,sb:240,sa:80,keep:true})}
+  var fac=M.fac||'[يُستكمل: اسم المنشأة التدريبية]',nd=M.nd||1,kids=[];
+  var from=M.from||'[يُستكمل: تاريخ البداية]',to=M.to||'[يُستكمل: تاريخ النهاية]';
+  var today=M.today,ph=function(x){return (x||'').trim()};
+  var nSubs=M.nSubs;
+  var allPr=[],allRc=[],allSg=[];M.data.forEach(function(d){allPr=allPr.concat(d.pr);allRc=allRc.concat(d.rc);allSg=allSg.concat(d.sg)});allPr=dedupe(allPr);allRc=dedupe(allRc);allSg=dedupe(allSg);
   /* cover */
-  kids.push(P("", {sa:1600}));
-  kids.push(P("تقرير فريق المراجعة الخارجية", {size:56, bold:true, color:NAVY, al:AL.CENTER, sa:80}));
-  kids.push(P("للاعتماد المؤسسي", {size:40, bold:true, color:NAVY, al:AL.CENTER, sa:900}));
-  kids.push(P(fac, {size:44, bold:true, color:HC, al:AL.CENTER, sa:80}));
-  kids.push(P((M.region || "").trim() || "[المنطقة / المدينة]", {size:28, color:"808080", al:AL.CENTER, sa:900}));
-  kids.push(P("تاريخ إعداد التقرير: " + ((M.rdate || "").trim() || new Date().toLocaleDateString("ar-SA-u-ca-gregory-nu-latn")), {size:24, al:AL.CENTER, sa:80}));
-  kids.push(P("مسودة أُعدّت من مدقق الشواهد وتتطلب مراجعة فريق المراجعة قبل الرفع", {size:20, color:"C00000", al:AL.CENTER}));
-  /* contents */
-  kids.push(P("جدول المحتويات", {size:32, bold:true, color:HC, al:AL.START, pb:true, sa:160}));
-  kids.push(new D.TableOfContents("جدول المحتويات", {hyperlink:true, headingStyleRange:"1-2"}));
-  kids.push(NOTE("(إن لم تظهر الصفحات: انقر بزر الفأرة الأيمن على الجدول ثم «تحديث الحقل».)"));
+  kids.push(P('',{sa:1600}));
+  kids.push(P('تقرير فريق المراجعة الخارجية',{size:56,bold:true,color:NAVY,al:AL.CENTER,sa:80}));
+  kids.push(P('للاعتماد المؤسسي',{size:40,bold:true,color:NAVY,al:AL.CENTER,sa:900}));
+  kids.push(P(fac,{size:44,bold:true,color:HC,al:AL.CENTER,sa:80}));
+  kids.push(PH(ph(M.region)||'[يُستكمل: المدينة / المنطقة]',{size:28,color:'808080',al:AL.CENTER,sa:900}));
+  kids.push(P('تاريخ إعداد التقرير: '+today,{size:24,al:AL.CENTER,sa:80}));
   /* introduction */
-  kids.push(H1("مقدمة"));
-  kids.push(P("قام فريق المراجعة الخارجية بتنفيذ زيارة مراجعة لـ" + fac + "، خلال الفترة من تاريخ " + from + " إلى تاريخ " + to + " لتقويم المنشأة وعمليات ضمان الجودة بها وتقديم الإشادات والتوصيات والاقتراحات حسب ما تمخضت عنه المراجعة الخارجية. وقد اضطلع الفريق بهذه المهمة بناء على دعوة من المركز الوطني لتقويم واعتماد التدريب من أجل تعزيز جودة التدريب في المملكة العربية السعودية ودوره في التنمية الاقتصادية.", {size:24}));
-  { const pt = profText(M, ssNoun(org)); if (pt) kids.push(P(pt, {size:24})); }
-  const ID = [["نوع المنشأة التدريبية","kind"], ["تاريخ بداية عمل المنشأة","founded"], ["طبيعة المنشأة","nature"], ["الفئة المستهدفة","target"], ["حالة طلب الاعتماد","reqst"]];
-  kids.push(T([1600, 3000, 5604], ID.map(([x, k], i) => [...(i ? [] : [H("البيانات التعريفية", {w:1600, rs:ID.length})]), C(x, {w:3000, bold:true, fill:BLUE, color:WH}), C(profVal(M, k), {w:5604})])));
-  kids.push(P("ارتكزت منهجية الفريق على مراجعة الأدلة والشواهد والمعلومات المقدّمة من " + fac + "، وإجراء لقاءات مع منسوبي المنشأة وأصحاب المصلحة، بالإضافة إلى الملاحظات الميدانية أثناء الزيارة. وقد استند الفريق في بناء هذا التقرير على معايير الاعتماد المؤسسي لمنشآت التدريب (النسخة 2) الصادرة عن هيئة تقويم التعليم والتدريب ممثلة في مركز \"مسار\".", {size:24, sb:160}));
-  /* executive summary */
-  const recs = t => Rs.flatMap(R => R.subs.filter(z => !z.na).flatMap(z => String(z[t] || "").split(/\n+/).map(s => s.trim()).filter(Boolean).map(s => ({code:z.x.code, t:s}))));
-  const LP = recs("P"), LR = recs("R"), LS = recs("S"); const nFull = Rs.filter(R => R.c && R.c.st === "كامل").length;
-  kids.push(H1("ملخص تنفيذي"));
-  kids.push(P("[يُستكمل: نبذة عن " + fac + " (التأسيس، الرؤية والرسالة، الخطة الاستراتيجية ومحاورها)].", {size:24, color:"808080"}));
-  kids.push(P("ويتقدم فريق المراجعة بالشكر والتقدير لإدارة ومنسوبي " + fac + " على التعاون والاستعداد خلال زيارة الاعتماد المؤسسي، وذلك لغرض تقييم المنشأة وقياس مدى مطابقة الشواهد والأدلة التي تم رفعها على منصة اعتماد التدريب. ويتضمن هذا التقرير تفصيلاً للتقييم الميداني استناداً إلى ما قُدّم من أدلة وشواهد وما اطلع عليه الفريق خلال الزيارة. وقد أظهرت نتائج المراجعة تحقق الامتثال الكامل في " + nFull + " من " + Rs.length + " معايير رئيسة، وتضمن التقرير " + LP.length + " إشادة و" + LR.length + " توصية و" + LS.length + " مقترحاً.", {size:24}));
-  if (LP.length) kids.push(P("وقد رصد الفريق أثناء الزيارة جوانب عديدة تستحق الإشادة، تتمثل في: " + LP.map(x => x.t.replace(/^يشيد (فريق المراجعة( الخارجي| الخارجية)?|الفريق) ?/, "").replace(/^بـ|^ب(?=ال)/, "").replace(/[.\s]+$/, "")).join("؛ ") + ".", {size:24}));
-  if (LR.length) kids.push(P("وقد وجد الفريق عدداً من فرص التحسين التي يمكن للمنشأة العمل عليها، ومن ذلك: " + LR.slice(0, 3).map(x => x.t.replace(/^ينبغي (على )?\S+( التدريبية)? ?/, "").replace(/[.\s]+$/, "")).join("؛ ") + ".", {size:24}));
-  kids.push(P("وختاماً يُثمّن فريق المراجعة الجهود التي " + (femNoun(R0noun(all)) ? "تبذلها " : "يبذلها ") + R0noun(all) + " و" + (femNoun(R0noun(all)) ? "حرصها" : "حرصه") + " على التطوير المستمر، ويرى أن العمل على فرص التحسين المدرجة ضمن هذا التقرير سيسهم في رفع كفاءة الأداء وجودة المخرجات.", {size:24}));
-  const EI = [["معلومات أساسية", ["تاريخ التأسيس", "جهة التأسيس", "نموذج عمل المنشأة", "طبيعة التدريب المقدم", "عدد البرامج التدريبية", "مسميات البرامج التدريبية المنتهية بمؤهل"]], ["مؤشرات الأداء", ["عدد المدربين في المنشأة وتوزيعهم على الأقسام", "عدد المتدربين\n(فترة لا تقل عن ثلاث سنوات)", "عدد الخريجين\n(فترة لا تقل عن ثلاث سنوات)", "عدد التوظيف\n(فترة لا تقل عن ثلاث سنوات)", "نسب التسرب\n(فترة لا تقل عن ثلاث سنوات)", "أهم الجهات المستفيدة من مخرجات المنشأة التدريبية\n(يتم ذكر 3 جهات في حال تعدد الجهات)", "الاعتمادات الحاصلة عليها المنشأة التدريبية\n(يتم ذكر عدد الاعتمادات والجهات المانحة لها)"]]];
-  const er = []; EI.forEach(g => g[1].forEach((x, i) => er.push([...(i ? [] : [H(g[0], {w:1600, rs:g[1].length})]), C(x, {w:3600, bold:true, fill:BLUE, color:WH, size:20}), C("", {w:5004})])));
-  kids.push(P("", {sa:60})); kids.push(T([1600, 3600, 5004], er));
+  kids.push(H1('مقدمة'));
+  kids.push(PH('قام فريق المراجعة الخارجية بتنفيذ زيارة مراجعة لـ'+fac+'، خلال الفترة من تاريخ '+from+' إلى تاريخ '+to+' لتقويم المنشأة وعمليات ضمان الجودة بها وتقديم الإشادات والتوصيات والمقترحات حسب ما تمخضت عنه المراجعة الخارجية. وقد اضطلع الفريق بهذه المهمة بناء على دعوة من المركز الوطني لتقويم واعتماد التدريب من أجل تعزيز جودة التدريب في المملكة العربية السعودية ودوره في التنمية الاقتصادية.',{size:24}));
+  kids.push(PH(clean(ph(M.profile))||'[يُستكمل: وصف المنشأة من ناحية موقعها، وهل هي مقر رئيسي أم فرعي، ونشأتها، وعدد المتدربين ونوع البرامج المقدمة]',{size:24}));
+  kids.push(T([3000,7204],M.ids.map(function(p){return [C(p[0],{w:3000,bold:true,fill:BLUE,color:WH}),C(clean(ph(p[1]))||'[يُستكمل]',{w:7204})]})));
+  kids.push(P('ويتضمن هذا التقرير ملاحظات الفريق استناداً على المعلومات التي قدمت إليه من قبل '+fac+'، وملاحظات الفريق أثناء الزيارة. وقد استند الفريق في بناء هذا التقرير على معايير الاعتماد المؤسسي لمنشآت التدريب (النسخة 2) الصادرة عن هيئة تقويم التعليم والتدريب ممثلة في مركز "مسار".',{size:24,sb:160}));
+  /* executive summary: no accreditation status and no compliance level, as the template requires */
+  kids.push(H1('ملخص تنفيذي'));
+  kids.push(PH('قام فريق المراجعة الخارجية بتنفيذ زيارة مراجعة لـ'+fac+' بدءاً من '+from+' واستمرت الزيارة لمدة '+(!M.nd?'[يُستكمل: مدة الزيارة]':nd===1?'يوم واحد':nd===2?'يومين':nd===3?'ثلاثة أيام':nd+' أيام')+'، وذلك لغرض تقييم '+N+' وقياس مدى مطابقة الشواهد والأدلة التي تم رفعها على المنصة الإلكترونية ضمن تقدم '+N+' للحصول على الاعتماد المؤسسي في التدريب من المركز الوطني لتقويم واعتماد التدريب (مسار). وتم خلال الزيارة مراجعة جميع المعايير الأساسية الثمانية متضمنة المعايير الفرعية ال'+nSubs+'، وتخلل الزيارة مقابلات ونقاشات مع إدارة '+N+' ومسؤولي الجودة والتدريب وعدد من المدربين والمتدربين والخريجين وأصحاب العمل والهيئة الإدارية.',{size:24}));
+  kids.push(P('ويتضمن هذا التقرير تفصيلاً للتقييم الميداني استناداً إلى ما تم تقديمه من أدلة وشواهد وما أضيف لها من أدلة اطلع عليها فريق المراجعة خلال عملية التقييم الميداني، كما قام الفريق بجولة ميدانية على المرافق وقاعات التدريب، وتمت مناقشة جميع المعايير مع المعنيين بكل معيار لتكوين صورة كاملة ودقيقة عن '+N+' وعن العملية التدريبية فيها.',{size:24}));
+  if(allPr.length)kids.push(P('وقد رصد الفريق أثناء الزيارة جوانب تستحق الإشادة، تتمثل في: '+allPr.map(function(x){return x[1].replace(/^يشيد (فريق المراجعة( الخارجي| الخارجية)?|الفريق) ?/,'').replace(/^بـ|^ب(?=ال)/,'').replace(/[.\s]+$/,'')}).join('؛ ')+'.',{size:24}));
+  if(allRc.length)kids.push(P('ويتناول هذا التقرير بعض الجوانب التي تتطلب اتخاذ إجراءات للتحسين ورفع مستوى الفاعلية، ومن ذلك: '+allRc.slice(0,3).map(function(x){return x[1].replace(/^ينبغي على \S+( التدريبية)? ?/,'').replace(/[.\s]+$/,'')}).join('؛ ')+'.',{size:24}));
+  kids.push(P('وختاماً يرى الفريق أن العمل على فرص التحسين المدرجة ضمن هذا التقرير، إضافة إلى التوصيات الأخرى فيه، سيؤدي إلى رفع كفاءة أداء '+N+' لمهامها بشكل أكثر فاعلية وتحقيق أهدافها ورفع جودة وكفاءة مخرجاتها، ويُثمّن الفريق الجهود التي تبذلها '+N+' وحرصها على التطوير المستمر.',{size:24}));
   /* standards */
-  kids.push(H1("تقويم الممارسات وفق معايير الاعتماد"));
-  kids.push(NOTE("(يقوم الفريق هنا بتقييم وعرض ملاحظاته على المعايير الفرعية لكل معيار رئيس، وتشمل الإشادات والمقترحات والتوصيات إن وجدت. ويتم التركيز في الملاحظات على نواتج الأثر المتحقق وكيفية الاستفادة منه في تحسين عمليات المنشأة. على أن تكون مبنية على الأدلة والبراهين.)"));
-  const CW = [556, 567, 2332, 928, 993, 992, 3546];
-  const REC3 = [["P", "الإشادات"], ["R", "التوصيات"], ["S", "المقترحات"]];
-  for (const R of Rs) {
-    const m = R.m; kids.push(H2("المعيار " + (ORD4[m.n - 1] || m.n) + ": " + m.title)); kids.push(P(m.desc || "", {size:22, sa:100}));
-    const rows = []; const first = R.subs.findIndex(z => !z.na && z.has);
-    rows.push([V("التقويم التفصيلي للمعايير الفرعية", 556), H("المعايير الفرعية", {w:3827, span:3}), H("مستوى التقييم", {w:993}), H("مستوى الجودة", {w:992}), H("الملخص", {w:3546})]);
-    R.subs.forEach((z, i) => {
-      const code = dcode(z.x.code);
-      if (z.na) {
-        rows.push([K(556, {fill:NAVY}), C(code, {w:567, fill:GRY, bold:true, font:FB}), C(z.x.text, {w:3260, span:2, fill:GRY, size:20}), C("لا ينطبق", {w:993, bold:true, size:20}), C("", {w:992, fill:GRY}), C("لا ينطبق: " + (String(z.na) === "لا ينطبق" ? "[يُستكمل: تعليل عدم الانطباق وطريقة التحقق]" : z.na), {w:3546, font:FS, size:24})]);
-        return;
-      }
-      LVK.forEach(([k], li) => {
-        const r = [K(556, {fill:NAVY})];
-        if (!li) { r.push(C(code, {w:567, fill:GRY, bold:true, vm:"r", font:FB})); r.push(C(z.x.text, {w:3260, span:2, fill:GRY, vm:"r", size:20})); r.push(C(z.L != null ? RATE_LAB[z.L] || String(z.L) : "", {w:993, vm:"r", bold:true, size:20})); }
-        else { r.push(K(567, {fill:GRY})); r.push(K(3260, {span:2, fill:GRY})); r.push(K(993)); }
-        const txt = z.has ? (i === first && k === "e" && R.open ? R.open + " " : "") + z.cells[k] : "";
-        r.push(C(LVN[k], {w:992, fill:LVF[k], bold:true, size:20})); r.push(C(txt, {w:3546, font:FS, size:24})); rows.push(r);
-      });
-      REC3.forEach(([t, lab]) => rows.push([K(556, {fill:NAVY}), K(567, {fill:GRY}), C(lab, {w:3260, span:2, fill:GRY2, color:WH, bold:true, size:20}), C(String(z[t] || "").trim() || "لا يوجد", {w:5531, span:3, font:FS, size:24})]));
-    });
-    const EV = [["درجة التقييم الذاتي\n(يتم استعراض درجة التقييم الذاتي بعد اعتماد تقدير فريق المراجعة، وتُستخدم للمقارنة وتحليل الفجوات. ويُعتدّ بها بقدر ما تؤيّده الأدلة والشواهد؛ وعند الاختلاف يُرجَّح حكم فريق المراجعة.)", R.selfAvg != null ? trunc2(R.selfAvg) : ""], ["متوسط تقييم المعيار\n(بناء على تقدير فريق المراجعة)", R.c ? trunc2(R.c.avg) : ""], ["حالة الامتثال", R.c ? ST_LAB(R.c.st) : ""]];
-    EV.forEach((v, i) => rows.push([i ? K(556, {fill:NAVY}) : V("تقييم المعيار الرئيس", 556), C(v[0], {w:3827, span:3, fill:BLUE, color:WH, bold:true, size:i ? 20 : 18}), C(v[1], {w:5531, span:3, bold:true, size:24})]));
-    rows.push([V("ملخص النتائج", 556), H("نتائج المراجعة", {w:2899, span:2}), H("المعيار المرتبط", {w:928}), H("نص النتائج", {w:5531, span:3})]);
-    REC3.forEach(([t, lab]) => {
-      const it = R.subs.filter(z => !z.na).flatMap(z => String(z[t] || "").split(/\n+/).map(s => s.trim()).filter(Boolean).map(s => [dcode(z.x.code), s]));
-      if (!it.length) it.push(["", "لا يوجد"]);
-      it.forEach((v, i) => rows.push([K(556, {fill:NAVY}), i ? K(2899, {span:2, fill:BLUE}) : C(lab, {w:2899, span:2, vm:"r", fill:BLUE, color:WH, bold:true, size:20}), C(v[0], {w:928, bold:true, size:20}), C(v[1], {w:5531, span:3, font:FS, size:24})]));
-    });
-    kids.push(T(CW, rows));
-  }
+  kids.push(H1('تقويم الممارسات وفق معايير الاعتماد'));
+  M.data.forEach(function(d,di){var st=d;kids.push(H2('المعيار '+st.ord+': '+st.title));kids.push(P(st.desc,{size:22,sa:100}));
+    d.subList.forEach(function(sb){kids.push(P([run(sb[0]+'   ',{size:20,bold:true,color:HC}),run(sb[1],{size:20})],{sa:20}))});
+    kids.push(P('',{sa:60}));
+    var OPEN0='تبين لفريق المراجعة الخارجية للاعتماد المؤسسي من خلال فحص وثائق الدراسة الذاتية على المنصة الإلكترونية والشواهد الإضافية التي تم توفيرها قبل وأثناء الزيارة، والجولة الميدانية، والمقابلات مع المعنيين بإعداد هذا المعيار والمدربين والمتدربين والخريجين وأصحاب العمل';
+    var opn=String(d.open||OPEN0).replace(/[\s.:：،]*(ما يلي)?[\s.:：]*$/,'');
+    var sumKids=[PH(opn+'، ما يلي:',{size:24,font:FS,sa:100})];
+    (d.evaluated?d.subs:[]).forEach(function(sx,si){var runs=[];
+      sx.paras.forEach(function(p,i){var txt=typeof p==='string'?p:p.ph;var isPh=typeof p!=='string';runs.push(run((i?' ':'')+txt,{size:24,font:FS,hl:isPh?'yellow':undefined}))});
+      sumKids.push(P(runs,{sa:100}))});
+    if(!d.evaluated)sumKids.push(PH('[يُستكمل: لم يُدخل تقييم هذا المعيار بعد]',{size:24,font:FS}));
+    function list(it){return it.length?it.map(function(x){return PH(x[1],{size:24,font:FS,sa:60})}):[P('لا يوجد',{size:24,font:FS,sa:0})]}
+    kids.push(T([2000,8204],[[C('ملخص المعيار',{w:2000,bold:true,fill:BLUE,color:WH}),C('',{w:8204,kids:sumKids,al:AL.BOTH})],
+      [C('الإشادات',{w:2000,bold:true,fill:BLUE,color:WH}),C('',{w:8204,kids:list(d.pr)})],
+      [C('التوصيات',{w:2000,bold:true,fill:BLUE,color:WH}),C('',{w:8204,kids:list(d.rc)})],
+      [C('المقترحات',{w:2000,bold:true,fill:BLUE,color:WH}),C('',{w:8204,kids:list(d.sg)})]]))});
   /* overall findings */
-  kids.push(H1("ملخص نتائج المراجعة"));
-  kids.push(NOTE("(يقوم فريق المراجعة بسرد جميع الإشادات والتوصيات والمقترحات مرقمة بالتوالي على أن تنسخ كما هي من تقييم كل معيار.)"));
-  const fr = [[H("الإشادات والتوصيات والمقترحات", {w:10204, span:2})]];
-  [["الإشادات", LP], ["التوصيات", LR], ["المقترحات", LS]].forEach(([lab, it]) => {
-    fr.push([C("ملخص " + lab + ":", {w:10204, span:2, fill:BLUE, color:WH, bold:true, al:AL.START})]);
-    if (!it.length) fr.push([C("", {w:700}), C("لا يوجد", {w:9504, font:FS, size:24})]);
-    it.forEach((x, i) => fr.push([C((i + 1) + ".", {w:700, bold:true, al:AL.CENTER}), C(x.t, {w:9504, font:FS, size:24})]));
-  });
-  kids.push(T([700, 9504], fr));
+  kids.push(H1('ملخص نتائج المراجعة'));
+  var fr=[[H('الإشادات والتوصيات والمقترحات',{w:10204,span:2})]];
+  [['الإشادات',allPr],['التوصيات',allRc],['المقترحات',allSg]].forEach(function(g){fr.push([C('ملخص '+g[0]+':',{w:10204,span:2,fill:BLUE,color:WH,bold:true,al:AL.START})]);
+    if(!g[1].length)fr.push([C('',{w:700}),C('لا يوجد',{w:9504,font:FS,size:24})]);g[1].forEach(function(x,i){fr.push([C((i+1)+'.',{w:700,bold:true,al:AL.CENTER}),C(x[1],{w:9504,font:FS,size:24})])})});
+  kids.push(T([700,9504],fr));
   /* compliance */
-  kids.push(H1("ملخص الامتثال وتوصية الاعتماد المؤسسي"));
-  kids.push(NOTE("(يُسجِّل الفريق حالة الامتثال لكل معيار رئيس، مع توثيق الملاحظات الداعمة، ثم يُحدِّد توصية الاعتماد المؤسسي.)"));
-  const cr = [[H("ملخص امتثال المعايير الرئيسة", {w:10204, span:3})], [H("المعايير الفرعية", {w:4000, fill:BLUE}), H("حالة الامتثال", {w:2400, fill:BLUE}), H("ملاحظات", {w:3804, fill:BLUE})]];
-  all.forEach(R => {
-    const weak = R.subs.filter(z => !z.na && z.L != null && z.L < 3).map(z => dcode(z.x.code));
-    const note = !R.c ? "" : "متوسط تقييم المعيار (" + trunc2(R.c.avg) + ")" + (weak.length ? "، والمعايير الفرعية دون المستوى [3]: " + weak.join("، ") : "") + ".";
-    cr.push([C("المعيار " + (ORD4[R.m.n - 1] || R.m.n) + ": " + R.m.title, {w:4000, bold:true, al:AL.START, size:20}), C(R.c ? ST_LAB(R.c.st) : "", {w:2400, bold:true, size:20}), C(note, {w:3804, font:FS, size:24})]);
-  });
-  cr.push([H("توصية الاعتماد المؤسسي", {w:10204, span:3})]);
-  cr.push([C("توصية الاعتماد", {w:4000, fill:BLUE, color:WH, bold:true}), C(ssDecision(all), {w:6204, span:2, bold:true, size:24})]);
-  kids.push(T([4000, 2400, 3804], cr));
+  kids.push(H1('ملخص الامتثال وتوصية الاعتماد المؤسسي'));
+  var LABS=['الامتثال الكامل','الامتثال الجوهري','الحد الأدنى من الامتثال','عدم الامتثال'];
+  var cr=[[H('المعيار الرئيس',{w:3000,fill:BLUE}),H('الامتثال الكامل',{w:900,fill:BLUE,size:18}),H('الامتثال الجوهري',{w:900,fill:BLUE,size:18}),H('الحد الأدنى من الامتثال',{w:900,fill:BLUE,size:18}),H('عدم الامتثال',{w:900,fill:BLUE,size:18}),H('ملاحظات',{w:3604,fill:BLUE})]];
+  M.data.forEach(function(d){var c=d,st=d,lab=c.ev?(c.lab==='الحد الأدنى'?'الحد الأدنى من الامتثال':c.lab):'',idx=LABS.indexOf(lab);
+    var gaps=d.gaps;
+    var note=!c.ev?'[يُستكمل: لم يُدخل تقييم هذا المعيار بعد]':idx===0&&!gaps.length?'تم استيفاء المعيار بشكل كامل.':'لم يتم استيفاء المعيار بشكل كامل، '+(gaps.length===1?'ففي المعيار الفرعي '+gaps[0].o+(gaps[0].lv&&gaps[0].lv.length?' (مستوى '+joinAr(gaps[0].lv)+')':'')+' لم يتحقق مستوى الجودة المستهدف.':gaps.length?'ففي المعايير الفرعية '+joinAr(gaps.map(function(g){return g.o}))+' لم يتحقق مستوى الجودة المستهدف.':'ولم يتحقق مستوى الجودة المستهدف في بعض المعايير الفرعية.');
+    cr.push([C('المعيار '+st.ord+': '+st.title,{w:3000,bold:true,al:AL.START,size:20})].concat(LABS.map(function(_,i){return C(i===idx?'✔':'',{w:900,bold:true,al:AL.CENTER,size:24})})).concat([C(note,{w:3604,font:FS,size:24})]))});
+  kids.push(T([3000,900,900,900,900,3604],cr));
+  var dc=M.dec,okk=dc.k==='ok',mid=dc.k==='mid',bad=dc.k==='bad';
+  kids.push(P('',{sa:120}));
+  kids.push(T([10204],[[H('توصية الاعتماد المؤسسي',{w:10204})],
+    [C(' ',{w:10204,kids:[P((okk?'☒':'☐')+'  منح '+N+' اعتماداً كاملاً.',{size:24,font:FS,sa:40}),P((mid?'☒':'☐')+'  منح '+N+' اعتماداً مشروطاً.',{size:24,font:FS,sa:40}),P((bad?'☒':'☐')+'  رفض اعتماد '+N+'.',{size:24,font:FS,sa:40})]})]]));
+  if(!dc.k)kids.push(PH('[يُستكمل: توصية الاعتماد بعد إكمال تقييم المعايير]',{size:24}));
+  if(mid||bad){var wk=M.data.filter(function(d){return d.ev&&d.lab!=='الامتثال الكامل'&&d.lab!=='الامتثال الجوهري'});
+    kids.push(P('ملخص عن سبب '+(bad?'رفض اعتماد ':'اشتراط ')+N+(mid?' (اعتماد مشروط)':'')+':',{size:24,bold:true,color:HC,al:AL.START,sb:160,sa:60}));
+    kids.push(P('يعود ذلك إلى أن '+(wk.length?'المعايير ('+wk.map(function(d){return d.ord}).join('، ')+') جاءت في مستوى «'+joinAr(wk.map(function(d){return d.lab==='الحد الأدنى'?'الحد الأدنى من الامتثال':d.lab}).filter(function(v,i,a){return a.indexOf(v)===i}))+'»':'عدداً من المعايير لم يبلغ مستوى الامتثال الجوهري')+'، وفق قاعدة القرار المعتمدة في معايير الاعتماد المؤسسي، وأن ما ورد في التوصيات يلزم معالجته قبل المراجعة التالية.',{size:24,font:FS}));
+    if(allRc.length){kids.push(P('توصيات يجب توفرها:',{size:24,bold:true,color:HC,al:AL.START,sb:120,sa:60}));allRc.forEach(function(x,i){kids.push(P((i+1)+'.  '+x[1],{size:24,font:FS,sa:50}))})}}
+  if(okk&&allRc.length){kids.push(P('توصيات يجب العمل على تحسينها:',{size:24,bold:true,color:HC,al:AL.START,sb:160,sa:60}));allRc.forEach(function(x,i){kids.push(P((i+1)+'.  '+x[1],{size:24,font:FS,sa:50}))})}
   /* documentation */
-  kids.push(H1("التوثيق"));
-  kids.push(NOTE("(يُستكمَل هذا الجدول ببيانات فريق المراجعة، متضمنة الصفة، والاسم الثلاثي، وتاريخ اعتماد النسخة النهائية من التقرير، وتوقيع كل عضو. ويُوقِّع رئيس الفريق أخيرًا لإقرار محتوى التقرير.)"));
-  const team = String(M.team || "").split(/\n+/).map(s => s.trim()).filter(Boolean);
-  const lead = team[0] || "", oth = team.length > 1 ? team.slice(1) : ["", "", ""];
-  const dr = [[H("فريق المراجعة", {w:10204, span:4})], [H("الصفة", {w:2000, fill:BLUE}), H("الاسم", {w:4204, fill:BLUE}), H("التاريخ", {w:2000, fill:BLUE}), H("التوقيع", {w:2000, fill:BLUE})]];
-  dr.push([C("رئيس الفريق", {w:2000, bold:true}), C(lead, {w:4204, bold:true}), C("", {w:2000}), C("", {w:2000})]);
-  oth.forEach((n, i) => dr.push([i ? K(2000) : C("أعضاء الفريق", {w:2000, bold:true, vm:"r"}), C(n, {w:4204, bold:true}), C("", {w:2000}), C("", {w:2000})]));
-  kids.push(T([2000, 4204, 2000, 2000], dr));
-  const footer = new D.Footer({children:[new D.Paragraph({alignment:AL.CENTER, bidirectional:true, children:[run("تقرير فريق المراجعة الخارجية للاعتماد المؤسسي — " + fac + "     |     ", {size:18, color:"808080"}), new D.TextRun({children:[D.PageNumber.CURRENT], font:FL, size:18, color:"808080"})]})]});
-  return new D.Document({creator:"علي الأحمري", title:"تقرير فريق المراجعة الخارجية — " + fac, description:"مسودة تقرير المراجعة الخارجية للاعتماد المؤسسي", features:{updateFields:true},
-    styles:{default:{document:{run:{font:FL, size:22}}}, paragraphStyles:[{id:"Heading1", name:"Heading 1", basedOn:"Normal", next:"Normal", quickFormat:true, run:{font:FB, size:32, bold:true, color:HC}}, {id:"Heading2", name:"Heading 2", basedOn:"Normal", next:"Normal", quickFormat:true, run:{font:FB, size:28, bold:true, color:HC}}]},
-    sections:[{properties:{page:{size:{width:11906, height:16838, orientation:D.PageOrientation.PORTRAIT}, margin:{top:1440, bottom:1440, left:851, right:851}}}, footers:{default:footer}, children:kids}]});
+  kids.push(H1('التوثيق'));
+  var lead=M.team.filter(function(m){return m.lead}),oth=M.team.filter(function(m){return !m.lead&&(m.name||'').trim()}),dr=[[H('فريق المراجعة',{w:10204,span:4})],[H('الصفة',{w:2000,fill:BLUE}),H('الاسم',{w:4204,fill:BLUE}),H('التاريخ',{w:2000,fill:BLUE}),H('التوقيع',{w:2000,fill:BLUE})]];
+  lead.concat(oth).forEach(function(m,i){var r=[];r.push(C(i<lead.length?'رئيس الفريق':'عضو',{w:2000,bold:true}));r.push(C((m.name||'').trim()||'[يُستكمل: الاسم]',{w:4204,bold:true}));r.push(C(today,{w:2000,size:20}));r.push(C('',{w:2000}));dr.push(r)});
+  kids.push(T([2000,4204,2000,2000],dr));
+  var footer=new D.Footer({children:[new D.Paragraph({alignment:AL.CENTER,bidirectional:true,children:[run('تقرير فريق المراجعة الخارجية للاعتماد المؤسسي — '+fac+'     |     ',{size:18,color:'808080'}),new D.TextRun({children:[D.PageNumber.CURRENT],font:FL,size:18,color:'808080'})]})]});
+  return new D.Document({creator:'علي الأحمري',title:'تقرير فريق المراجعة الخارجية — '+fac,description:'تقرير فريق المراجعة الخارجية للاعتماد المؤسسي',
+    styles:{default:{document:{run:{font:FL,size:22}}},paragraphStyles:[{id:'Heading1',name:'Heading 1',basedOn:'Normal',next:'Normal',quickFormat:true,run:{font:FB,size:32,bold:true,color:HC}},{id:'Heading2',name:'Heading 2',basedOn:'Normal',next:'Normal',quickFormat:true,run:{font:FB,size:28,bold:true,color:HC}}]},
+    sections:[{properties:{page:{size:{width:11906,height:16838,orientation:D.PageOrientation.PORTRAIT},margin:{top:1440,bottom:1440,left:851,right:851}}},footers:{default:footer},children:kids}]})}
+
+return {buildReportDoc:buildReportDoc, clean:clean, recOpen:recOpen, dedupe:dedupe, facNoun:facNoun};
+})();
+/* ---------- تقرير الفريق بقالب «تقرير فريق المراجعة الخارجية» (ملخص المعيار + إشادات/توصيات/مقترحات) ---------- */
+function ssModel(nums){
+  const D = window.docx; const M0 = SS_META().s; const org = SUM_ORG;
+  const all = INST.map(m => ssStd(m, org)); const Rs = all.filter(R => nums.includes(R.m.n));
+  const N = RPT.facNoun(String(org || "")) !== "المنشأة التدريبية" ? RPT.facNoun(String(org || "")) : R0noun(all);
+  const sub2 = dc => { const n = parseInt(String(dc).split(".").pop(), 10); return ["الأول","الثاني","الثالث","الرابع","الخامس","السادس","السابع","الثامن","التاسع"][n - 1] || String(n); };
+  const data = Rs.map(R => {
+    const subs = [], subList = [], gaps = [], pr = [], rc = [], sg = []; let evaluated = false; const first = R.subs.findIndex(z => !z.na && z.has);
+    R.subs.forEach((z, i) => {
+      const dc = dcode(z.x.code); subList.push([dc, z.x.text]);
+      if (z.na) { subs.push({code:dc, paras:String(z.na) === "لا ينطبق" ? [{ph:"[يُستكمل: تعليل عدم الانطباق]"}] : ["لا ينطبق هذا المعيار الفرعي على المنشأة، " + RPT.clean(z.na)]}); return; }
+      if (!z.has && !LVK.some(([k]) => R.s.ed && R.s.ed[z.x.code + "|" + k])) { subs.push({code:dc, paras:[{ph:"[يُستكمل: تقييم المعيار الفرعي وملخصه]"}]}); }
+      else { evaluated = true; subs.push({code:dc, paras:LVK.map(([k]) => RPT.clean(z.cells[k])).map(t => t.trim()).filter(Boolean)}); }
+      [["P","إشادة",pr],["R","توصية",rc],["S","مقترح",sg]].forEach(([f, type, arr]) => String(z[f] || "").split(/\n+/).map(s => s.trim()).filter(Boolean).forEach(s => { const t = RPT.recOpen(type, s, N); if (t && !/^لا يوجد/.test(s)) arr.push([dc, t]); }));
+      if (z.L != null && z.L < 3) gaps.push({o:sub2(dc), lv:[]});
+    });
+    const lab = R.c ? ST_LAB(R.c.st) : "";
+    if (R.s.ed && R.s.ed.deskPh && subs.length) subs[subs.length - 1].paras.push({ph:"[يُستكمل: ما تبيّن للفريق من المقابلات والجولة الميدانية]"});
+    return {open:RPT.clean(R.open || ""), ord:ORD4[R.m.n - 1] || String(R.m.n), title:R.m.title, desc:R.m.desc || "", subList, subs, pr:RPT.dedupe(pr), rc:RPT.dedupe(rc), sg:RPT.dedupe(sg), gaps, evaluated, ev:!!R.c, lab};
+  });
+  const dtxt = ssDecision(all), dk = dtxt === "اعتماد كامل" ? "ok" : dtxt === "اعتماد مشروط" ? "mid" : dtxt === "رفض الاعتماد" ? "bad" : "";
+  const team = String(M0.team || "").split(/\n+/).map(s => s.trim()).filter(Boolean);
+  const idKeys = [["نوع المنشأة التدريبية","kind"],["تاريخ بداية عمل المنشأة","founded"],["معلومات الاتصال","contact"],["طبيعة المنشأة","nature"],["الفئة المستهدفة","target"],["عدد البرامج المقدمة","programs"]];
+  const prog = progList(M0);
+  return {N, fac:String(org || "").trim(), nd:0, from:(M0.from || "").trim(), to:(M0.to || "").trim(),
+    today:(M0.rdate || "").trim() || new Date().toLocaleDateString("ar-SA-u-ca-gregory-nu-latn", {day:"numeric", month:"long", year:"numeric"}),
+    region:(M0.region || M0.city || "").trim(), profile:profText(M0, N),
+    ids:idKeys.map(([l, k]) => [l, k === "programs" ? (prog.length ? String(prog.length) : "") : profVal(M0, k)]),
+    nSubs:Rs.reduce((a, R) => a + R.subs.length, 0), data, dec:{k:dk},
+    team:team.map((n, i) => ({name:n, lead:i === 0}))};
 }
+function ssBuildDoc(nums){ return RPT.buildReportDoc(ssModel(nums)); }
 const R0noun = all => (all[0] && all[0].F) || "المنشأة التدريبية";
 async function ssExport(nums){
   if (!window.docx) { toast("تعذّر تحميل مكتبة Word"); return; }
@@ -2892,7 +3074,7 @@ async function ssExport(nums){
     const blob = await window.docx.Packer.toBlob(ssBuildDoc(nums));
     const name = "التقرير النهائي للاعتماد المؤسسي" + (nums.length === 1 ? " - المعيار " + nums[0] : "") + ".docx";
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
-    toast("صُدِّر التقرير بقالب فريق المراجعة الخارجية — راجعه قبل الرفع");
+    toast("صُدِّر التقرير بقالب فريق المراجعة الخارجية — استكمل المواضع المظلّلة بالأصفر إن وُجدت ثم راجعه");
   } catch (e) { toast("تعذّر إنشاء ملف Word"); if (window.console) console.error(e); }
   finally { btns.forEach(b => b.disabled = false); }
 }
