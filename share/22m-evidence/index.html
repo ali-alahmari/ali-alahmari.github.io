@@ -522,4 +522,37 @@ else{$('#mFac').textContent='جارٍ التحميل…';$('#seg').hidden=true;A
 
 
 
+<div class="pwl-ov" id="pwlOv" hidden>
+  <div class="pwl" role="dialog" aria-modal="true" aria-labelledby="pwlT" aria-describedby="pwlB">
+    <h2 id="pwlT">أهلًا بكم في بوابة شواهد المنشأة</h2>
+    <div id="pwlB">
+      <p>تتيح لكم هذه البوابة رفع الشواهد التي طلبها فريق المراجعة، كل شاهد في موضعه حسب المعيار والمستوى، فيصل مباشرة إلى فريق المراجعة.</p>
+      <p>بعد رفع شواهد الطلب اضغطوا «اعتماد الرفع»، وراعوا آخر موعد للتسليم الظاهر في أعلى الصفحة.</p>
+      <p>شاكرين لكم تعاونكم، ونسأل الله لكم التوفيق.</p>
+      <p class="pwl-sig">إعداد المهندس/ علي سعد الأحمري</p>
+    </div>
+    <div class="pwl-a"><button type="button" id="pwlOk">ابدأ رفع الشواهد</button></div>
+  </div>
+</div>
+<style>
+.pwl-ov{position:fixed;inset:0;z-index:2147482000;background:rgba(3,46,39,.62);display:grid;place-items:center;padding:16px}
+.pwl-ov[hidden]{display:none}
+.pwl{background:#FFFEFA;color:#0E2E29;max-width:520px;width:100%;border-radius:18px;border-top:5px solid #C9A24B;padding:26px 24px 20px;box-shadow:0 20px 60px rgba(0,0,0,.28);line-height:1.9;font-size:1rem;animation:pwlIn .22s ease-out}
+.pwl h2{margin:0 0 10px;font-size:1.35rem;color:#0A5A4B;line-height:1.5}
+.pwl p{margin:0 0 6px}
+.pwl-sig{margin-top:12px!important;font-weight:700;color:#7a5c14}
+.pwl-a{margin-top:16px;display:flex;justify-content:flex-start}
+.pwl-a button{background:#0A5A4B;color:#fff;border:1px solid #0A5A4B;font:inherit;font-weight:700;padding:10px 20px;border-radius:12px;cursor:pointer}
+.pwl-a button:active{transform:scale(.97)}
+.pwl-a button:focus-visible{outline:3px solid #C9A24B;outline-offset:2px}
+@keyframes pwlIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.pwl{animation:none}}
+</style>
+<script>(function(){if(!/^#f=/.test(location.hash))return;var K='shr22ev.welcome.v1',ov=document.getElementById('pwlOv'),ok=document.getElementById('pwlOk');if(!ov||!ok)return;
+var seen=false;try{seen=localStorage.getItem(K)==='1'}catch(e){}if(seen)return;
+ov.hidden=false;setTimeout(function(){try{ok.focus()}catch(e){}},30);
+function close(){try{localStorage.setItem(K,'1')}catch(e){}ov.hidden=true;document.removeEventListener('keydown',kd,true)}
+function kd(e){if(ov.hidden)return;if(e.key==='Escape'){e.preventDefault();close()}else if(e.key==='Tab'){e.preventDefault();ok.focus()}}
+document.addEventListener('keydown',kd,true);ok.addEventListener('click',close)})();</script>
+
 </html>
