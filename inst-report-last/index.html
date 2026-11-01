@@ -3645,7 +3645,7 @@ function LR_CLAUDE(){ try { return PROV === "claude"; } catch { return false; } 
 function LR_SCAN_MAX(){ return LR_CLAUDE() ? 200 : 8; }
 const LR_ENC = new TextEncoder();
 const LR_bytes = s => LR_ENC.encode(String(s || "")).length;
-function LR_cutBytes(s, n){ const b = LR_ENC.encode(s); if (b.length <= n) return s; return new TextDecoder().decode(b.slice(0, Math.max(0, n))).replace(/�+$/, ""); }
+function LR_cutBytes(s, n){ const b = LR_ENC.encode(s); if (b.length <= n) return s; return new TextDecoder().decode(b.slice(0, Math.max(0, n))).replace(/\uFFFD+$/, ""); }
 const LR_num = s => +String(s).replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
 function LR_key(){ const c = curSub(); return [c?.sub?.code || "", scope, (typeof store !== "undefined" ? store.get("aud-instrtype", "") : "")].join("|"); }
 function LR_raw(f){ return [f.text, f.visText].filter(Boolean).join("\n\n"); }
