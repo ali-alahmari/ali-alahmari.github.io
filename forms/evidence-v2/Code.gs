@@ -175,7 +175,7 @@ function rowView_(r, admin) {
   return {
     id: r.id, sub: r.sub, lv: r.lv, txt: r.txt, rd: r.rd || 'o', src: r.src || 'team', ap: r.ap === 0 ? 0 : 1,
     status: admin ? r.status : (r.status === 'ok' ? 'up' : r.status), locked: r.status === 'ok', cf: r.cf ? 1 : 0,
-    note: (admin || r.status === 'redo') ? (r.note || '') : '',
+    note: (admin || r.status === 'redo' || (r.status === 'up' && !r.cf)) ? (r.note || '') : '',
     files: r.files.map(function (f) { return admin ? { name: f.name, size: f.size, url: f.url, at: f.at } : { name: f.name, size: f.size }; }),
     links: r.links.slice(),
     folderUrl: admin ? r.folderUrl : undefined,
@@ -699,7 +699,7 @@ function remove_(q) {
       if (!(i >= 0 && i < r.links.length)) throw new Error('الرابط غير موجود');
       r.links.splice(i, 1);
     } else throw new Error('نوع غير صالح');
-    if (!r.files.length && !r.links.length) r.status = 'none';
+    if (!r.files.length && !r.links.length) r.status = r.note ? 'redo' : 'none';
     saveV_(h.v);
     return { ok: 1 };
   });
