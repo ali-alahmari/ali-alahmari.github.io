@@ -21285,7 +21285,7 @@ function renderSetupSum(){var s=S.setup,d=pd(s.date),names=team().filter(functio
 /* ---------- form build ---------- */
 function ratingOpts(k,org){var h='<option value="">— اختر —</option>';(org?OSC:(LSC[k]||[])).forEach(function(o){h+='<option value="'+o[0]+'">'+(org?o[0]:vLab(k,o[0]))+'</option>'});return h}
 function fieldHTML(sb,l,f){var id='f-'+sb.code+'-'+l.k+'-'+f[0],key=sb.code+'.'+l.k+'.'+f[0];
-  if(f[2]==='sel')return '<div class="fld"><label for="'+id+'">'+f[1]+'</label><select id="'+id+'" data-f="'+key+'">'+ratingOpts(l.k,f[0]==='org')+'</select><div class="hint" data-hint="'+key+'" title="اضغط لعرض النص كاملاً"></div>'+(f[0]==='rev'?'<div class="gap" data-gap="'+sb.code+'.'+l.k+'" hidden></div><div class="why" data-why="'+sb.code+'.'+l.k+'" hidden><label for="f-'+sb.code+'-'+l.k+'-why">تعليل الفرق عن رأي المنشأة (مطلوب)</label><textarea id="f-'+sb.code+'-'+l.k+'-why" data-f="'+sb.code+'.'+l.k+'.why" placeholder="اكتب سبب اختلاف درجة المراجع عن رأي المنشأة…"></textarea></div><div class="dsk" data-dsk="'+sb.code+'.'+l.k+'" hidden></div><div class="why chgw" data-chgi="'+sb.code+'.'+l.k+'" hidden><label for="f-'+sb.code+'-'+l.k+'-chgi">سبب تغيير الدرجة الأولية بعد الشواهد المكتبية (مطلوب)</label><textarea id="f-'+sb.code+'-'+l.k+'-chgi" data-f="'+sb.code+'.'+l.k+'.chgi" placeholder="ما الشاهد المكتبي الذي غيّر الدرجة الأولية، أو ما الذي اتضح منه؟"></textarea></div><div class="why chgw" data-chg="'+sb.code+'.'+l.k+'" hidden><label for="f-'+sb.code+'-'+l.k+'-chg">سبب تغيير الدرجة المكتبية بعد الزيارة الميدانية (مطلوب)</label><textarea id="f-'+sb.code+'-'+l.k+'-chg" data-f="'+sb.code+'.'+l.k+'.chg" placeholder="ماذا ظهر في الشاهد أو المقابلة فغيّر الدرجة؟"></textarea></div>':'')+'</div>';
+  if(f[2]==='sel')return '<div class="fld"><label for="'+id+'">'+f[1]+'</label><select id="'+id+'" data-f="'+key+'">'+ratingOpts(l.k,f[0]==='org')+'</select><div class="hint" data-hint="'+key+'" title="اضغط لعرض النص كاملاً"></div>'+(f[0]==='rev'?'<div class="gap" data-gap="'+sb.code+'.'+l.k+'" hidden></div><div class="why" data-why="'+sb.code+'.'+l.k+'" hidden><label for="f-'+sb.code+'-'+l.k+'-why">تعليل الفرق عن رأي المنشأة (مطلوب)</label><textarea id="f-'+sb.code+'-'+l.k+'-why" data-f="'+sb.code+'.'+l.k+'.why" placeholder="اكتب سبب اختلاف درجة المراجع عن رأي المنشأة…"></textarea></div><div class="dsk" data-dsk="'+sb.code+'.'+l.k+'" hidden></div><div class="why chgw" data-chgi="'+sb.code+'.'+l.k+'" hidden><label for="f-'+sb.code+'-'+l.k+'-chgi">سبب تغيير درجة الدراسة الذاتية بعد الشواهد المكتبية (مطلوب)</label><textarea id="f-'+sb.code+'-'+l.k+'-chgi" data-f="'+sb.code+'.'+l.k+'.chgi" placeholder="ما الشاهد المكتبي الذي غيّر درجة الدراسة الذاتية، أو ما الذي اتضح منه؟"></textarea></div><div class="why chgw" data-chg="'+sb.code+'.'+l.k+'" hidden><label for="f-'+sb.code+'-'+l.k+'-chg">سبب تغيير الدرجة المكتبية بعد الزيارة الميدانية (مطلوب)</label><textarea id="f-'+sb.code+'-'+l.k+'-chg" data-f="'+sb.code+'.'+l.k+'.chg" placeholder="ماذا ظهر في الشاهد أو المقابلة فغيّر الدرجة؟"></textarea></div>':'')+'</div>';
   return '<div class="fld"><label for="'+id+'">'+f[1]+'</label><textarea id="'+id+'" data-f="'+key+'" placeholder="اكتب هنا…"></textarea>'+(TXS.indexOf(f[0])>=0?'<div class="oldt" data-old="'+key+'" hidden></div>':'')+'</div>'}
 function lvHTML(sb,l){return '<section class="lv lv-'+l.k+'"><div class="lv-h"><span class="ch">'+l.ch+'</span><h4>'+l.name+'</h4></div><div class="cols"><div class="col"><span class="col-t">جانب المنشأة</span>'+F_ORG.map(function(f){return fieldHTML(sb,l,f)}).join('')+'</div><div class="col rev"><span class="col-t">جانب المراجع</span>'+F_REV.map(function(f){return fieldHTML(sb,l,f)}).join('')+'</div></div><div class="rqi-wrap" data-rqi-w="'+sb.code+'" data-rqi-l="'+l.k+'"><button type="button" class="rqi-btn" data-rqi-b="'+sb.code+'|'+l.k+'" aria-expanded="false">📎 شواهد إضافية؟ <b></b></button><div class="rqi" hidden></div></div></section>'}
 function recHTML(sb){var c=sb.code,h='<div class="rec rec2"><b class="rec-t">التوصيات والإشادات والمقترحات (يمكن إضافة أكثر من بند لنفس المستوى)</b>';
@@ -21345,7 +21345,7 @@ function chgiList(){var o=[];SUBS_ALL.forEach(function(sb){LV.forEach(function(l
 function trailHTML(code,k){var ia=iniAt(),fz=frozen();if(!ia&&!fz)return '';
   var L=function(v){return (!v||v==='-')?'لم يُقيَّم':vLab(k,v)},iv=S.f[code+'.'+k+'.ini']||'',dv=fz?(S.f[code+'.'+k+'.dsk']||''):(S.f[code+'.'+k+'.rev']||''),rv=S.f[code+'.'+k+'.rev']||'';
   var ci=chgiInfo(code,k),cf=chgInfo(code,k),p=[];
-  p.push('<span>أولي: '+(ia?esc(L(iv)):'لم يُسجَّل')+'</span>');
+  p.push('<span>الدراسة الذاتية: '+(ia?esc(L(iv)):'لم يُسجَّل')+'</span>');
   p.push('<span'+(ci&&!ci.same?' class="tchg"':'')+'>'+(fz?'مكتبي: ':'مكتبي (الحالي): ')+esc(L(dv))+'</span>');
   if(fz)p.push('<span'+(cf&&!cf.same?' class="tchg"':'')+'>ميداني: '+esc(L(rv))+'</span>');
   return p.join(' · ')}
@@ -21353,21 +21353,21 @@ var TXS=['ev','desc','notes'];
 /* نسخة نصوص كل مرحلة: CODE.l.evI/descI/notesI (أولي) و evD/descD/notesD (مكتبي) */
 function snapTxt(sfx){SUBS_ALL.forEach(function(sb){LV.forEach(function(l){TXS.forEach(function(f){var b=sb.code+'.'+l.k+'.',k=b+f+sfx,v=S.f[b+f]||'';if((S.f[k]||'')!==v){S.f[k]=v;queueEntry(k,v)}})})})}
 function oldHTML(key){var cur=(S.f[key]||'').trim(),o=[];
-  if(iniAt()){var a=(S.f[key+'I']||'').trim();if(a&&a!==cur)o.push(['نص المرحلة الأولية',a])}
+  if(iniAt()){var a=(S.f[key+'I']||'').trim();if(a&&a!==cur)o.push(['نص مرحلة الدراسة الذاتية',a])}
   if(frozen()){var d=(S.f[key+'D']||'').trim();if(d&&d!==cur&&!(o.length&&o[0][1]===d))o.push(['نص المرحلة المكتبية',d])}
   return o.map(function(x){return '<details><summary>'+x[0]+' (للاطلاع)</summary><div class="ot">'+esc(x[1])+'</div></details>'}).join('')}
 function updOld(code){$$('#sub-'+code+' [data-old]').forEach(function(el){var h=oldHTML(el.getAttribute('data-old'));if(el._h===h)return;var op=[];$$('details',el).forEach(function(d){op.push(d.open)});el._h=h;el.innerHTML=h;el.hidden=!h;$$('details',el).forEach(function(d,i){if(op[i])d.open=true})})}
 function phDate(v){if(!v)return '';try{return new Date(v).toLocaleString('ar-SA',{dateStyle:'medium',timeStyle:'short'})}catch(e){return v}}
 function renderPhase(){var el=$('#phaseBar');if(!el)return;var f=frozen(),ia=iniAt(),st=stageNo(),n=chgList().length,ni=chgiList().length,lead=myRole()==='lead';
-  var S3=[['١','التقييم الأولي (تدقيق الدراسة الذاتية)'],['٢','المراجعة المكتبية (بعد الشواهد)'],['٣','الزيارة الميدانية (الدرجة النهائية)']];
+  var S3=[['١','تدقيق الدراسة الذاتية وشواهد المنصة'],['٢','المراجعة المكتبية (بعد الشواهد)'],['٣','الزيارة الميدانية (الدرجة النهائية)']];
   var stps='<div class="stps">'+S3.map(function(x,i){return '<span class="stp1'+(i+1===st?' on':(i+1<st?' dn':''))+'">'+(i+1<st?'✓ ':'')+x[0]+'. '+x[1]+'</span>'}).join('')+'</div>';
   el.className='phase '+(st===3?'fld':(st===2?'dsk':'ini'));
   var txt,btns='';
-  if(st===1){txt='عبّئ درجاتك الأولية من تدقيق الدراسة الذاتية، واطلب الشواهد من زر «📎 شواهد إضافية؟». عند الانتهاء يعتمد الرئيس التقييم الأولي لتُحفظ الدرجات كخط أساس.';
-    btns='<button class="btn sm pri" id="btnIni" type="button">اعتماد التقييم الأولي وبدء المراجعة المكتبية</button><button class="btn sm" id="btnFreeze" type="button">تجميد التقييم المكتبي وبدء المرحلة الميدانية</button>'}
-  else if(st===2){txt='اعتُمد التقييم الأولي في '+esc(phDate(ia))+'. عدّل الدرجة أو أثبتها بعد الشواهد المكتبية، وأي تغيير عن الأولية يتطلب سببًا. التغييرات حتى الآن: '+ni+'. عند بدء الزيارة يجمّد الرئيس التقييم المكتبي.';
-    btns='<button class="btn sm pri" id="btnFreeze" type="button">تجميد التقييم المكتبي وبدء المرحلة الميدانية</button><button class="btn sm" id="btnIniUndo" type="button">إلغاء اعتماد التقييم الأولي</button>'}
-  else{txt=(ia?'اعتُمد التقييم الأولي في '+esc(phDate(ia))+' (تغييرات المكتبي عنه: '+ni+'). ':'')+'جُمّد التقييم المكتبي في '+esc(phDate(f))+'. أي تغيير في درجة المراجع بعد الآن يتطلب سببًا، ويظهر مسار الدرجة تحت كل مستوى. تغييرات الميداني حتى الآن: '+n+'.';
+  if(st===1){txt='عبّئ درجاتك من تدقيق الدراسة الذاتية وشواهد المنصة، واطلب الشواهد الإضافية من زر «📎 شواهد إضافية؟». عند الانتهاء يعتمد الرئيس هذه المرحلة لتُحفظ الدرجات والنصوص كخط أساس.';
+    btns='<button class="btn sm pri" id="btnIni" type="button">اعتماد مرحلة تدقيق الدراسة الذاتية وشواهد المنصة وبدء المراجعة المكتبية</button><button class="btn sm" id="btnFreeze" type="button">تجميد التقييم المكتبي وبدء المرحلة الميدانية</button>'}
+  else if(st===2){txt='اعتُمدت مرحلة تدقيق الدراسة الذاتية وشواهد المنصة في '+esc(phDate(ia))+'. عدّل الدرجة أو أثبتها بعد الشواهد المكتبية، وأي تغيير عن درجة الدراسة الذاتية يتطلب سببًا. التغييرات حتى الآن: '+ni+'. عند بدء الزيارة يجمّد الرئيس التقييم المكتبي.';
+    btns='<button class="btn sm pri" id="btnFreeze" type="button">تجميد التقييم المكتبي وبدء المرحلة الميدانية</button><button class="btn sm" id="btnIniUndo" type="button">إلغاء اعتماد مرحلة الدراسة الذاتية</button>'}
+  else{txt=(ia?'اعتُمدت مرحلة تدقيق الدراسة الذاتية وشواهد المنصة في '+esc(phDate(ia))+' (تغييرات المكتبي عنها: '+ni+'). ':'')+'جُمّد التقييم المكتبي في '+esc(phDate(f))+'. أي تغيير في درجة المراجع بعد الآن يتطلب سببًا، ويظهر مسار الدرجة تحت كل مستوى. تغييرات الميداني حتى الآن: '+n+'.';
     btns='<button class="btn sm" id="btnFreeze" type="button">إلغاء التجميد</button>'}
   el.innerHTML=stps+'<b>المرحلة: '+S3[st-1][1]+'</b> <span>'+txt+'</span> '+btns;
   $$('#btnIni,#btnFreeze,#btnIniUndo',el).forEach(function(b){b.style.display=lead?'':'none'})}
@@ -21389,10 +21389,10 @@ function doFinal(n){if(myRole()!=='lead')return;
   rqSet('meta','final'+n,'1');save();updAll();toast('اعتُمد المعيار '+n+' نهائيًا وقُفل')}
 function doIni(){if(myRole()!=='lead')return;
   if(frozen()){toast('ألغِ تجميد التقييم المكتبي أولاً');return}
-  if(iniAt()){if(!confirm('إلغاء اعتماد التقييم الأولي؟ تبقى الدرجات الأولية المحفوظة، لكن لا يُطلب سبب لتغييرها حتى تعتمدها مجددًا.'))return;rqSet('meta','ini','')}
-  else{if(!confirm('اعتماد التقييم الأولي الآن؟ تُحفظ درجات المراجع الحالية كتقييم أولي من تدقيق الدراسة الذاتية، وأي تغيير بعدها في المراجعة المكتبية يتطلب سببًا.'))return;
+  if(iniAt()){if(!confirm('إلغاء اعتماد مرحلة تدقيق الدراسة الذاتية وشواهد المنصة؟ تبقى الدرجات والنصوص المحفوظة، لكن لا يُطلب سبب لتغييرها حتى تعتمدها مجددًا.'))return;rqSet('meta','ini','')}
+  else{if(!confirm('اعتماد مرحلة تدقيق الدراسة الذاتية وشواهد المنصة الآن؟ تُحفظ درجات المراجع ونصوصه الحالية كخط أساس، وأي تغيير في الدرجة بعدها في المراجعة المكتبية يتطلب سببًا.'))return;
     SUBS_ALL.forEach(function(sb){LV.forEach(function(l){var k=sb.code+'.'+l.k+'.ini',v=S.f[sb.code+'.'+l.k+'.rev']||'-';S.f[k]=v;queueEntry(k,v)})});snapTxt('I');rqSet('meta','ini',new Date().toISOString())}
-  save();updAll();toast(iniAt()?'اعتُمد التقييم الأولي وبدأت المراجعة المكتبية':'أُلغي اعتماد التقييم الأولي')}
+  save();updAll();toast(iniAt()?'اعتُمدت مرحلة الدراسة الذاتية وبدأت المراجعة المكتبية':'أُلغي اعتماد مرحلة الدراسة الذاتية')}
 function doFreeze(){if(myRole()!=='lead')return;
   if(frozen()){if(!confirm('إلغاء التجميد؟ ستبقى الدرجات المكتبية المحفوظة لكن لا يُطلب سبب للتغيير حتى تجمّد مجددًا.'))return;rqSet('meta','frozen','')}
   else{if(!confirm('تجميد التقييم المكتبي الآن؟ تُحفظ درجات المراجع الحالية كخط أساس، وأي تغيير بعدها يتطلب سببًا.'))return;
@@ -21772,7 +21772,7 @@ function renderSummary(){var tot=0,ans=0,gaps=0,critAns=0,critTot=0,avgs=[],done
 var SUBS_ALL=[];STDS.forEach(function(s){s.subs.forEach(function(b){SUBS_ALL.push(b)})});
 
 function updAll(){updOwners();updStd();updFilterSel();applyFilter();SUBS_ALL.forEach(updSubChips);$$('select[data-f]').forEach(updHint);renderQuick();renderDist();renderSetupSum();renderSummary();renderMe();renderReq(false);renderPhase();renderFin();applyRole();try{updMeBar();updTask();simApply()}catch(e){}}
-function light(code){if(code)updSubChips(SUB[code]);updStd();renderSummary();if(typeof schedTask==='function')schedTask()}
+function light(code){if(code)updSubChips(SUB[code]);updStd();renderSummary();try{if(iniAt()||frozen())renderPhase()}catch(e){}if(typeof schedTask==='function')schedTask()}
 
 /* ---------- tabs ---------- */
 function showTab(t){S.ui.tab=t;$$('.tab').forEach(function(b){b.setAttribute('aria-selected',b.getAttribute('data-tab')===t?'true':'false')});$$('.panel').forEach(function(p){p.hidden=p.id!=='p-'+t});
