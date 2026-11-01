@@ -222,7 +222,7 @@ body{margin:0;background:var(--bg);color:var(--ink)}
 .gapx{margin:0 0 10px;padding:10px 14px;border-radius:12px;border:1px solid var(--crit);background:var(--crit-soft)}.gapx label{display:block;margin:6px 0 3px;font-weight:700;font-size:.9rem}.gapx textarea{width:100%}.gapx:not(.miss){border-color:var(--line);background:var(--surface-2)}
 .dsk{margin-top:6px;font-size:.88rem;padding:4px 10px;border-radius:8px;background:var(--surface-2);border:1px solid var(--line);color:var(--ink-2)}.dsk.chg{border-color:#d69e00;background:rgba(214,158,0,.14);color:#7a5a00;font-weight:700}
 .phase .btn,[data-fin] .btn{color:var(--ink);opacity:1}.phase .btn.pri,[data-fin] .btn.pri{background:#0D6B63!important;color:#fff!important;border-color:#0D6B63;opacity:1}
-.phase{margin:0 0 12px;padding:10px 14px;border-radius:12px;border:2px solid var(--line);background:var(--surface-2);display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}.phase.fld{border-color:#d69e00}.phase.dsk{border-color:var(--brand)}
+.phase{margin:0 0 12px;padding:10px 14px;border-radius:12px;border:2px solid var(--line);background:var(--surface-2);display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}.phase.fld{border-color:#d69e00}.phase.dsk{border-color:var(--brand)}.phase.ini{border-color:#6b5bd2}.phase .stps{display:flex;flex-wrap:wrap;gap:6px;width:100%}.phase .stp1{padding:2px 10px;border-radius:999px;border:1px solid var(--line);font-size:.85rem;color:var(--ink-2);background:var(--surface)}.phase .stp1.on{border-color:#0D6B63;color:#0D6B63;font-weight:800}.phase .stp1.dn{color:var(--ink)}.dsk .tchg{font-weight:800;text-decoration:underline;text-underline-offset:3px}.rq-row .rn .rph{display:block;font-size:.6rem;line-height:1.1;font-weight:700;color:var(--ink-2);white-space:nowrap;margin-top:2px}
 .dec{margin:0 0 12px;padding:12px 14px;border-radius:12px;border:2px solid var(--line);background:var(--surface-2)}.dec b{font-size:1.05rem}.dec.ok{border-color:#1f8c50}.dec.mid{border-color:#d69e00}.dec.bad{border-color:var(--crit)}
 .rec{margin:0 14px 12px;display:grid;grid-template-columns:200px minmax(0,1fr);gap:10px;align-items:start;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:10px 12px}.rec label{font-weight:700;display:block;margin-bottom:4px}@media (max-width:760px){.rec{grid-template-columns:minmax(0,1fr)}}
 .gap{margin-top:6px;background:var(--crit-soft);color:var(--crit);border:1px dashed var(--crit);border-radius:8px;padding:.15rem .6rem;font-size:.88rem;font-weight:700}
@@ -376,7 +376,7 @@ button,.btn,[role=button],a.btn,select,summary{touch-action:manipulation}
 .ed{grid-column:1/-1;font-size:.84rem;color:var(--ink-2)}
 .ed:empty{display:none}
 #app.view [data-f],#app.view [data-sd],#app.view #reqRows .in,#app.view #reqRows textarea{opacity:.85}
-#app.view .rqi-btn,#app.view [data-rqdel],#app.view [data-rvw],#app.view [data-finb],#app.view #reqAdd,#app.view #reqWord,#app.view #pubBox,#app.view #btnData,#app.view #btnFreeze,#app.view #meBox,#app.view #vwT,#app.view #vwBox,#app.view #vwAdd,#app.view #ptBox,#app.view .rqi-ft,#app.view #tkSum+div .btn{display:none!important}
+#app.view .rqi-btn,#app.view [data-rqdel],#app.view [data-rvw],#app.view [data-finb],#app.view #reqAdd,#app.view #reqWord,#app.view #pubBox,#app.view #btnData,#app.view #btnFreeze,#app.view #btnIni,#app.view #btnIniUndo,#app.view #meBox,#app.view #vwT,#app.view #vwBox,#app.view #vwAdd,#app.view #ptBox,#app.view .rqi-ft,#app.view #tkSum+div .btn{display:none!important}
 #app.mem:not(.view) #teamT,#app.mem:not(.view) #teamBox,#app.mem:not(.view) #addRow,#app.mem:not(.view) #vwT,#app.mem:not(.view) #vwBox,#app.mem:not(.view) #vwAdd,#app.mem:not(.view) #ptBox,#app.mem:not(.view) #distT,#app.mem:not(.view) #quickBox,#app.mem:not(.view) #presetBox,#app.mem:not(.view) #pvBox{display:none!important}
 #app.mem:not(.view) #reqWord,#app.mem:not(.view) #reqPub,#app.mem:not(.view) #pubBox>*:not(:first-child){display:none!important}
 #vwNotice:not([hidden]){display:flex;align-items:center;gap:10px}
@@ -21172,7 +21172,7 @@ var LV=[{k:'e',ch:'و',name:'الوجود'},{k:'p',ch:'م',name:'الممارس�
 var LSC={e:[['1','لا تتوفر وثيقة تغطي المعيار.'],['2','تتوفر وثيقة لكنها غير معتمدة أو غير محدثة أو غير مرتبطة بالمنشأة، أو لا تغطي جميع عناصر المعيار.'],['3','تتوفر وثيقة/سياسة معتمدة ومحدثة وتغطي جميع العناصر الأساسية.']],
   p:[['1','لا يتوفر تطبيق لعناصر المعيار.'],['2','يتوفر تطبيق جزئي أو غير منتظم أو غير موثّق.'],['3','يتوفر تطبيق منتظم بجودة جيدة ويغطي جميع العناصر.']],
   f:[['2','لا تتوفر أداة قياس يُبنى على نتائجها تحسين، فتُحسب درجة المعيار الفرعي [2] وتستدعي توصية للفاعلية. لا تُقيَّم الفاعلية إلا إذا كان الوجود والتطبيق [3].'],['3','تتوفر أداة أو أكثر من أدوات القياس (استبانة، مستهدفات، مؤشرات أو غيرها) يُبنى على نتائج تحليلها تحسينات مناسبة.'],['4','كل ما سبق في [3] إضافة إلى ارتباط قياس الفاعلية بخطط المنشأة التدريبية (حيثما انطبقت).'],['5','كل ما سبق في [4] إضافة إلى تميز أو إبداع يتجاوز توقعات المعيار عبر ممارسة ذات أثر استثنائي موثق.']]};
-function lvOf(key){var m=/\.([epf])\.(rev|org|dsk)$/.exec(key||'');return m?m[1]:''}
+function lvOf(key){var m=/\.([epf])\.(rev|org|dsk|ini)$/.exec(key||'');return m?m[1]:''}
 function vLab(k,v){return v==='NA'?'لا ينطبق':(k==='f'&&v==='2'?'غير متحققة':v)}
 /* رأي المنشأة بالسلّم القديم 1–5 (التقييم الذاتي)، وقرار المراجع بالسلّم الرسمي */
 var OSC=SCALE.filter(function(x){return x.v!=='NA'}).map(function(x){return [x.v,x.d]});
@@ -21285,7 +21285,7 @@ function renderSetupSum(){var s=S.setup,d=pd(s.date),names=team().filter(functio
 /* ---------- form build ---------- */
 function ratingOpts(k,org){var h='<option value="">— اختر —</option>';(org?OSC:(LSC[k]||[])).forEach(function(o){h+='<option value="'+o[0]+'">'+(org?o[0]:vLab(k,o[0]))+'</option>'});return h}
 function fieldHTML(sb,l,f){var id='f-'+sb.code+'-'+l.k+'-'+f[0],key=sb.code+'.'+l.k+'.'+f[0];
-  if(f[2]==='sel')return '<div class="fld"><label for="'+id+'">'+f[1]+'</label><select id="'+id+'" data-f="'+key+'">'+ratingOpts(l.k,f[0]==='org')+'</select><div class="hint" data-hint="'+key+'" title="اضغط لعرض النص كاملاً"></div>'+(f[0]==='rev'?'<div class="gap" data-gap="'+sb.code+'.'+l.k+'" hidden></div><div class="why" data-why="'+sb.code+'.'+l.k+'" hidden><label for="f-'+sb.code+'-'+l.k+'-why">تعليل الفرق عن رأي المنشأة (مطلوب)</label><textarea id="f-'+sb.code+'-'+l.k+'-why" data-f="'+sb.code+'.'+l.k+'.why" placeholder="اكتب سبب اختلاف درجة المراجع عن رأي المنشأة…"></textarea></div><div class="dsk" data-dsk="'+sb.code+'.'+l.k+'" hidden></div><div class="why chgw" data-chg="'+sb.code+'.'+l.k+'" hidden><label for="f-'+sb.code+'-'+l.k+'-chg">سبب تغيير الدرجة بعد الاطلاع على الشواهد (مطلوب)</label><textarea id="f-'+sb.code+'-'+l.k+'-chg" data-f="'+sb.code+'.'+l.k+'.chg" placeholder="ماذا ظهر في الشاهد أو المقابلة فغيّر الدرجة؟"></textarea></div>':'')+'</div>';
+  if(f[2]==='sel')return '<div class="fld"><label for="'+id+'">'+f[1]+'</label><select id="'+id+'" data-f="'+key+'">'+ratingOpts(l.k,f[0]==='org')+'</select><div class="hint" data-hint="'+key+'" title="اضغط لعرض النص كاملاً"></div>'+(f[0]==='rev'?'<div class="gap" data-gap="'+sb.code+'.'+l.k+'" hidden></div><div class="why" data-why="'+sb.code+'.'+l.k+'" hidden><label for="f-'+sb.code+'-'+l.k+'-why">تعليل الفرق عن رأي المنشأة (مطلوب)</label><textarea id="f-'+sb.code+'-'+l.k+'-why" data-f="'+sb.code+'.'+l.k+'.why" placeholder="اكتب سبب اختلاف درجة المراجع عن رأي المنشأة…"></textarea></div><div class="dsk" data-dsk="'+sb.code+'.'+l.k+'" hidden></div><div class="why chgw" data-chgi="'+sb.code+'.'+l.k+'" hidden><label for="f-'+sb.code+'-'+l.k+'-chgi">سبب تغيير الدرجة الأولية بعد الشواهد المكتبية (مطلوب)</label><textarea id="f-'+sb.code+'-'+l.k+'-chgi" data-f="'+sb.code+'.'+l.k+'.chgi" placeholder="ما الشاهد المكتبي الذي غيّر الدرجة الأولية، أو ما الذي اتضح منه؟"></textarea></div><div class="why chgw" data-chg="'+sb.code+'.'+l.k+'" hidden><label for="f-'+sb.code+'-'+l.k+'-chg">سبب تغيير الدرجة المكتبية بعد الزيارة الميدانية (مطلوب)</label><textarea id="f-'+sb.code+'-'+l.k+'-chg" data-f="'+sb.code+'.'+l.k+'.chg" placeholder="ماذا ظهر في الشاهد أو المقابلة فغيّر الدرجة؟"></textarea></div>':'')+'</div>';
   return '<div class="fld"><label for="'+id+'">'+f[1]+'</label><textarea id="'+id+'" data-f="'+key+'" placeholder="اكتب هنا…"></textarea></div>'}
 function lvHTML(sb,l){return '<section class="lv lv-'+l.k+'"><div class="lv-h"><span class="ch">'+l.ch+'</span><h4>'+l.name+'</h4></div><div class="cols"><div class="col"><span class="col-t">جانب المنشأة</span>'+F_ORG.map(function(f){return fieldHTML(sb,l,f)}).join('')+'</div><div class="col rev"><span class="col-t">جانب المراجع</span>'+F_REV.map(function(f){return fieldHTML(sb,l,f)}).join('')+'</div></div><div class="rqi-wrap" data-rqi-w="'+sb.code+'" data-rqi-l="'+l.k+'"><button type="button" class="rqi-btn" data-rqi-b="'+sb.code+'|'+l.k+'" aria-expanded="false">📎 شواهد إضافية؟ <b></b></button><div class="rqi" hidden></div></div></section>'}
 function recHTML(sb){var c=sb.code,h='<div class="rec rec2"><b class="rec-t">التوصيات والإشادات والمقترحات (يمكن إضافة أكثر من بند لنفس المستوى)</b>';
@@ -21337,13 +21337,34 @@ function chgList(){var o=[];SUBS_ALL.forEach(function(sb){LV.forEach(function(l)
 function chgMiss(){return chgList().filter(function(c){return !c.why}).length}
 function stdDsk(s){var a=[];s.subs.forEach(function(sb){var d={};LV.forEach(function(l){var v=S.f[sb.code+'.'+l.k+'.dsk']||'';d[l.k]=v==='-'?'':v});var v=finLv(d);if(v!=null)a.push(v)});return a.length?r2(a.reduce(function(p,q){return p+q},0)/a.length):null}
 function lbl2(v){return v==='NA'?'لا ينطبق':(v==='-'?'لم يُقيَّم':v)}
-function renderPhase(){var el=$('#phaseBar');if(!el)return;var f=frozen(),n=chgList().length;
-  var d='';if(f){try{d=new Date(f).toLocaleString('ar-SA',{dateStyle:'medium',timeStyle:'short'})}catch(e){d=f}}
-  el.className='phase '+(f?'fld':'dsk');
-  el.innerHTML='<b>المرحلة: '+(f?'ميداني (أثناء الزيارة)':'مكتبي (قبل الزيارة)')+'</b> <span>'+(f?'جُمّد التقييم المكتبي في '+esc(d)+'. أي تغيير في درجة المراجع بعد الآن يتطلب سببًا، وتظهر الدرجة المكتبية بجوارها. التغييرات حتى الآن: '+n+'.':'عبّئ التقييم المكتبي بحرية. عند بدء الزيارة يجمّده الرئيس لتُحفظ الدرجات كخط أساس.')+'</span> <button class="btn sm '+(f?'':'pri')+'" id="btnFreeze" type="button">'+(f?'إلغاء التجميد':'تجميد التقييم المكتبي وبدء المرحلة الميدانية')+'</button>';
-  var b=$('#btnFreeze');if(b)b.style.display=myRole()==='lead'?'':'none'}
+/* ---------- مراحل التقييم: أولي (تدقيق الدراسة الذاتية) ثم مكتبي (بعد الشواهد) ثم ميداني (نهائي) ---------- */
+function iniAt(){return S.f['rq.meta.ini']||''}
+function stageNo(){return frozen()?3:(iniAt()?2:1)}
+function chgiInfo(code,k){var i=S.f[code+'.'+k+'.ini']||'';if(!iniAt()||!i||i==='-')return null;var c=frozen()?(S.f[code+'.'+k+'.dsk']||''):(S.f[code+'.'+k+'.rev']||'');if(c==='-')c='';return c===i?{same:true}:{from:i,to:c||'—'}}
+function chgiList(){var o=[];SUBS_ALL.forEach(function(sb){LV.forEach(function(l){var c=chgiInfo(sb.code,l.k);if(c&&!c.same)o.push({code:sb.code,std:sb.std,lv:l.name,from:c.from,to:c.to,why:(S.f[sb.code+'.'+l.k+'.chgi']||'').trim()})})});return o}
+function trailHTML(code,k){var ia=iniAt(),fz=frozen();if(!ia&&!fz)return '';
+  var L=function(v){return (!v||v==='-')?'لم يُقيَّم':vLab(k,v)},iv=S.f[code+'.'+k+'.ini']||'',dv=fz?(S.f[code+'.'+k+'.dsk']||''):(S.f[code+'.'+k+'.rev']||''),rv=S.f[code+'.'+k+'.rev']||'';
+  var ci=chgiInfo(code,k),cf=chgInfo(code,k),p=[];
+  p.push('<span>أولي: '+(ia?esc(L(iv)):'لم يُسجَّل')+'</span>');
+  p.push('<span'+(ci&&!ci.same?' class="tchg"':'')+'>'+(fz?'مكتبي: ':'مكتبي (الحالي): ')+esc(L(dv))+'</span>');
+  if(fz)p.push('<span'+(cf&&!cf.same?' class="tchg"':'')+'>ميداني: '+esc(L(rv))+'</span>');
+  return p.join(' · ')}
+function phDate(v){if(!v)return '';try{return new Date(v).toLocaleString('ar-SA',{dateStyle:'medium',timeStyle:'short'})}catch(e){return v}}
+function renderPhase(){var el=$('#phaseBar');if(!el)return;var f=frozen(),ia=iniAt(),st=stageNo(),n=chgList().length,ni=chgiList().length,lead=myRole()==='lead';
+  var S3=[['١','التقييم الأولي (تدقيق الدراسة الذاتية)'],['٢','المراجعة المكتبية (بعد الشواهد)'],['٣','الزيارة الميدانية (الدرجة النهائية)']];
+  var stps='<div class="stps">'+S3.map(function(x,i){return '<span class="stp1'+(i+1===st?' on':(i+1<st?' dn':''))+'">'+(i+1<st?'✓ ':'')+x[0]+'. '+x[1]+'</span>'}).join('')+'</div>';
+  el.className='phase '+(st===3?'fld':(st===2?'dsk':'ini'));
+  var txt,btns='';
+  if(st===1){txt='عبّئ درجاتك الأولية من تدقيق الدراسة الذاتية، واطلب الشواهد من زر «📎 شواهد إضافية؟». عند الانتهاء يعتمد الرئيس التقييم الأولي لتُحفظ الدرجات كخط أساس.';
+    btns='<button class="btn sm pri" id="btnIni" type="button">اعتماد التقييم الأولي وبدء المراجعة المكتبية</button><button class="btn sm" id="btnFreeze" type="button">تجميد التقييم المكتبي وبدء المرحلة الميدانية</button>'}
+  else if(st===2){txt='اعتُمد التقييم الأولي في '+esc(phDate(ia))+'. عدّل الدرجة أو أثبتها بعد الشواهد المكتبية، وأي تغيير عن الأولية يتطلب سببًا. التغييرات حتى الآن: '+ni+'. عند بدء الزيارة يجمّد الرئيس التقييم المكتبي.';
+    btns='<button class="btn sm pri" id="btnFreeze" type="button">تجميد التقييم المكتبي وبدء المرحلة الميدانية</button><button class="btn sm" id="btnIniUndo" type="button">إلغاء اعتماد التقييم الأولي</button>'}
+  else{txt=(ia?'اعتُمد التقييم الأولي في '+esc(phDate(ia))+' (تغييرات المكتبي عنه: '+ni+'). ':'')+'جُمّد التقييم المكتبي في '+esc(phDate(f))+'. أي تغيير في درجة المراجع بعد الآن يتطلب سببًا، ويظهر مسار الدرجة تحت كل مستوى. تغييرات الميداني حتى الآن: '+n+'.';
+    btns='<button class="btn sm" id="btnFreeze" type="button">إلغاء التجميد</button>'}
+  el.innerHTML=stps+'<b>المرحلة: '+S3[st-1][1]+'</b> <span>'+txt+'</span> '+btns;
+  $$('#btnIni,#btnFreeze,#btnIniUndo',el).forEach(function(b){b.style.display=lead?'':'none'})}
 function finalOf(n){return S.f['rq.meta.final'+n]==='1'}
-function finIssues(n){var s=STD[n],m=0,c=0,r=0,na=0;s.subs.forEach(function(sb){if(subNA(sb.code)){if(!(S.f[sb.code+'.s.nar']||'').trim())na++;return}LV.forEach(function(l){if(!S.f[sb.code+'.'+l.k+'.rev'])m++;var ci=chgInfo(sb.code,l.k);if(ci&&!ci.same&&!(S.f[sb.code+'.'+l.k+'.chg']||'').trim())c++});var sp=subSpot(sb);if(sp.rec.length&&!subRecs(sb.code).some(function(q){return q.t==='توصية'&&q.x}))r++});
+function finIssues(n){var s=STD[n],m=0,c=0,r=0,na=0;s.subs.forEach(function(sb){if(subNA(sb.code)){if(!(S.f[sb.code+'.s.nar']||'').trim())na++;return}LV.forEach(function(l){if(!S.f[sb.code+'.'+l.k+'.rev'])m++;var ci=chgInfo(sb.code,l.k);if(ci&&!ci.same&&!(S.f[sb.code+'.'+l.k+'.chg']||'').trim())c++;var cj=chgiInfo(sb.code,l.k);if(cj&&!cj.same&&!(S.f[sb.code+'.'+l.k+'.chgi']||'').trim())c++});var sp=subSpot(sb);if(sp.rec.length&&!subRecs(sb.code).some(function(q){return q.t==='توصية'&&q.x}))r++});
   var o=[];if(m)o.push(m+' خانة بلا درجة مراجع');if(c)o.push(c+' تغيير بلا سبب');if(r)o.push(r+' موضع توصية بلا توصية مكتوبة');if(na)o.push(na+' معيار فرعي «لا ينطبق» بلا تعليل');return o}
 function renderFin(){var lead=myRole()==='lead';STDS.forEach(function(s){var el=$('[data-fin="'+s.n+'"]');if(!el)return;var f=finalOf(s.n);
   el.innerHTML=f?'<span class="pill p-ok">معتمد نهائيًا من الرئيس · المعيار مقفل</span>'+(lead?'<button class="btn sm" data-finb="'+s.n+'" type="button">إلغاء الاعتماد وفتح المعيار</button>':'<span class="note">لا يُعدَّل إلا بعد أن يفتحه الرئيس.</span>'):(lead?'<span class="own-l">اعتماد الرئيس</span><button class="btn sm pri" data-finb="'+s.n+'" type="button">اعتماد نهائي وقفل المعيار</button>':'')})}
@@ -21358,6 +21379,12 @@ function doFinal(n){if(myRole()!=='lead')return;
   if(finalOf(n)){rqSet('meta','final'+n,'');save();updAll();toast('فُتح المعيار '+n);return}
   var is=finIssues(n);if(is.length&&!confirm('ملاحظات على المعيار '+n+': '+is.join('، ')+'.\nهل تعتمده وتقفله رغم ذلك؟'))return;
   rqSet('meta','final'+n,'1');save();updAll();toast('اعتُمد المعيار '+n+' نهائيًا وقُفل')}
+function doIni(){if(myRole()!=='lead')return;
+  if(frozen()){toast('ألغِ تجميد التقييم المكتبي أولاً');return}
+  if(iniAt()){if(!confirm('إلغاء اعتماد التقييم الأولي؟ تبقى الدرجات الأولية المحفوظة، لكن لا يُطلب سبب لتغييرها حتى تعتمدها مجددًا.'))return;rqSet('meta','ini','')}
+  else{if(!confirm('اعتماد التقييم الأولي الآن؟ تُحفظ درجات المراجع الحالية كتقييم أولي من تدقيق الدراسة الذاتية، وأي تغيير بعدها في المراجعة المكتبية يتطلب سببًا.'))return;
+    SUBS_ALL.forEach(function(sb){LV.forEach(function(l){var k=sb.code+'.'+l.k+'.ini',v=S.f[sb.code+'.'+l.k+'.rev']||'-';S.f[k]=v;queueEntry(k,v)})});rqSet('meta','ini',new Date().toISOString())}
+  save();updAll();toast(iniAt()?'اعتُمد التقييم الأولي وبدأت المراجعة المكتبية':'أُلغي اعتماد التقييم الأولي')}
 function doFreeze(){if(myRole()!=='lead')return;
   if(frozen()){if(!confirm('إلغاء التجميد؟ ستبقى الدرجات المكتبية المحفوظة لكن لا يُطلب سبب للتغيير حتى تجمّد مجددًا.'))return;rqSet('meta','frozen','')}
   else{if(!confirm('تجميد التقييم المكتبي الآن؟ تُحفظ درجات المراجع الحالية كخط أساس، وأي تغيير بعدها يتطلب سببًا.'))return;
@@ -21408,7 +21435,8 @@ function updRecAdv(n){var s=STD[n];if(!s)return;var el=stdComp(s);
     box.innerHTML=h})}
 function updSubChips(sb){var x=subStats(sb),h='';
   LV.forEach(function(l){var d=$('[data-dsk="'+sb.code+'.'+l.k+'"]'),w=$('[data-chg="'+sb.code+'.'+l.k+'"]'),dv=S.f[sb.code+'.'+l.k+'.dsk']||'',c=chgInfo(sb.code,l.k);
-    if(d){if(frozen()&&dv){d.hidden=false;d.className='dsk'+(c&&!c.same?' chg':'');d.textContent='مكتبي: '+lbl2(dv)+(c&&!c.same?'  ←  ميداني: '+lbl2(c.to):'')}else d.hidden=true}
+    var ci=chgiInfo(sb.code,l.k),wi=$('[data-chgi="'+sb.code+'.'+l.k+'"]'),th=trailHTML(sb.code,l.k);if(d){if(th){d.hidden=false;d.className='dsk'+((c&&!c.same)||(ci&&!ci.same)?' chg':'');d.innerHTML=th}else d.hidden=true}
+    if(wi){var ni=!!ci&&!ci.same;wi.hidden=!ni;wi.classList.toggle('miss',ni&&!(S.f[sb.code+'.'+l.k+'.chgi']||'').trim())}
     if(w){var need=!!c&&!c.same;w.hidden=!need;w.classList.toggle('miss',need&&!(S.f[sb.code+'.'+l.k+'.chg']||'').trim())}});
   var ar=$('#sub-'+sb.code);if(ar)ar.classList.toggle('is-na',x.na);var nw=$('[data-nar="'+sb.code+'"]');if(nw){nw.hidden=!x.na;nw.classList.toggle('miss',x.na&&!(S.f[sb.code+'.s.nar']||'').trim())}
   if(x.na)h+='<span class="mini na-chip">لا ينطبق · مستبعد من المتوسط</span>';
@@ -21908,8 +21936,9 @@ function rqSorted(ids){var si={};SUBS_ALL.forEach(function(b,i){si[b.code]=i});f
   return ids.map(function(id,i){return{id:id,i:i,k:k(id)}}).sort(function(a,b){return(a.k[0]-b.k[0])||(a.k[1]-b.k[1])||(a.k[2]-b.k[2])||(a.i-b.i)}).map(function(x){return x.id})}
 function rqFocusRow(id,sel){var r=document.querySelector('#reqRows .rq-row[data-rid="'+id+'"]');if(!r)return;var x=r.querySelector(sel);try{r.scrollIntoView({block:'center',behavior:'smooth'})}catch(e){}if(x)x.focus()}
 function rqIds(){var ids={};Object.keys(S.f).forEach(function(k){var m=/^rq\.(r[a-z0-9]+)\.(std|sub|lv|txt|n|del|by|st)$/.exec(k);if(m)ids[m[1]]=1});return Object.keys(ids).filter(function(id){return rqGet(id,'del')!=='1'}).sort(function(a,b){return (+rqGet(a,'n')||0)-(+rqGet(b,'n')||0)})}
+function rqPh(id){var p=rqGet(id,'ph');if(p)return p;var f=frozen(),n=+rqGet(id,'n')||0;return (f&&n&&n>=Date.parse(f))?'f':'d'}
 function rqRowHTML(id,i){var sd=rqGet(id,'std'),sb=rqGet(id,'sub'),lv=rqGet(id,'lv');
-  var h='<div class="rq-row" data-rid="'+id+'"><span class="rn">'+(i+1)+'</span><select class="in" data-rq="'+id+'.std" aria-label="المعيار"><option value="">— المعيار —</option>'+STDS.filter(function(s){return canStd(s.n)}).map(function(s){return '<option value="'+s.n+'"'+(String(s.n)===sd?' selected':'')+'>'+s.n+' · '+esc(s.title)+'</option>'}).join('')+'</select>';
+  var ph=rqPh(id),h='<div class="rq-row" data-rid="'+id+'"><span class="rn" title="'+(ph==='f'?'طلب أثناء الزيارة الميدانية':'طلب في المراجعة المكتبية')+'">'+(i+1)+'<i class="rph">'+(ph==='f'?'ميداني':'مكتبي')+'</i></span><select class="in" data-rq="'+id+'.std" aria-label="المعيار"><option value="">— المعيار —</option>'+STDS.filter(function(s){return canStd(s.n)}).map(function(s){return '<option value="'+s.n+'"'+(String(s.n)===sd?' selected':'')+'>'+s.n+' · '+esc(s.title)+'</option>'}).join('')+'</select>';
   h+='<select class="in" data-rq="'+id+'.sub" aria-label="المعيار الفرعي"'+(STD[sd]?STD[sd].subs.filter(function(b){return b.code===sb}).map(function(b){return ' title="'+esc(b.code+' · '+b.text)+'"'}).join(''):'')+'><option value="">— المعيار الفرعي —</option>'+(STD[sd]?STD[sd].subs.filter(function(b){return canSub(b.code)}).map(function(b){var tx=b.text.length>110?b.text.slice(0,110)+'…':b.text;return '<option value="'+b.code+'"'+(b.code===sb?' selected':'')+'>'+b.code+' · '+esc(tx)+'</option>'}).join(''):'')+'</select>';
   h+='<select class="in" data-rq="'+id+'.lv" aria-label="المستوى"><option value="">— المستوى —</option>'+LVO.map(function(k){return '<option value="'+k+'"'+(k===lv?' selected':'')+'>'+LVN[k]+'</option>'}).join('')+'</select>';
   h+='<textarea data-rq="'+id+'.txt" rows="2" placeholder="اكتب الشاهد المطلوب من المنشأة…">'+esc(rqGet(id,'txt'))+'</textarea><select class="in" data-rq="'+id+'.st" aria-label="حالة الشاهد"><option value="">— الحالة —</option><option value="وصل"'+(rqGet(id,'st')==='وصل'?' selected':'')+'>وصل</option><option value="لم يصل"'+(rqGet(id,'st')==='لم يصل'?' selected':'')+'>لم يصل بعد</option></select><button class="btn sm danger" data-rqdel="'+id+'" type="button">حذف</button></div>';return h}
@@ -21932,7 +21961,7 @@ function rqiRender(force){var ae=document.activeElement,tot={};$$('.rqi-wrap').f
   var open=ok&&!!RQI_OPEN[key];btn.setAttribute('aria-expanded',open?'true':'false');box.hidden=!open;if(!open)return;if(!force&&ae&&box.contains(ae))return;
   box.innerHTML=ids.map(rqiRowHTML).join('')+'<div class="rqi-ft"><button class="btn sm" type="button" data-rqi-add="'+key+'">+ شاهد آخر لنفس المستوى</button><button class="btn sm" type="button" data-rqi-tab="1">عرض كل الطلبات في «طلب الشواهد من المنشأة»</button></div>'});
   $$('.rqi-tot').forEach(function(x){var n=tot[x.getAttribute('data-rqi-t')]||0;x.textContent=n?'📎 '+n+' شاهد إضافي':''})}
-function rqAddFor(code,lv){var id='r'+Math.random().toString(36).slice(2,7);rqSet(id,'n',String(Date.now()));rqSet(id,'by',SH.me||'');rqSet(id,'std',String(SUB[code].std));rqSet(id,'sub',code);rqSet(id,'lv',lv);rqSet(id,'txt','');save();return id}
+function rqAddFor(code,lv){var id='r'+Math.random().toString(36).slice(2,7);rqSet(id,'n',String(Date.now()));rqSet(id,'by',SH.me||'');rqSet(id,'std',String(SUB[code].std));rqSet(id,'sub',code);rqSet(id,'lv',lv);rqSet(id,'ph',frozen()?'f':'d');rqSet(id,'txt','');save();return id}
 function rqiFocus(code,lv){var w=document.querySelector('.rqi-wrap[data-rqi-w="'+code+'"][data-rqi-l="'+lv+'"]');var t=w&&w.querySelectorAll('.rqi textarea');if(t&&t.length){var x=t[t.length-1];x.focus();try{w.scrollIntoView({block:'center',behavior:'smooth'})}catch(e){}}}
 document.addEventListener('click',function(ev){var t=ev.target.closest?ev.target.closest('[data-rqi-b],[data-rqi-add],[data-rqi-tab]'):null;if(!t)return;
   if(t.hasAttribute('data-rqi-tab')){showTab('req');return}
@@ -21941,7 +21970,7 @@ document.addEventListener('click',function(ev){var t=ev.target.closest?ev.target
   RQI_OPEN[key]=1;if(t.hasAttribute('data-rqi-add')||!rqiRows(code,lv).length)rqAddFor(code,lv);renderReq(true);rqiRender(1);rqiFocus(code,lv)});
 function rqAdd(){if(myRole()==='view')return;if(myRole()!=='lead'&&!mem(SH.me)){toast('اختر اسمك من «أنا» أولاً');return}
   var ids=rqVisIds(),last=ids.length?ids[ids.length-1]:null,id='r'+Math.random().toString(36).slice(2,7);
-  rqSet(id,'n',String(Date.now()));rqSet(id,'by',SH.me||'');if(last){rqSet(id,'std',rqGet(last,'std'));rqSet(id,'sub',rqGet(last,'sub'))}else{var al=STDS.filter(function(x){return canStd(x.n)});if(al.length===1)rqSet(id,'std',String(al[0].n))}rqSet(id,'txt','');save();renderReq(true);rqFocusRow(id,'textarea')}
+  rqSet(id,'n',String(Date.now()));rqSet(id,'by',SH.me||'');rqSet(id,'ph',frozen()?'f':'d');if(last){rqSet(id,'std',rqGet(last,'std'));rqSet(id,'sub',rqGet(last,'sub'))}else{var al=STDS.filter(function(x){return canStd(x.n)});if(al.length===1)rqSet(id,'std',String(al[0].n))}rqSet(id,'txt','');save();renderReq(true);rqFocusRow(id,'textarea')}
 function rqRows(){var o=[];rqVisIds().forEach(function(id){var sub=rqGet(id,'sub'),sd=+rqGet(id,'std')||(SUB[sub]?SUB[sub].std:0);if(!sd&&!rqGet(id,'txt').trim())return;o.push({std:sd,sub:sub,lv:rqGet(id,'lv'),txt:rqGet(id,'txt').trim()})});
   o.sort(function(a,b){var ai=a.sub?SUBS_ALL.findIndex(function(x){return x.code===a.sub}):-1,bi=b.sub?SUBS_ALL.findIndex(function(x){return x.code===b.sub}):-1;return (a.std-b.std)||(ai-bi)||(LVO.indexOf(a.lv)-LVO.indexOf(b.lv))});return o}
 function buildReqDocx(){var D=window.docx;if(!D)throw new Error('docx');
@@ -22414,7 +22443,7 @@ document.addEventListener('input',function(ev){var e=ev.target;
   if(e.hasAttribute&&e.hasAttribute('data-xp')){var xk='rq.rxp'+e.getAttribute('data-xp')+'.exp';S.f[xk]=e.value;queueEntry(xk,e.value);save();return}
   if(e.hasAttribute&&e.hasAttribute('data-rq')&&e.tagName!=='SELECT'){var rk=e.getAttribute('data-rq'),pp=rk.split('.');rqSet(pp[0],pp[1],e.value);save();var rc=$('#reqCount');return}
   if(e.id==='shCode'){shFillGs();return}
-  if(e.hasAttribute&&e.hasAttribute('data-f')){var k=e.getAttribute('data-f');S.f[k]=e.value;if(/\.r\d+\.t$/.test(k))recOpen(k);if(e.tagName==='TEXTAREA')autosize(e);else updHint(e);light(k.split('.')[0]);queueEntry(k,e.value);if(/\.why$/.test(k)){var wb=e.closest('.why');if(wb)wb.classList.toggle('miss',!e.value.trim())}obsTouch(k.split('.')[0]);save();return}
+  if(e.hasAttribute&&e.hasAttribute('data-f')){var k=e.getAttribute('data-f');S.f[k]=e.value;if(/\.r\d+\.t$/.test(k))recOpen(k);if(e.tagName==='TEXTAREA')autosize(e);else updHint(e);light(k.split('.')[0]);queueEntry(k,e.value);if(/\.(why|chg|chgi)$/.test(k)){var wb=e.closest('.why');if(wb)wb.classList.toggle('miss',!e.value.trim())}obsTouch(k.split('.')[0]);save();return}
   if(e.id==='ptLink'||e.id==='ptTeam'){if(myRole()==='lead'){S.setup[e.id==='ptTeam'?'portalTeam':'portalView']=e.value.trim();renderPortal();queueMain();save()}return}
   if(e.id==='facility'){S.setup.facility=e.value;renderSetupSum();queueMain();save();return}
   if(e.id==='fSearch'){applyFilter();return}
@@ -22462,6 +22491,7 @@ document.addEventListener('click',function(ev){var t=ev.target,e=t.closest?t.clo
   switch(e.id){
     case 'setupToggle':var o=$('#setup').classList.toggle('closed');e.textContent=o?'فتح':'طيّ';e.setAttribute('aria-expanded',o?'false':'true');S.ui.setupOpen=!o;save();break;
     case 'btnFreeze':doFreeze();break;
+    case 'btnIni':case 'btnIniUndo':doIni();break;
     case 'reqAdd':rqAdd();break;
     case 'reqWord':exportReq();break;
     case 'reqPub':pubSend();break;
