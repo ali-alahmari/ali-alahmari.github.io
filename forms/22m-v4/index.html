@@ -605,6 +605,9 @@ html[data-skin="heritage"] .gd::before{background:linear-gradient(90deg,#C9A24B,
 html .top .btn.pri{background:var(--gold)!important;color:#07332F!important;border-color:var(--gold)!important;box-shadow:none!important}
 @media (hover:hover) and (pointer:fine){.top .btn.pri:hover{background:var(--gold);filter:brightness(1.06);transform:none;box-shadow:none}}
 .tmenu{position:relative}
+.top:has(.tmenu[open]){z-index:40}
+html .top .tmenu-p .btn{white-space:nowrap}
+.tmenu-p{min-width:300px}
 .tmenu>summary{list-style:none;cursor:pointer;user-select:none}
 .tmenu>summary::-webkit-details-marker{display:none}
 .tmenu>summary::after{content:"";width:.56em;height:.56em;margin-inline-start:.2rem;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-2px) rotate(45deg);transform-origin:center;transition:transform .16s ease-out}
