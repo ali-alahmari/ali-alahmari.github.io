@@ -199,7 +199,7 @@ function rowView_(r, admin) {
     files: r.files.map(function (f) { return admin ? { name: f.name, size: f.size, url: f.url, at: f.at } : { name: f.name, size: f.size }; }),
     links: r.links.slice(),
     folderUrl: admin ? r.folderUrl : undefined,
-    at: admin ? (r.at || '') : undefined, cfAt: admin ? (r.cfAt || '') : undefined
+    at: admin ? (r.at || '') : undefined, cfAt: admin ? (r.cfAt || '') : undefined, cpFrom: admin ? (r.cpFrom || '') : undefined
   };
 }
 
@@ -385,7 +385,7 @@ function team_(q) {
     ok: 1, view: viewOnly ? 1 : 0, visit: m.code, title: m.title || '', deadline: m.deadline, closed: closed_(m), days: m.days || [],
     log: (m.log || []).slice(0, 150).map(function (e) {
       var f = m.facilities[e.fid] || {}, r = (f.rows || {})[e.row];
-      var undo = e.op === 'move' ? !!(r && (r.rd || 'o') === e.to) : e.op === 'del' ? !!(f.trash && f.trash[e.row]) : false;
+      var undo = e.op === 'move' ? !!(r && (r.rd || 'o') === e.to) : e.op === 'copy' ? !!(r && !r.files.length && !r.links.length) : e.op === 'del' ? !!(f.trash && f.trash[e.row]) : false;
       return { at: e.at, op: e.op, by: e.by, fid: e.fid, fac: e.fac, row: e.row, sub: e.sub, lv: e.lv, txt: e.txt, from: e.from, to: e.to, undo: (undo && !viewOnly) ? 1 : 0 };
     }),
     facilities: Object.keys(m.facilities).map(function (fid) {
@@ -575,13 +575,23 @@ function closeDay_(q) {
   });
 }
 
-/* نقل طلب أو مجموعة طلبات إلى يوم آخر في مكانها: تبقى الملفات والحالة، ويتغير اليوم فقط.
- * rows: أرقام الطلبات، أو auto=1 لنقل طلبات «from» إلى اليوم الذي يضم معيارها الفرعي. */
+/* نسخ طلب أو مجموعة طلبات إلى يوم آخر: يبقى الأصل في مكانه بملفاته وحالته، ويُضاف في اليوم الآخر طلب جديد بالنص نفسه.
+ * rows: أرقام الطلبات، أو auto=1 لنسخ طلبات «from» إلى اليوم الذي يضم معيارها الفرعي.
+ * لا يُنسخ الطلب مرتين إلى اليوم نفسه. uncopy=1 مع row: حذف نسخة لم يُرفع لها شيء (للتراجع). */
 function moveReq_(q) {
   return withLock_(function () {
     var v = loadV_(String(q.visit || '')), m = v.m;
     teamAuth_(q, m);
     var by = who_(q), to = String(q.to || ''), from = String(q.from || ''), auto = !!q.auto;
+    if (q.uncopy) {
+      var uf = m.facilities[q.fid], ur = uf && uf.rows[String(q.row || '')];
+      if (!ur) throw new Error('النسخة غير موجودة');
+      if (ur.files.length || ur.links.length) throw new Error('رُفع لهذه النسخة ملفات، فلا تُحذف');
+      delete uf.rows[ur.id]; trash_(uf, ur, by);
+      log_(m, { op: 'del', by: by, fid: q.fid, fac: uf.name, row: ur.id, sub: ur.sub, lv: ur.lv, txt: ur.txt, from: ur.rd || 'o' });
+      saveV_(v);
+      return { ok: 1, moved: 0, removed: 1 };
+    }
     if (!auto && to !== 'o' && !dayOf_(m, to)) throw new Error('اليوم المطلوب غير موجود');
     var ids = (q.rows || []).map(String), std = String(q.std || ''), n = 0, skip = 0;
     var target = function (r) {
@@ -597,9 +607,12 @@ function moveReq_(q) {
         if (ids.length ? ids.indexOf(id) < 0 : (cur !== from || (std && String(r.sub).split('-')[0] !== std))) return;
         var t = target(r);
         if (!t || t === cur) { if (auto) skip++; return; }
+        var dup = Object.keys(f.rows).some(function (k) { var x = f.rows[k]; return (x.rd || 'o') === t && (x.cpOf === id || (x.sub === r.sub && x.lv === r.lv && x.txt === r.txt)); });
+        if (dup) { skip++; return; }
         if (MAX_DAY && t !== 'o' && Object.keys(f.rows).filter(function (k) { return f.rows[k].rd === t; }).length >= MAX_DAY) { skip++; return; }
-        r.rd = t; n++;
-        log_(m, { op: 'move', by: by, fid: fid, fac: f.name, row: id, sub: r.sub, lv: r.lv, txt: r.txt, from: cur, to: t });
+        var nid = 'y' + token_().slice(0, 9), c = newRow_(nid, r.sub, r.lv, r.txt, t, r.src === 'fac' ? 'fac' : 'team', 1);
+        c.cpOf = id; c.cpFrom = cur; f.rows[nid] = c; n++;
+        log_(m, { op: 'copy', by: by, fid: fid, fac: f.name, row: nid, src: id, sub: r.sub, lv: r.lv, txt: r.txt, from: cur, to: t });
       });
     });
     if (n) saveV_(v);
