@@ -1,0 +1,77 @@
+/* ===== تحديث الواجهة (skin) — طبقة شكلية فقط، لا تغيّر أي وظيفة ===== */
+.sk-i{width:1.1em;height:1.1em;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none;vertical-align:-.18em}
+.btn,summary.btn,.tab,.chip,.rqi-btn{display:inline-flex;align-items:center;gap:.5em}
+.btn,summary.btn{border-radius:12px;transition:transform .15s ease,box-shadow .2s ease,background-color .15s,border-color .15s,color .15s}
+.btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 18px -10px color-mix(in srgb,var(--brand,#0D6B63) 55%,transparent)}
+.btn:active:not(:disabled){transform:translateY(0);box-shadow:none}
+.btn.sm{border-radius:10px}
+.btn.danger,.btn.rdel,.btn.warn{background:transparent}
+.btn.sk-icon-only{padding-inline:9px}
+:where(button,a,select,textarea,input,summary):focus-visible{outline:2px solid var(--brand,#0D6B63);outline-offset:2px}
+
+/* الحقول */
+.fld select,.na-row select,select.in{border-radius:12px;min-height:42px;transition:border-color .15s,box-shadow .15s,background-color .15s}
+.fld select:hover,.na-row select:hover{border-color:color-mix(in srgb,var(--brand,#0D6B63) 50%,var(--line))}
+select.sk-has{border-color:color-mix(in srgb,var(--brand,#0D6B63) 45%,var(--line));background-color:color-mix(in srgb,var(--brand,#0D6B63) 7%,var(--surface));font-weight:700}
+.fld textarea,.why textarea{border-radius:12px;background:var(--surface-2);transition:border-color .15s,box-shadow .15s,background-color .15s}
+.fld textarea:focus,.why textarea:focus,.fld select:focus,.na-row select:focus{border-color:var(--brand,#0D6B63);box-shadow:0 0 0 4px color-mix(in srgb,var(--brand,#0D6B63) 16%,transparent);background-color:var(--surface);outline:0}
+.fld textarea::placeholder{color:color-mix(in srgb,var(--ink-2) 70%,transparent)}
+
+/* الدرجات بنقرة */
+select.sk-hidden{position:absolute!important;width:1px!important;height:1px!important;min-height:0!important;opacity:0!important;pointer-events:none!important;overflow:hidden!important}
+.fld{position:relative}
+.sk-seg{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.sk-seg button{min-width:42px;height:40px;padding:0 10px;border-radius:11px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-weight:800;font-variant-numeric:tabular-nums;cursor:pointer;transition:background-color .15s,border-color .15s,color .15s,transform .12s}
+.sk-seg button:hover:not(:disabled){border-color:var(--brand,#0D6B63);transform:translateY(-1px)}
+.lvls .lv .sk-seg button[aria-pressed="true"]{background:var(--brand,#0D6B63);border-color:var(--brand,#0D6B63);color:#fff;box-shadow:0 6px 14px -8px var(--brand,#0D6B63)}
+.lvls .lv .col:not(.rev) .sk-seg button[aria-pressed="true"]{background:color-mix(in srgb,var(--gold,#E6C673) 70%,var(--surface));border-color:var(--gold,#E6C673);color:var(--ink);box-shadow:none}
+.sk-seg .sk-clr{min-width:34px;width:34px;padding:0;color:var(--ink-2);background:transparent;border-style:dashed}
+.sk-seg.sk-empty .sk-clr{visibility:hidden}
+.sk-seg button:disabled{opacity:.5;cursor:not-allowed}
+
+/* بطاقات المستويات: شريط أنحف وحرف المستوى بلون هادئ */
+.lvls .lv{border-inline-start-width:3px;transition:box-shadow .2s,border-color .2s}
+.lvls .lv:focus-within{box-shadow:0 10px 26px -18px color-mix(in srgb,var(--lc) 70%,transparent);border-color:color-mix(in srgb,var(--lc) 40%,var(--line))}
+.lvls .lv .lv-h .ch{border-radius:10px;background:color-mix(in srgb,var(--lc) 14%,var(--surface));color:var(--lc);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--lc) 30%,transparent)}
+.lvls .lv .col-t{display:inline-flex;align-items:center;gap:6px}
+
+/* أزرار الشواهد الإضافية */
+.rqi-btn{border-radius:10px;transition:background-color .15s,border-color .15s}
+.rqi-btn:hover{background:color-mix(in srgb,var(--brand,#0D6B63) 8%,var(--surface))}
+
+/* التبويبات */
+.tabs-in .tab{border-radius:11px;transition:background-color .15s,color .15s}
+.tabs-in .tab .sk-i{opacity:.8}
+.tabs-in .tab[aria-selected="true"] .sk-i{opacity:1}
+
+/* قائمة المعايير الجانبية */
+.rail a{transition:background-color .15s,transform .15s}
+.rail a:hover{transform:translateX(-2px)}
+.rail .rbar{border-radius:99px;overflow:hidden}
+.rail .rbar i{border-radius:99px;transition:width .5s ease}
+
+/* رقم المعيار */
+.std-h .std-num{border-radius:14px}
+
+/* أدوات النموذج: كل عنصر بأيقونته */
+details[open]>summary.btn .sk-chev{transform:rotate(180deg)}
+.sk-chev{transition:transform .2s}
+
+/* ===== البوابة ===== */
+.slot{transition:box-shadow .2s,border-color .2s}
+.slot:hover{box-shadow:0 12px 28px -22px rgba(10,40,37,.45)}
+.slot .path{display:flex;flex-wrap:wrap;align-items:center;gap:2px;font-size:.78rem}
+.slot .path span{border:0!important;background:none!important;padding:0!important;box-shadow:none!important;color:var(--ink-2)}
+.slot .path span::before,.slot .path span::after{content:none!important}
+.slot .path span+span::before{content:"/"!important;display:inline-block;margin-inline:6px;opacity:.45}
+.slot .path span:last-child{color:var(--ink);font-weight:700}
+.slot .path .sk-i{margin-inline-end:4px;opacity:.7}
+.slot .st{display:inline-flex;align-items:center;gap:5px}
+.slot .st::before,.slot .st::after{content:none!important}
+.slot .files li{display:flex;align-items:center;gap:8px}
+.sk-ft{display:inline-grid;place-items:center;min-width:34px;height:22px;padding:0 5px;border-radius:6px;font-size:.66rem;font-weight:800;letter-spacing:.3px;color:#fff;background:#6B7A78;font-family:system-ui,sans-serif}
+.sk-ft.pdf{background:#C2412D}.sk-ft.doc{background:#2B5DB8}.sk-ft.xls{background:#1F7A45}.sk-ft.ppt{background:#C45A1A}.sk-ft.img{background:#7A4FB5}.sk-ft.lnk{background:#0D6B63}
+.slot .drop{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px;border-radius:14px;padding:18px;transition:background-color .2s,border-color .2s}
+.slot .drop:hover,.slot .drop.over,.slot .drop.drag{background:color-mix(in srgb,var(--brand,#0D6B63) 7%,transparent)}
+.slot .drop .sk-up{width:26px;height:26px;color:var(--brand,#0D6B63);flex-basis:100%;margin-inline:auto}
+@media (prefers-reduced-motion:reduce){.btn,.rail a,.slot,.lvls .lv,.sk-chev,.rail .rbar i{transition:none!important}.btn:hover,.rail a:hover{transform:none!important}}
