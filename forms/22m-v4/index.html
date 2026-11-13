@@ -684,7 +684,6 @@ html[data-skin="heritage"] .top .byline .by-v{color:#FBF3D6}
       <summary class="btn" aria-haspopup="menu">أدوات النموذج</summary>
       <div class="tmenu-p" role="menu">
         <button class="btn" id="btnWordF" type="button">تقرير المراجعة الميدانية (Word)</button>
-        <button class="btn" id="btnRpt" type="button" title="مسودة بقالب تقرير فريق المراجعة الخارجية المعتمد: المقدمة والملخص التنفيذي وجداول المعايير وملخص النتائج والامتثال والتوثيق">مسودة التقرير الرسمي (Word)</button>
         <button class="btn" id="btnData" type="button">حفظ ودمج البيانات</button>
         <button class="btn" id="btnGuide" type="button" title="خطوات الاستخدام حسب دورك">دليل الاستخدام</button>
         <button class="btn" id="btnChk" type="button" hidden title="يفحص الحفظ والاتصال بالـSheet والرمز السري وبيانات الفريق">فحص النموذج</button>
@@ -22013,11 +22012,10 @@ function buildReqDocx(){var D=window.docx;if(!D)throw new Error('docx');
         row.push(C(LVN[r.lv]||'—',{w:W[1],al:AL.CENTER}),C(r.txt||'—',{w:W[2]}),C('',{w:W[3]}),C('',{w:W[4]}),C('',{w:W[5]}),C('',{w:W[6]}));tr.push(row)}
       i=j}
     kids.push(T(W,tr))});
-  var header=new D.Header({children:[new D.Paragraph({alignment:AL.CENTER,bidirectional:true,children:[run('معدّ التقرير: المهندس/ علي الأحمري',{size:22,bold:true,color:'0D6B63'})]})]});
   var footer=new D.Footer({children:[new D.Paragraph({alignment:AL.CENTER,bidirectional:true,children:[run('إعداد التقرير: المهندس/ علي الأحمري     |     صفحة ',{size:20,color:'555555'}),new D.TextRun({children:[D.PageNumber.CURRENT],font:FONT,size:20,color:'555555'})]})]});
   return new D.Document({creator:'علي الأحمري',lastModifiedBy:'علي الأحمري',title:'طلب أدلة وشواهد'+(s.facility?' — '+s.facility:''),description:'طلب أدلة وشواهد من المنشأة',
     styles:{default:{document:{run:{font:FONT,size:26}}}},
-    sections:[{properties:{page:{size:{width:11906,height:16838,orientation:D.PageOrientation.PORTRAIT},margin:{top:700,bottom:700,left:700,right:700}}},headers:{default:header},footers:{default:footer},children:kids}]})}
+    sections:[{properties:{page:{size:{width:11906,height:16838,orientation:D.PageOrientation.PORTRAIT},margin:{top:700,bottom:700,left:700,right:700}}},footers:{default:footer},children:kids}]})}
 async function exportReq(){if(!window.docx){toast('تعذّر تحميل مكتبة Word؛ تحقق من الاتصال بالإنترنت');return}
   if(!rqRows().length){toast('أضف شاهدًا مطلوبًا واحدًا على الأقل');return}
   var b=$('#reqWord');b.disabled=true;var old=b.textContent;b.textContent='جارٍ الإنشاء…';
@@ -22126,11 +22124,10 @@ function buildDocx(mode){var D=window.docx;if(!D)throw new Error('docx');var FLD
     var xr=[[C('المعيار الفرعي',{w:1800,bold:true,fill:TEAL,color:WH,size:23,al:AL.CENTER}),C('المستوى',{w:1600,bold:true,fill:TEAL,color:WH,size:23,al:AL.CENTER}),C('الشاهد المطلوب',{w:6806,bold:true,fill:TEAL,color:WH,size:23})]];
     XR.forEach(function(x){xr.push([C(x.sub||('المعيار '+(x.std?STD[x.std].ord:'—')),{w:1800,al:AL.CENTER,bold:true}),C(LVN[x.lv]||'—',{w:1600,al:AL.CENTER}),C(x.txt||'—',{w:6806,size:23})])});kids.push(T([1800,1600,6806],xr))}
   kids.push(P('الحالة مؤشر استرشادي يُحسب من متوسط درجات «رأي المراجع» للمعايير الفرعية المنطبقة، والقرار النهائي للفريق وفق مقاييس التقويم المعتمدة.',{size:21,sb:200,color:'6B7977'}));
-  var header=new D.Header({children:[new D.Paragraph({alignment:AL.CENTER,bidirectional:true,children:[run('معدّ التقرير: المهندس/ علي الأحمري',{size:21,bold:true,color:TEAL})]})]});
-  var footer=new D.Footer({children:[new D.Paragraph({alignment:AL.CENTER,bidirectional:true,children:[run(TT+(s.facility?' — '+s.facility:'')+'     |     صفحة ',{size:19,color:'555555'}),new D.TextRun({children:[D.PageNumber.CURRENT],font:FONT,size:19,color:'555555'})]})]});
+  var footer=new D.Footer({children:[new D.Paragraph({alignment:AL.CENTER,bidirectional:true,children:[run('إعداد التقرير: المهندس/ علي الأحمري     |     '+TT+(s.facility?' — '+s.facility:'')+'     |     صفحة ',{size:19,color:'555555'}),new D.TextRun({children:[D.PageNumber.CURRENT],font:FONT,size:19,color:'555555'})]})]});
   return new D.Document({creator:'علي الأحمري',lastModifiedBy:'علي الأحمري',title:TT+(s.facility?' — '+s.facility:''),description:'تقرير مراجعة الاعتماد المؤسسي',
     styles:{default:{document:{run:{font:FONT,size:26}}}},
-    sections:[{properties:{page:{size:{width:11906,height:16838,orientation:D.PageOrientation.PORTRAIT},margin:{top:850,bottom:850,left:850,right:850}}},headers:{default:header},footers:{default:footer},children:kids}]})}
+    sections:[{properties:{page:{size:{width:11906,height:16838,orientation:D.PageOrientation.PORTRAIT},margin:{top:850,bottom:850,left:850,right:850}}},footers:{default:footer},children:kids}]})}
 function buildDocxMode(mode){var f=frozen();if(mode!=='dsk'||!f)return buildDocx(mode);var o=S.f,c=Object.assign({},o);Object.keys(o).forEach(function(k){var m=k.match(/^(.*)\.(e|p|f)\.dsk$/);if(m){var v=o[k];c[m[1]+'.'+m[2]+'.rev']=(v==='-'?'':v)}});S.f=c;try{return buildDocx(mode)}finally{S.f=o}}
 /* ---------- official report draft (قالب تقرير فريق المراجعة الخارجية) ---------- */
 var RLAB={'1':'غير مستوفى\n\u200F[1]\u200F','2':'مستوفى جزئياً\n\u200F[2]\u200F','3':'مستوفى\n\u200F[3]\u200F','4':'مستوفى بإتقان\n\u200F[4]\u200F','5':'مستوفى بتميز\n\u200F[5]\u200F'};
