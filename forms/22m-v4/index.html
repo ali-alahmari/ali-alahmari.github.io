@@ -21213,7 +21213,7 @@ var SCL={};SCALE.forEach(function(x){SCL[x.v]=x.d});
 
 /* ---------- state ---------- */
 function uid(){return 'm'+Math.random().toString(36).slice(2,8)}
-function fresh(){var m2=uid(),m3=uid();return {setup:{facility:'',date:'',days:2,dayNotes:[],viewers:[],team:[{id:uid(),name:'علي الأحمري',role:'رئيس الفريق'},{id:m2,name:'',role:'مقيّم'},{id:m3,name:'',role:'مقيّم'},{id:uid(),name:'',role:OBS,with:m2,tr:0},{id:uid(),name:'',role:OBS,with:m3,tr:0}]},mode:'A',assign:{},subAssign:{},stdDay:{},f:{},ui:{tab:'form',setupOpen:true,filter:'all',crit:false,collapsed:{2:1,3:1,4:1,5:1,6:1,7:1,8:1}}}}
+function fresh(){var m2=uid(),m3=uid();return {setup:{facility:'',date:'',days:2,dayNotes:[],viewers:[],team:[{id:uid(),name:'',role:'رئيس الفريق'},{id:m2,name:'',role:'مقيّم'},{id:m3,name:'',role:'مقيّم'},{id:uid(),name:'',role:OBS,with:m2,tr:0},{id:uid(),name:'',role:OBS,with:m3,tr:0}]},mode:'A',assign:{},subAssign:{},stdDay:{},f:{},ui:{tab:'form',setupOpen:true,filter:'all',crit:false,collapsed:{2:1,3:1,4:1,5:1,6:1,7:1,8:1}}}}
 var storeOK=true;
 function load(){try{var t=localStorage.getItem(KEY);if(!t)return null;var o=JSON.parse(t);return norm(o)}catch(e){storeOK=false;return null}}
 function norm(o){var f=fresh();if(!o||typeof o!=='object')return f;
