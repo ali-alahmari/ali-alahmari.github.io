@@ -26,6 +26,7 @@ var MAX_CHUNKS = 14;            // 14 × 1.5MB تقريباً = 20MB
 var MAX_B64 = 2100000;          // أقصى طول لقطعة base64 واحدة
 var BAD_EXT = /\.(exe|js|jse|bat|cmd|com|scr|msi|apk|ps1|vbs|vbe|jar|sh|dll|lnk|html?|svg)$/i;
 var LV_NAME = { e: 'الوجود', p: 'الممارسة', f: 'الفاعلية' };
+var MAX_DAY = 400;              // أقصى عدد لطلبات اليوم الواحد لكل منشأة (طلبات الفريق والمنشأة معاً)
 
 function props_() { return PropertiesService.getScriptProperties(); }
 function out_(o) {
@@ -67,6 +68,8 @@ function handle_(q) {
       case 'teamAddReq': return out_(teamAddReq_(q));
       case 'approve': return out_(approve_(q));
       case 'closeDay': return out_(closeDay_(q));
+      case 'moveReq': return out_(moveReq_(q));
+      case 'restoreReq': return out_(restoreReq_(q));
       default: return out_({ ok: 0, error: 'إجراء غير معروف' });
     }
   } catch (err) {
@@ -96,6 +99,23 @@ function leaderAuth_(q) {
 function teamAuth_(q, m) {
   if (m && m.tc && keyEq_(m.tc, q.tc)) return;
   admin_(q);
+}
+/* من نفّذ الإجراء، للسجل */
+function who_(q) {
+  var k = props_().getProperty('LEAD_KEY') || props_().getProperty('ADMIN_KEY');
+  return keyEq_(k, q.key) ? 'رئيس الفريق' : 'الفريق';
+}
+/* سجل النقل والحذف والاستعادة لكل زيارة (آخر 500 عملية) */
+function log_(m, e) {
+  e.at = new Date().toISOString();
+  m.log = [e].concat(m.log || []).slice(0, 500);
+}
+function trash_(f, r, by) {
+  f.trash = f.trash || {};
+  r.delAt = new Date().toISOString(); r.delBy = by;
+  f.trash[r.id] = r;
+  var ks = Object.keys(f.trash);
+  if (ks.length > 300) { ks.sort(function (a, b) { return String(f.trash[a].delAt).localeCompare(String(f.trash[b].delAt)); }); delete f.trash[ks[0]]; }
 }
 /* مراقب الهيئة: رمز اطلاع فقط (vc) لكل زيارة. يقبله استدعاء team (القراءة) وحده، وترفضه كل إجراءات الكتابة */
 function isViewer_(q, m) { return !!(m && m.vc && keyEq_(m.vc, q.vc)); }
@@ -363,6 +383,11 @@ function team_(q) {
   if (!viewOnly) teamAuth_(q, m);
   return {
     ok: 1, view: viewOnly ? 1 : 0, visit: m.code, title: m.title || '', deadline: m.deadline, closed: closed_(m), days: m.days || [],
+    log: (m.log || []).slice(0, 150).map(function (e) {
+      var f = m.facilities[e.fid] || {}, r = (f.rows || {})[e.row];
+      var undo = e.op === 'move' ? !!(r && (r.rd || 'o') === e.to) : e.op === 'del' ? !!(f.trash && f.trash[e.row]) : false;
+      return { at: e.at, op: e.op, by: e.by, fid: e.fid, fac: e.fac, row: e.row, sub: e.sub, lv: e.lv, txt: e.txt, from: e.from, to: e.to, undo: (undo && !viewOnly) ? 1 : 0 };
+    }),
     facilities: Object.keys(m.facilities).map(function (fid) {
       var f = m.facilities[fid];
       return {
@@ -435,7 +460,7 @@ function facReq_(q) {
     if (dayClosed_(d)) throw new Error('هذا اليوم غير مفتوح أو انتهى موعده');
     if (d.subs.length && d.subs.indexOf(sb) < 0) throw new Error('هذا المعيار ليس من معايير هذا اليوم');
     var n = Object.keys(h.f.rows).filter(function (k) { return h.f.rows[k].rd === d.k; }).length;
-    if (n >= 80) throw new Error('بلغت الحد الأعلى لطلبات اليوم');
+    if (n >= MAX_DAY) throw new Error('بلغت الحد الأعلى لطلبات اليوم');
     var id = 'x' + token_().slice(0, 9);
     h.f.rows[id] = newRow_(id, sb, lv, txt, d.k, 'fac', 0);
     saveV_(h.v);
@@ -449,6 +474,8 @@ function facRmReq_(q) {
     if (!r || r.src !== 'fac') throw new Error('لا يمكن حذف هذا الطلب');
     if (r.files.length || r.links.length || r.status === 'ok') throw new Error('احذف ملفات الشاهد أولاً');
     delete h.f.rows[r.id];
+    trash_(h.f, r, 'المنشأة');
+    log_(h.v.m, { op: 'del', by: 'المنشأة', fid: h.fid || '', fac: h.f.name, row: r.id, sub: r.sub, lv: r.lv, txt: r.txt, from: r.rd || 'o' });
     saveV_(h.v);
     return { ok: 1 };
   });
@@ -499,6 +526,8 @@ function approve_(q) {
     else if (q.op === 'del') {
       if (r.files.length || r.links.length) throw new Error('رُفع لهذا الشاهد ملفات، فلا يُحذف');
       delete f.rows[r.id];
+      trash_(f, r, who_(q));
+      log_(m, { op: 'del', by: who_(q), fid: q.fid, fac: f.name, row: r.id, sub: r.sub, lv: r.lv, txt: r.txt, from: r.rd || 'o' });
     } else throw new Error('إجراء غير صالح');
     saveV_(v);
     return { ok: 1 };
@@ -519,25 +548,78 @@ function closeDay_(q) {
     var rd = String(q.day || ''), d = dayOf_(m, rd);
     if (!d) throw new Error('اليوم غير موجود');
     var LVN = LV_NAME, SL = { none: 'لم يُرفع', up: 'تم الرفع', ok: 'تم الرفع', redo: 'مطلوب استكمال' };
-    var saved = 0;
+    var saved = 0, pending = 0;
     Object.keys(m.facilities).forEach(function (fid) {
       var f = m.facilities[fid];
-      var rows = Object.keys(f.rows).map(function (k) { return f.rows[k]; }).filter(function (r) { return r.rd === rd && r.ap !== 0; });
-      if (!rows.length) return;
+      var all = Object.keys(f.rows).map(function (k) { return f.rows[k]; }).filter(function (r) { return r.rd === rd; });
+      var rows = all.filter(function (r) { return r.ap !== 0; }), pend = all.filter(function (r) { return r.ap === 0; }).sort(bySub_);
+      pending += pend.length;
+      if (!rows.length && !pend.length) return;
       rows = rows.map(function (r, i) { return [r, i]; }).sort(function (a, b) { return bySub_(a[0], b[0]) || (a[1] - b[1]); }).map(function (x) { return x[0]; });
       var up = rows.filter(function (r) { return r.files.length || r.links.length; }).length;
       var h = '<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>طلبات ' + d.label + '</title></head><body style="font-family:Sakkal Majalla,Tahoma,sans-serif">'
         + '<h1>طلبات ' + d.label + '</h1><p>' + f.name + ' · زيارة ' + m.code + '</p><p>المطلوب ' + rows.length + ' · المرفوع ' + up + ' · المتبقي ' + (rows.length - up) + (d.dl ? ' · موعد التسليم ' + d.dl : '') + '</p>'
         + '<table border="1" cellpadding="6" style="border-collapse:collapse"><tr><th>المعيار</th><th>المستوى</th><th>الشاهد</th><th>الحالة</th></tr>'
         + rows.map(function (r) { return '<tr><td>' + r.sub + '</td><td>' + LVN[r.lv] + '</td><td>' + r.txt + '</td><td>' + SL[(r.files.length || r.links.length) ? r.status : 'none'] + '</td></tr>'; }).join('')
-        + '</table></body></html>';
+        + '</table>'
+        + (pend.length ? '<h2>طلبات كتبتها المنشأة ولم يعتمدها الفريق بعد (' + pend.length + ')</h2><p>هذه الطلبات غير محسوبة في المطلوب أعلاه حتى تُعتمد.</p><table border="1" cellpadding="6" style="border-collapse:collapse"><tr><th>المعيار</th><th>المستوى</th><th>الشاهد</th></tr>'
+          + pend.map(function (r) { return '<tr><td>' + r.sub + '</td><td>' + LVN[r.lv] + '</td><td>' + r.txt + '</td></tr>'; }).join('') + '</table>' : '')
+        + '</body></html>';
       var folder = sub_(DriveApp.getFolderById(f.folderId), clean_(rdName_(m, rd), 40));
       var old = folder.getFilesByName('محضر طلبات اليوم.html');
       while (old.hasNext()) old.next().setTrashed(true);
       folder.createFile('محضر طلبات اليوم.html', h, 'text/html');
       saved++;
     });
-    return { ok: 1, saved: saved };
+    return { ok: 1, saved: saved, pending: pending };
+  });
+}
+
+/* نقل طلب أو مجموعة طلبات إلى يوم آخر في مكانها: تبقى الملفات والحالة، ويتغير اليوم فقط.
+ * rows: أرقام الطلبات، أو auto=1 لنقل طلبات «from» إلى اليوم الذي يضم معيارها الفرعي. */
+function moveReq_(q) {
+  return withLock_(function () {
+    var v = loadV_(String(q.visit || '')), m = v.m;
+    teamAuth_(q, m);
+    var by = who_(q), to = String(q.to || ''), from = String(q.from || ''), auto = !!q.auto;
+    if (!auto && to !== 'o' && !dayOf_(m, to)) throw new Error('اليوم المطلوب غير موجود');
+    var ids = (q.rows || []).map(String), std = String(q.std || ''), n = 0, skip = 0;
+    var target = function (r) {
+      if (!auto) return to;
+      var d = (m.days || []).filter(function (x) { return x.subs && x.subs.indexOf(r.sub) >= 0; })[0];
+      return d ? d.k : '';
+    };
+    Object.keys(m.facilities).forEach(function (fid) {
+      if (q.fid && q.fid !== 'all' && q.fid !== fid) return;
+      var f = m.facilities[fid];
+      Object.keys(f.rows).forEach(function (id) {
+        var r = f.rows[id], cur = r.rd || 'o';
+        if (ids.length ? ids.indexOf(id) < 0 : (cur !== from || (std && String(r.sub).split('-')[0] !== std))) return;
+        var t = target(r);
+        if (!t || t === cur) { if (auto) skip++; return; }
+        if (MAX_DAY && t !== 'o' && Object.keys(f.rows).filter(function (k) { return f.rows[k].rd === t; }).length >= MAX_DAY) { skip++; return; }
+        r.rd = t; n++;
+        log_(m, { op: 'move', by: by, fid: fid, fac: f.name, row: id, sub: r.sub, lv: r.lv, txt: r.txt, from: cur, to: t });
+      });
+    });
+    if (n) saveV_(v);
+    return { ok: 1, moved: n, skipped: skip };
+  });
+}
+
+/* استعادة طلب محذوف إلى يومه */
+function restoreReq_(q) {
+  return withLock_(function () {
+    var v = loadV_(String(q.visit || '')), m = v.m;
+    teamAuth_(q, m);
+    var f = m.facilities[q.fid], r = f && f.trash && f.trash[String(q.row || '')];
+    if (!r) throw new Error('لا يمكن استعادة هذا الطلب');
+    delete f.trash[r.id]; delete r.delAt; delete r.delBy;
+    if (r.rd && r.rd !== 'o' && !dayOf_(m, r.rd)) r.rd = 'o';
+    f.rows[r.id] = r;
+    log_(m, { op: 'restore', by: who_(q), fid: q.fid, fac: f.name, row: r.id, sub: r.sub, lv: r.lv, txt: r.txt, to: r.rd || 'o' });
+    saveV_(v);
+    return { ok: 1 };
   });
 }
 
