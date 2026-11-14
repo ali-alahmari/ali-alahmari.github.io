@@ -22664,6 +22664,8 @@ html[data-pal] body::after{background-image:var(--v5-waves,none)!important;backg
 .top .tmenu-p .btn::before{grid-row:1 / span 2;align-self:center}
 .top .tmenu-p .btn small{grid-column:2}
 .top .tmenu-p .btn[hidden]{display:none!important}
+.top .tmenu-p .btn[style*="display: none"],.top .tmenu-p .btn[style*="display:none"]{display:none!important}
+.v5-bar[hidden]{display:none!important}
 .top .tmenu-p #btnWordI::before{content:"";display:inline-block;width:1.15em;height:1.15em;background:currentColor;--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z'/%3E%3Cpath d='M14 3v6h6'/%3E%3Cpath d='M8 13h8M8 17h5'/%3E%3C/svg%3E");-webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat}
 .top .tmenu-p .btn small{display:block;font-weight:400;font-size:.74rem;opacity:.75;line-height:1.45}
 .v5-mh{font-weight:800;font-size:1rem;padding:4px 8px 6px;border-bottom:1px solid var(--line);color:var(--ink)}
@@ -22768,7 +22770,8 @@ function build(){var tabs=$('.tabs');if(!tabs||$('#v5bars'))return;
     sec.innerHTML='<button type="button" class="v5-h" data-v5bar="'+b.k+'" aria-expanded="false" aria-controls="v5b-'+b.k+'"><span class="v5-ic">'+svg(b.ic)+'</span><span class="v5-tx"><b></b><small></small></span><span class="v5-bd"></span><span class="v5-ch">'+svg('chev')+'</span></button><div class="v5-body v5-c" id="v5b-'+b.k+'"></div>';
     wrap.appendChild(sec);sec.querySelector('.v5-body').appendChild(el);el.classList.remove('v5-c');if(el.hidden&&!b.tab)el.hidden=false});
   refresh();}
-function refresh(){BARS.forEach(function(b){var sec=$('#v5-'+b.k);if(!sec)return;sec.querySelector('.v5-tx b').textContent=b.t();sec.querySelector('.v5-tx small').textContent=typeof b.s==='function'?b.s():b.s;var bd=sec.querySelector('.v5-bd'),v=badge(b);if(bd.textContent!==v)bd.textContent=v})}
+function tabOff(b){if(!b.tab)return false;var t=$('.tab[data-tab="'+b.tab+'"]');return !!t&&(t.hidden||t.style.display==='none')}
+function refresh(){BARS.forEach(function(b){var sec=$('#v5-'+b.k);if(!sec)return;var off=tabOff(b);if(sec.hidden!==off)sec.hidden=off;if(off&&OPEN===b.k)openBar(b.k,true);sec.querySelector('.v5-tx b').textContent=b.t();sec.querySelector('.v5-tx small').textContent=typeof b.s==='function'?b.s():b.s;var bd=sec.querySelector('.v5-bd'),v=badge(b);if(bd.textContent!==v)bd.textContent=v})}
 function openBar(k,toggle){var target=toggle&&OPEN===k?'':k;OPEN=target;BUSY=true;
   BARS.forEach(function(b){var sec=$('#v5-'+b.k);if(!sec)return;var on=b.k===target,body=sec.querySelector('.v5-body');sec.classList.toggle('open',on);sec.querySelector('.v5-h').setAttribute('aria-expanded',on?'true':'false');body.classList.toggle('v5-c',!on)});
   var b=BARS.filter(function(x){return x.k===target})[0];
@@ -22803,14 +22806,18 @@ document.addEventListener('click',function(e){var h=e.target.closest&&e.target.c
   var c=e.target.closest&&e.target.closest('[data-v5click]');if(c){var t=$(c.getAttribute('data-v5click'));if(t&&!t.hidden){t.click()}else toast('انشر الطلب أولاً من «طلب الشواهد من المنشأة»');return}
   var r=e.target.closest&&e.target.closest('[data-v5rec]');if(r){var a=r.getAttribute('data-v5rec').split('|');addRec(a[0],a[1]);return}});
 document.addEventListener('pointermove',function(e){var h=e.target.closest&&e.target.closest('.v5-h');if(!h)return;var r=h.getBoundingClientRect();h.style.setProperty('--mx',(e.clientX-r.left)+'px');h.style.setProperty('--my',(e.clientY-r.top)+'px')});
-document.addEventListener('keydown',function(e){if(e.altKey&&/^[1-9]$/.test(e.key)){var b=BARS[+e.key-1];if(b&&$('#v5-'+b.k)){e.preventDefault();openBar(b.k,true)}return}
-  if(e.key==='Escape'&&OPEN&&!/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement||{}).tagName||'')&&!$('.ov:not([hidden]),.gd-ov:not([hidden]),[role="dialog"]:not([hidden])'))openBar(OPEN,true)});
+window.addEventListener('keydown',function(e){if(e.altKey&&/^[1-9]$/.test(e.key)){var b=BARS[+e.key-1];var sb=b&&$('#v5-'+b.k);if(sb&&!sb.hidden){e.preventDefault();openBar(b.k,true)}return}
+  if(e.key==='Escape'&&OPEN){var shown=$$('.ov,.gd-ov,[role="dialog"]').some(function(x){return x.getClientRects().length>0&&getComputedStyle(x).visibility!=='hidden'});if(shown)return;
+    var a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)){a.blur();return}
+    var tt=$('#topTools');if(tt&&tt.open)return;
+    var sec=$('#v5-'+OPEN);openBar(OPEN,true);if(sec){var h=sec.querySelector('.v5-h');if(h){h.focus({preventScroll:true});h.scrollIntoView({block:'nearest',behavior:RM?'auto':'smooth'})}}}},true);
 function scrollBits(){var p=document.createElement('div');p.className='v5-scroll';document.body.appendChild(p);var up=document.createElement('button');up.type='button';up.className='v5-top';up.setAttribute('aria-label','العودة إلى الأعلى');up.textContent='↑';up.onclick=function(){scrollTo({top:0,behavior:RM?'auto':'smooth'})};document.body.appendChild(up);
   function f(){var h=document.documentElement.scrollHeight-innerHeight;p.style.transform='scaleX('+(h>0?scrollY/h:0)+')';up.classList.toggle('on',scrollY>500)}addEventListener('scroll',f,{passive:true});f()}
 function palUI(){var act=$('.top .top-act');if(!act||$('#v5Pal'))return;var l=document.createElement('label');l.className='v5-pal';l.innerHTML='<span>لون الواجهة:</span><select id="v5Pal" aria-label="لون الواجهة">'+PALS.slice(0,4).map(function(p){return '<option value="'+p[0]+'">'+p[1]+'</option>'}).join('')+'<optgroup label="ألوان أخرى">'+PALS.slice(4).map(function(p){return '<option value="'+p[0]+'">'+p[1]+'</option>'}).join('')+'</optgroup></select>';act.appendChild(l);
   $('#v5Pal').addEventListener('change',function(){setPal(this.value)})}
 function init(){setPal(getPal());palUI();tools();build();watchTabs();recChips();scrollBits();
   var t;new MutationObserver(function(){clearTimeout(t);t=setTimeout(function(){recChips();refresh()},120)}).observe(document.getElementById('app')||document.body,{childList:true,subtree:true,characterData:true});
+  var ti=$('.tabs');if(ti)new MutationObserver(function(){refresh()}).observe(ti,{attributes:true,subtree:true,attributeFilter:['style','hidden']});
   document.addEventListener('change',function(e){var f=e.target.getAttribute&&e.target.getAttribute('data-f');if(f&&/\.r\d+\.t$/.test(f))syncChips(f.split('.r')[0])},true)}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();</script>
