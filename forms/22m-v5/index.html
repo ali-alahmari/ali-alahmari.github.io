@@ -21476,13 +21476,15 @@ function updOwners(){STDS.forEach(function(s){var id=effStd(s.n),ov={};
     var ro=$('[data-ro="'+s.n+'"]');if(ro){var m=mem(id);ro.textContent=m&&m.name.trim()?m.name.trim():(m?'بانتظار الاسم':'غير مسند')}});updObsRows();updTrainee();try{applyRole()}catch(e){}}
 
 /* ---------- زر بوابة الشواهد (رابط اطلاع فقط) ---------- */
-var PT_RE_O=/^https:\/\/ali-alahmari\.github\.io\/forms\/evidence\/#o=[A-Za-z0-9_\-+\/=%.]+$/;
-var PT_RE_T=/^https:\/\/ali-alahmari\.github\.io\/forms\/evidence\/#t=[A-Za-z0-9_\-+\/=%.]+$/;
+var PT_RE_O=/^https:\/\/ali-alahmari\.github\.io\/forms\/evidence(?:-v[0-9]+)?\/#o=[A-Za-z0-9_\-+\/=%.]+$/;
+var PT_RE_T=/^https:\/\/ali-alahmari\.github\.io\/forms\/evidence(?:-v[0-9]+)?\/#t=[A-Za-z0-9_\-+\/=%.]+$/;
 function ptUrl(v,re){v=String(v||'').trim();return (re||PT_RE_O).test(v)?v:''}
+/* روابط البوابة القديمة (forms/evidence/) تُفتح على صفحة البوابة الحالية لهذا النموذج؛ البيانات نفسها لأن الخادم داخل الرابط */
+function ptPage(v){v=String(v||'');var pg=(typeof PUB!=='undefined'&&PUB&&PUB.page)||'';return pg?v.replace(/^https:\/\/ali-alahmari\.github\.io\/forms\/evidence\/(?=[#?])/,pg):v}
 function renderPortal(){try{var a=$('#btnPortal'),io=$('#ptLink'),it=$('#ptTeam'),n=$('#ptNote');
   var ro=String(S.setup.portalView||'').trim(),rt=String(S.setup.portalTeam||'').trim(),uo=ptUrl(ro,PT_RE_O),ut=ptUrl(rt,PT_RE_T);
   var vw=myRole()==='view',u=vw?uo:(ut||uo);
-  if(a){a.hidden=!u;a.setAttribute('href',u||'#')}
+  if(a){a.hidden=!u;a.setAttribute('href',u?ptPage(u):'#')}
   if(io&&io!==document.activeElement&&io.value!==ro)io.value=ro;
   if(it&&it!==document.activeElement&&it.value!==rt)it.value=rt;
   if(n){var bad=(ro&&!uo)||(rt&&!ut);n.style.color=bad?'var(--crit)':'';if(bad)n.textContent='أحد الرابطين غير صالح. رابط الاطلاع فقط يحتوي #o= ورابط الفريق يحتوي #t= ولا يُقبل غيرهما.'}}catch(e){}}
@@ -21909,7 +21911,7 @@ function pubExec(x){x=String(x||'').trim();var m=/#[tl]=([A-Za-z0-9+\/=_-]+)/.ex
   return /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_\-]+\/exec$/.test(x)?x:''}
 function pubMsg(t,bad){var el=$('#pubMsg');if(!el)return;el.textContent=t||'';el.style.color=bad?'#b3261e':''}
 function pubInit(){var bx=$('#pubBox');if(bx&&bx.contains(document.activeElement))return;var u=pubLS('url'),k=pubLS('key');if($('#pubSet')){$('#pubSet').open=!(u&&k);$('#pubUrl').value=u;$('#pubKey').value=k?'••••••••':''}
-  var l=S.f['rq.meta.plink']||'';if(l){$('#pubOut').hidden=false;$('#pubLinkOut').value=l}pubTeamShow()}
+  var l=S.f['rq.meta.plink']||'';if(l){$('#pubOut').hidden=false;$('#pubLinkOut').value=ptPage(l)}pubTeamShow()}
 function pubTeamShow(){var b=$('#pubTeam');if(b)b.hidden=!(S.f['rq.meta.ptc']&&S.f['rq.meta.pvisit']&&(S.f['rq.meta.pexec']||pubLS('url')))}
 function pubTeamOpen(){var u=S.f['rq.meta.pexec']||pubLS('url'),v=S.f['rq.meta.pvisit'],tc=S.f['rq.meta.ptc'];if(!u||!v||!tc){toast('انشر الطلب أولاً');return}window.open(PUB.page+'#t='+btoa(unescape(encodeURIComponent(JSON.stringify({u:u,v:v,tc:tc})))),'_blank','noopener')}
 async function pubPost(url,o){var r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(o)});return r.json()}
@@ -21941,7 +21943,7 @@ async function pubSend(){
     var r=await pubPost(url,{action:'publishForm',key:key,name:name,rows:rows,deadline:dl,pageUrl:PUB.page,visit:S.f['rq.meta.pvisit']||'',title:name});
     if(!r.ok)throw new Error(r.error||'تعذّر النشر');
     rqSet('meta','pvisit',r.visit);rqSet('meta','plink',r.link);if(r.tc){rqSet('meta','ptc',r.tc);rqSet('meta','pexec',url)}save();pubTeamShow();
-    $('#pubOut').hidden=false;$('#pubLinkOut').value=r.link;
+    $('#pubOut').hidden=false;$('#pubLinkOut').value=ptPage(r.link);
     var pm=r.created?('تم إنشاء الزيارة ونشر '+r.rows+' شاهد'):('تم التحديث: '+r.added+' شاهد جديد، المجموع '+r.rows);
     try{await ptFetch(url,key,r.visit);pm+=' · وُضع رابطا الفريق والمراقب تلقائياً'}catch(e2){pm+=' · لم يُجلب رابطا البوابة تلقائياً، استخدم «جلب الرابطين من البوابة»'}
     pubMsg(pm+emN)}
