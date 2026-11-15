@@ -22599,7 +22599,7 @@ buildForm();buildGuide();bootAll();
 if(!storeOK)setSave(false);else setSave(true);
 setShare();if(SH.on){shLinks();shStart()}else initSync();
 /* واجهة قراءة فقط لطبقة «نظرة عامة» (لا تغيّر البيانات) */
-window.V5D={S:function(){return S},STDS:STDS,SUB:SUB,SUBS_ALL:SUBS_ALL,subStats:subStats,stdStats:stdStats,status:status,r2:r2,myScope:myScope,gapMiss:gapMiss,decision:decision,goStd:goStd,dayLabel:dayLabel,LV:LV};
+window.V5D={S:function(){return S},STDS:STDS,SUB:SUB,SUBS_ALL:SUBS_ALL,subStats:subStats,stdStats:stdStats,status:status,r2:r2,myScope:myScope,gapMiss:gapMiss,decision:decision,goStd:goStd,dayLabel:dayLabel,LV:LV,page:function(){return PUB.page}};
 })();
 </script>
 
@@ -22983,5 +22983,41 @@ document.addEventListener('click',function(e){if(!e.target.closest)return;var b=
 /* إعادة الرسم بعد الاستيراد أو المزامنة أو تغيّر الدور */
 setInterval(all,5000);
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(all,300)});else setTimeout(all,300);
+})();</script>
+<style id="v5pt-css">
+.v5pe{margin-top:12px;flex:1 1 100%;width:100%;min-width:0}
+.v5-portal.has-pe>p,.v5-portal.has-pe>button[data-v5click]{display:none}
+.v5pe-bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px}
+.v5pe-bar button{font:inherit;font-weight:700;font-size:.88rem;padding:7px 14px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.v5pe-bar button[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:var(--brand-ink,#fff)}
+.v5pe-bar a{margin-inline-start:auto;font-size:.82rem;color:var(--brand);font-weight:700}
+.v5pe-msg{font-size:.88rem;color:var(--ink-2);background:var(--surface-2);border:1px dashed var(--line);border-radius:12px;padding:12px 14px}
+.v5pe iframe{display:block;width:100%;min-height:640px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+@media print{.v5pe{display:none!important}}
+</style>
+<script id="v5pt-js">(function(){
+function $(q,r){return (r||document).querySelector(q)}
+/* يلتقط رابط الزر الأصلي دون فتح نافذة جديدة، فتبقى طريقة بناء الرابط كما هي في النموذج */
+function grab(sel){var b=$(sel);if(!b)return '';if(b.tagName==='A'){return b.hidden||b.getAttribute('href')==='#'?'':b.href}
+  var u='',o=window.open,t=window.toast;window.open=function(x){u=String(x||'');return null};
+  try{b.click()}catch(e){}finally{window.open=o}return u}
+var VIEWS=[['team','#pubTeam','شواهد المنشأة (الفريق)'],['lead','#pubLead','صفحة الرئيس'],['view','#btnPortal','اطلاع فقط']];
+var CUR='',URL='';
+function leadUrl(){var A=window.V5D,u='';try{u=localStorage.getItem('ev22.url')||''}catch(e){}if(!A||!u||A.myScope().r!=='lead')return '';return A.page()+'#l='+btoa(unescape(encodeURIComponent(JSON.stringify({u:u}))))}
+function avail(v){if(v[0]==='lead')return !!leadUrl();var b=$(v[1]);if(!b)return false;if(b.tagName==='A')return !b.hidden&&b.getAttribute('href')&&b.getAttribute('href')!=='#';return !b.hidden}
+function build(){var pb=$('#v5Portal');if(!pb||$('.v5pe',pb))return;var w=document.createElement('div');w.className='v5pe';
+  w.innerHTML='<div class="v5pe-bar" role="group" aria-label="عرض البوابة داخل النموذج"></div><div class="v5pe-msg" hidden></div><iframe title="بوابة شواهد المنشأة" hidden></iframe>';
+  pb.appendChild(w);bar()}
+function bar(){var pb=$('#v5Portal'),b=pb&&$('.v5pe-bar',pb);if(!b)return;var vs=VIEWS.filter(avail),h=vs.map(function(v){return '<button type="button" data-v5pv="'+v[0]+'" aria-pressed="'+(CUR===v[0])+'">'+v[2]+'</button>'}).join('');
+  h+=URL?'<a href="'+URL.replace(/"/g,'&quot;')+'" target="_blank" rel="noopener">فتح في صفحة مستقلة</a>':'';
+  if(b.getAttribute('data-h')!==h){b.setAttribute('data-h',h);b.innerHTML=h}
+  pb.classList.toggle('has-pe',vs.length>0);var m=$('.v5pe-msg',pb);if(!vs.length){m.hidden=false;m.textContent='تظهر البوابة هنا بعد نشر الطلب المكتبي من «طلب الشواهد من المنشأة»، أو بعد لصق رابط البوابة في بيانات الزيارة.'}else if(!CUR){m.hidden=false;m.textContent='اختر ما تريد عرضه، فتُفتح البوابة هنا داخل النموذج.'}else m.hidden=true}
+function show(k){var v=VIEWS.filter(function(x){return x[0]===k})[0];if(!v)return;var u=k==='lead'?leadUrl():grab(v[1]);var pb=$('#v5Portal'),f=pb&&$('iframe',pb);if(!f)return;
+  if(!u){CUR='';URL='';f.hidden=true;bar();return}
+  CUR=k;URL=u;f.hidden=false;if(f.getAttribute('src')!==u)f.setAttribute('src',u);bar()}
+function fit(){var pb=$('#v5Portal'),f=pb&&$('iframe',pb);if(!f||f.hidden)return;try{var d=f.contentDocument;if(!d||!d.documentElement)return;var h=Math.max(d.documentElement.scrollHeight,d.body?d.body.scrollHeight:0);if(h>200&&Math.abs(f.offsetHeight-h)>4)f.style.height=(h+4)+'px'}catch(e){}}
+document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-v5pv]');if(b){show(b.getAttribute('data-v5pv'))}});
+setInterval(function(){build();bar();fit()},1200);
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(build,500)});else setTimeout(build,500);
 })();</script>
 </html>
