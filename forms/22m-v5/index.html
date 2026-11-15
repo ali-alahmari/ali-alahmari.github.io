@@ -23084,4 +23084,94 @@ function all(){try{members();days()}catch(e){}}
 setInterval(all,1500);document.addEventListener('input',function(){setTimeout(all,200)},true);document.addEventListener('change',function(){setTimeout(all,200)},true);
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(all,400)});else setTimeout(all,400);
 })();</script>
+<style id="v5st-css">
+/* شريط المعايير الثمانية أعلى النموذج: نفس روابط «الشريط الجانبي» الأصلي بعد تحويلها إلى بطاقات أفقية بحلقة تقدم */
+.formwrap.v5st{grid-template-columns:minmax(0,1fr)}
+.formwrap.v5st .rail{position:static;display:flex;gap:10px;overflow-x:auto;max-height:none;padding:10px;scroll-snap-type:x proximity;scrollbar-width:thin}
+.formwrap.v5st .rail a{flex:0 0 228px;scroll-snap-align:start;display:grid;grid-template-columns:46px minmax(0,1fr);grid-template-rows:auto auto;gap:2px 10px;align-items:center;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:9px 12px}
+.formwrap.v5st .rail a[data-st]{border-inline-start:1px solid var(--line)}
+.formwrap.v5st .rail a.v5on{border-color:var(--brand);box-shadow:0 0 0 2px var(--brand) inset}
+.formwrap.v5st .rail .rn,.formwrap.v5st .rail .rbar{display:none}
+.formwrap.v5st .rail .rt{grid-column:2;grid-row:1;font-size:.88rem}
+.formwrap.v5st .rail .ro{grid-column:2;grid-row:2;font-size:.76rem}
+.v5rg{grid-column:1;grid-row:1/3;position:relative;width:46px;height:46px}
+.v5rg svg{width:46px;height:46px;transform:rotate(-90deg)}
+.v5rg b{position:absolute;inset:0;display:grid;place-items:center;font-weight:800;font-size:.95rem;font-variant-numeric:tabular-nums}
+.v5ra{grid-column:2;grid-row:3;font-size:.74rem;color:var(--ink-2);white-space:nowrap}
+.v5ra b{color:var(--ink)}
+.v5k{font:inherit;font-size:.9rem;display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:999px;padding:6px 12px;cursor:pointer;min-width:220px}
+.v5k kbd{font:inherit;font-size:.72rem;border:1px solid var(--line);border-radius:6px;padding:0 5px;background:var(--surface-2);color:var(--ink-2)}
+.v5k .k{margin-inline-start:auto;display:inline-flex;gap:3px}
+.v5q{position:fixed;inset:0;z-index:9000;background:rgba(10,18,34,.45);display:flex;align-items:flex-start;justify-content:center;padding:10vh 16px 16px}
+.v5q[hidden]{display:none}
+.v5q-in{width:min(640px,100%);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.3);overflow:hidden}
+.v5q-in input{width:100%;box-sizing:border-box;font:inherit;font-size:1rem;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--ink);padding:14px 16px;outline:none}
+.v5q-l{max-height:55vh;overflow:auto;padding:6px}
+.v5q-l button{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;text-align:start;font:inherit;font-size:.9rem;border:0;background:transparent;color:var(--ink);border-radius:10px;padding:8px 10px;cursor:pointer}
+.v5q-l button[aria-selected="true"]{background:var(--brand-soft,rgba(0,0,0,.06))}
+.v5q-l button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v5q-l code{font:inherit;font-weight:800;color:var(--brand)}
+.v5q-l i{font-style:normal;min-width:30px;height:22px;border-radius:999px;display:grid;place-items:center;font-weight:800;font-size:.75rem;color:#fff;background:var(--r-na);padding:0 6px}
+.v5q-l i.c1{background:var(--r1)}.v5q-l i.c2{background:var(--r2)}.v5q-l i.c3{background:var(--r3)}.v5q-l i.c4{background:var(--r4)}.v5q-l i.c5{background:rgb(var(--p-h2rgb,10 90 75))}
+.v5q-l i.cn{background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)}
+.v5q-e{padding:14px;color:var(--ink-2);font-size:.9rem}
+.v5q-h{padding:8px 14px;border-top:1px solid var(--line);font-size:.74rem;color:var(--ink-2)}
+@media (max-width:700px){.formwrap.v5st .rail a{flex-basis:200px}.v5k{min-width:0}.v5k .k{display:none}}
+@media print{.v5rg,.v5ra,.v5k,.v5q{display:none!important}}
+</style>
+<script id="v5st-js">(function(){
+var A=window.V5D;if(!A)return;
+function $(q,r){return (r||document).querySelector(q)}
+function $$(q,r){return [].slice.call((r||document).querySelectorAll(q))}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function cls(v){return v==null?'cn':'c'+Math.max(1,Math.min(5,Math.round(v)))}
+function fmt(v){return v==null?'—':String(Math.round(v*100)/100)}
+function ring(p){var C=2*Math.PI*19,col=p>=100?'var(--r4)':'var(--brand)';
+  return '<svg viewBox="0 0 46 46" aria-hidden="true"><circle cx="23" cy="23" r="19" fill="none" stroke="var(--line)" stroke-width="4"/><circle cx="23" cy="23" r="19" fill="none" stroke="'+col+'" stroke-width="4" stroke-linecap="round" stroke-dasharray="'+(C*p/100).toFixed(1)+' '+C.toFixed(1)+'"/></svg>'}
+/* ١) الشريط */
+function strip(){var fw=$('.formwrap'),rl=$('#rail');if(!fw||!rl)return;fw.classList.add('v5st');
+  A.STDS.forEach(function(s){var a=$('[data-rail="'+s.n+'"]',rl);if(!a)return;var st=A.stdStats(s);
+    var h=ring(st.pct)+'<b>'+st.pct+'٪</b>',t='المتوسط <b>'+fmt(st.avg)+'</b>';
+    var rg=$('.v5rg',a);if(!rg){a.insertAdjacentHTML('afterbegin','<span class="v5rg"></span>');a.insertAdjacentHTML('beforeend','<span class="v5ra"></span>');rg=$('.v5rg',a)}
+    if(rg.getAttribute('data-h')!==h){rg.setAttribute('data-h',h);rg.innerHTML=h}
+    var ra=$('.v5ra',a);if(ra&&ra.innerHTML!==t)ra.innerHTML=t});
+  cur()}
+function cur(){var rl=$('#rail');if(!rl)return;var best=null,y=window.innerHeight*.35;
+  A.STDS.forEach(function(s){var el=document.getElementById('std-'+s.n);if(!el||el.hidden||!el.getClientRects().length)return;var r=el.getBoundingClientRect();if(r.top<=y&&r.bottom>0)best=s.n});
+  $$('a[data-rail]',rl).forEach(function(a){var on=String(best)===a.getAttribute('data-rail');if(a.classList.contains('v5on')!==on){a.classList.toggle('v5on',on);if(on&&a.scrollIntoView&&rl.scrollWidth>rl.clientWidth){var L=a.offsetLeft,W=a.offsetWidth;if(L<rl.scrollLeft||L+W>rl.scrollLeft+rl.clientWidth)rl.scrollTo({left:L-12,behavior:'auto'})}}})}
+/* ٢) البحث عن معيار فرعي */
+function norm(s){return String(s||'').replace(/[ً-ْـ]/g,'').replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').replace(/[‐-―]/g,'-').toLowerCase().trim()}
+var Q,SEL=0,LIST=[];
+function subs(){var out=[];A.STDS.forEach(function(s){s.subs.forEach(function(sb){out.push({std:s.n,code:sb.code,text:sb.text,st:s.title})})});return out}
+function build(){if(Q)return;Q=document.createElement('div');Q.className='v5q';Q.hidden=true;
+  Q.innerHTML='<div class="v5q-in" role="dialog" aria-modal="true" aria-label="البحث عن معيار فرعي"><input type="search" placeholder="اكتب رقم المعيار الفرعي مثل 3-2 أو كلمة من نصه" aria-label="البحث عن معيار فرعي" autocomplete="off"><div class="v5q-l" role="listbox"></div><div class="v5q-h">الأسهم للتنقل، و Enter للفتح، و Esc للإغلاق.</div></div>';
+  document.body.appendChild(Q);var inp=$('input',Q);
+  inp.addEventListener('input',function(){SEL=0;draw()});
+  Q.addEventListener('mousedown',function(e){if(e.target===Q)close()});
+  Q.addEventListener('click',function(e){var b=e.target.closest('[data-v5q]');if(b)go(b.getAttribute('data-v5q'))});
+  Q.addEventListener('keydown',function(e){if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close();return}
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();if(!LIST.length)return;SEL=(SEL+(e.key==='ArrowDown'?1:-1)+LIST.length)%LIST.length;draw(true);return}
+    if(e.key==='Enter'){e.preventDefault();if(LIST[SEL])go(LIST[SEL].code)}})}
+function draw(keep){var q=norm($('input',Q).value),all=subs();
+  LIST=!q?all:all.filter(function(x){return norm(x.code).indexOf(q)===0||norm(x.code.replace('-','.')).indexOf(q)===0||norm(x.text).indexOf(q)>-1||norm(x.st).indexOf(q)>-1});
+  var l=$('.v5q-l',Q);if(!LIST.length){l.innerHTML='<div class="v5q-e">لا يوجد معيار فرعي بهذا النص.</div>';return}
+  if(SEL>=LIST.length)SEL=0;
+  l.innerHTML=LIST.map(function(x,i){var sb=A.SUB&&A.SUB[x.code],v=null;try{v=A.subStats(sb).avg}catch(e){}
+    return '<button type="button" role="option" data-v5q="'+x.code+'" aria-selected="'+(i===SEL)+'"><code>'+x.code+'</code><span>'+esc(x.text)+'</span><i class="'+cls(v)+'">'+(v==null?'·':fmt(v))+'</i></button>'}).join('');
+  if(keep){var b=l.children[SEL];if(b&&b.scrollIntoView)b.scrollIntoView({block:'nearest'})}}
+var LAST=null;
+function open(){build();LAST=document.activeElement;Q.hidden=false;var inp=$('input',Q);inp.value='';SEL=0;draw();try{inp.focus()}catch(e){}setTimeout(function(){if(document.activeElement!==inp)inp.focus()},0)}
+function close(){if(!Q||Q.hidden)return;Q.hidden=true;if(LAST&&LAST.focus)try{LAST.focus({preventScroll:true})}catch(e){}}
+function go(code){close();var sb=A.SUB&&A.SUB[code];var n=sb?sb.std:parseInt(code,10);if(!n)return;
+  A.goStd(n);setTimeout(function(){var el=document.getElementById('sub-'+code);if(!el)return;if(el.scrollIntoView)el.scrollIntoView({behavior:'auto',block:'start'});el.classList.add('v5ov-hit');setTimeout(function(){el.classList.remove('v5ov-hit')},1600)},900)}
+window.addEventListener('keydown',function(e){if((e.ctrlKey||e.metaKey)&&!e.altKey&&(e.key==='k'||e.key==='K'||e.key==='ك'||e.code==='KeyK')){e.preventDefault();e.stopPropagation();if(Q&&!Q.hidden)close();else open()}},true);
+function btn(){var t=$('#p-form .tools');if(!t||$('.v5k',t))return;var mac=/Mac|iPhone|iPad/.test(navigator.platform||'');
+  var b=document.createElement('button');b.type='button';b.className='v5k';b.setAttribute('aria-keyshortcuts',mac?'Meta+K':'Control+K');
+  b.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>ابحث عن معيار فرعي<span class="k"><kbd>'+(mac?'⌘':'Ctrl')+'</kbd><kbd>K</kbd></span>';
+  b.addEventListener('click',open);t.insertBefore(b,t.firstChild)}
+function all(){try{strip();btn()}catch(e){}}
+window.addEventListener('scroll',function(){try{cur()}catch(e){}},{passive:true});
+setInterval(all,1500);document.addEventListener('input',function(){setTimeout(all,200)},true);
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(all,400)});else setTimeout(all,400);
+})();</script>
 </html>
