@@ -23262,6 +23262,22 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 #app.v5wsm .sub.cur .lv .seg button.wide{flex:1 1 100%;max-width:150px;order:-1}
 .v5og span{flex-basis:100%;text-align:center}
 .v5og button{width:26px;height:26px}
+/* المستويات تحت بعضها بعرض كامل؛ عند فتح «ملاحظات وشواهد» تعود الخانات عمودين واسعين كالأصل */
+#app.v5wsm .sub.cur .lvls{grid-template-columns:minmax(0,1fr)!important}
+#app.v5wsm .sub.cur .lv-h{flex-wrap:nowrap}
+#app.v5wsm .sub.cur .lv-h .v5dial{flex:none;margin:0;margin-inline-start:auto}
+#app.v5wsm .sub.cur .lv-h .v5dial .rg,#app.v5wsm .sub.cur .lv-h .v5dial .rg svg{width:76px;height:76px}
+#app.v5wsm .sub.cur .lv-h .v5dial .rg b{font-size:1.5rem}
+#app.v5wsm .sub.cur .lv:not(.v5fold) .cols{display:grid;grid-template-columns:minmax(0,1fr)!important;gap:16px}
+#app.v5wsm .sub.cur .lv .seg{justify-content:flex-start}
+#app.v5wsm .sub.cur .lv [data-hint]{text-align:start}
+#app.v5wsm .sub.cur .lv.v5fold .cols{max-width:620px}
+#app.v5wsm .sub.cur .lv>.v5gm{max-width:620px}
+#app.v5wsm .sub.cur .v5og{justify-content:flex-start}
+.v5og span{flex-basis:auto!important;margin-inline-end:4px}
+#app.v5wsm .sub.cur .v5fd{margin:6px 0 0;justify-content:flex-start}
+#app.v5wsm .sub.cur .lv .fld textarea{min-height:5.5rem}
+@media (max-width:999px){#app.v5wsm .sub.cur .lv:not(.v5fold) .cols{grid-template-columns:minmax(0,1fr)!important}}
 @media print{.v5ws,.v5gm,.v5fd,.v5og{display:none!important}#app.v5wsm .std,#app.v5wsm .sub,#app.v5wsm .mytask{display:block!important}#app.v5wsm .lv.v5fold .fld,#app.v5wsm .lv.v5fold .col,#app.v5wsm .lv.v5fold .col-t,#app.v5wsm .lv.v5fold .fld>label,#app.v5wsm .lv.v5fold .fld>select{display:block!important}#app.v5wsm .sub.cur .lvls{display:block!important}}
 </style>
 <script id="v5ws-js">(function(){
