@@ -22599,7 +22599,7 @@ buildForm();buildGuide();bootAll();
 if(!storeOK)setSave(false);else setSave(true);
 setShare();if(SH.on){shLinks();shStart()}else initSync();
 /* واجهة قراءة فقط لطبقة «نظرة عامة» (لا تغيّر البيانات) */
-window.V5D={S:function(){return S},STDS:STDS,SUB:SUB,SUBS_ALL:SUBS_ALL,subStats:subStats,stdStats:stdStats,status:status,r2:r2,myScope:myScope,gapMiss:gapMiss,decision:decision,goStd:goStd,dayLabel:dayLabel,LV:LV,page:function(){return PUB.page},subSpot:subSpot,subRecs:subRecs,aljOn:aljOn,oCmp:oCmp,num:num,chgList:chgList,chgiList:chgiList,mem:mem,isObs:isObs,subsOfMem:subsOfMem,stdsOfSubs:stdsOfSubs,simGo:function(c){simCur=c;simApply()},simOn:function(){return simOn},simSet:function(v){simOn=!!v;simApply()},PB:PB};
+window.V5D={S:function(){return S},STDS:STDS,SUB:SUB,SUBS_ALL:SUBS_ALL,subStats:subStats,stdStats:stdStats,status:status,r2:r2,myScope:myScope,gapMiss:gapMiss,decision:decision,goStd:goStd,dayLabel:dayLabel,LV:LV,page:function(){return PUB.page},subSpot:subSpot,subRecs:subRecs,aljOn:aljOn,oCmp:oCmp,num:num,chgList:chgList,chgiList:chgiList,mem:mem,isObs:isObs,subsOfMem:subsOfMem,stdsOfSubs:stdsOfSubs,simGo:function(c){simCur=c;simApply()},simOn:function(){return simOn},simSet:function(v){simOn=!!v;simApply()},PB:PB,myRole:myRole};
 })();
 </script>
 
@@ -23304,12 +23304,14 @@ function pbScore(k,v){v=num(v);if(v==null)return null;if(k==='f')return v<3?1:3;
 function phrase(code,k){var PB=A.PB,S=A.S(),sc=pbScore(k,S.f[code+'.'+k+'.rev']);if(!PB||sc==null)return '';
   var h=0;for(var i=0;i<code.length;i++)h+=code.charCodeAt(i);var saw=PB.saw[k]||[''];var b=PB.body[sc][k];
   return PB.verdict[sc]+'\n'+(sc===1?b:saw[h%saw.length]+b)}
-function aside(sec,sb){var w=$('.v5ws',sec);if(!w){w=document.createElement('aside');w.className='v5ws';w.setAttribute('aria-label','درجة المعيار الفرعي وصياغات مقترحة');sec.appendChild(w)}
+/* صياغات مقترحة: لرئيس الفريق فقط في نموذجه. في نسخة المشاركة PBON=0 فلا تظهر لأحد */
+var PBON=0;
+function aside(sec,sb){var w=$('.v5ws',sec);if(!w){w=document.createElement('aside');w.className='v5ws';w.setAttribute('aria-label','درجة المعيار الفرعي');sec.appendChild(w)}
   var st=A.STDS.filter(function(s){return s.n===sb.std})[0],ss=A.stdStats(st),x=A.subStats(sb),done=st.subs.filter(function(s){return A.subStats(s).ans>=3}).length;
   var v=x.avg,h='<section><h4>درجة المعيار الفرعي <bdi dir="ltr">'+sb.code+'</bdi></h4><div class="sc"><b class="'+cls(v)+'">'+(v==null?'—':v)+'</b><p>'+esc(why(sb.code))+'</p></div><dl><dt>متوسط المعيار '+st.n+'</dt><dd>'+(ss.avg==null?'—':ss.avg)+'</dd><dt>معايير فرعية مكتملة</dt><dd>'+done+' من '+st.subs.length+'</dd><dt>نسبة الإنجاز</dt><dd>'+ss.pct+'٪</dd></dl></section>';
-  var ph=['e','p','f'].map(function(k){var t=phrase(sb.code,k);if(!t)return '';var ta=document.querySelector('[data-f="'+sb.code+'.'+k+'.notes"]'),dis=!ta||ta.disabled||ta.readOnly;
+  var ph=!(PBON&&A.myRole&&A.myRole()==='lead')?'':['e','p','f'].map(function(k){var t=phrase(sb.code,k);if(!t)return '';var ta=document.querySelector('[data-f="'+sb.code+'.'+k+'.notes"]'),dis=!ta||ta.disabled||ta.readOnly;
     return '<div class="ph"><small>'+LN[k]+'</small>'+esc(t).replace(/\n/g,'<br>')+'<br><button type="button" data-v5ph="'+sb.code+'.'+k+'"'+(dis?' disabled':'')+'>أضف إلى «الملحوظات والمبررات»</button></div>'}).join('');
-  h+='<section><h4>صياغات مقترحة</h4>'+(ph||'<p class="nt">تظهر الصياغات بعد اختيار درجة المراجع لأي مستوى.</p>')+'<p class="nt">من بنك العبارات المعتمد في النموذج. أكمل ما بين القوسين المربعين.</p></section>';
+  if(PBON&&A.myRole&&A.myRole()==='lead')h+='<section><h4>صياغات مقترحة</h4>'+(ph||'<p class="nt">تظهر الصياغات بعد اختيار درجة المراجع لأي مستوى.</p>')+'<p class="nt">من بنك العبارات المعتمد في النموذج. أكمل ما بين القوسين المربعين.</p></section>';
   if(w.getAttribute('data-h')!==h){w.setAttribute('data-h',h);w.innerHTML=h}}
 /* خط يقارن رأي المنشأة بدرجة الفريق في كل مستوى */
 function meter(sb){var S=A.S();['e','p','f'].forEach(function(k){var lv=$('#sub-'+sb.code+' .lv-'+k);if(!lv)return;var g=$('.v5gm',lv);
