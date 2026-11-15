@@ -22599,7 +22599,7 @@ buildForm();buildGuide();bootAll();
 if(!storeOK)setSave(false);else setSave(true);
 setShare();if(SH.on){shLinks();shStart()}else initSync();
 /* واجهة قراءة فقط لطبقة «نظرة عامة» (لا تغيّر البيانات) */
-window.V5D={S:function(){return S},STDS:STDS,SUB:SUB,SUBS_ALL:SUBS_ALL,subStats:subStats,stdStats:stdStats,status:status,r2:r2,myScope:myScope,gapMiss:gapMiss,decision:decision,goStd:goStd,dayLabel:dayLabel,LV:LV,page:function(){return PUB.page},subSpot:subSpot,subRecs:subRecs,aljOn:aljOn,oCmp:oCmp,num:num,chgList:chgList,chgiList:chgiList,mem:mem,isObs:isObs,subsOfMem:subsOfMem,stdsOfSubs:stdsOfSubs,simGo:function(c){simCur=c;simApply()},simOn:function(){return simOn},simSet:function(v){simOn=!!v;simApply()},PB:PB,myRole:myRole};
+window.V5D={S:function(){return S},STDS:STDS,SUB:SUB,SUBS_ALL:SUBS_ALL,subStats:subStats,stdStats:stdStats,status:status,r2:r2,myScope:myScope,gapMiss:gapMiss,decision:decision,goStd:goStd,dayLabel:dayLabel,LV:LV,page:function(){return PUB.page},subSpot:subSpot,subRecs:subRecs,aljOn:aljOn,oCmp:oCmp,num:num,chgList:chgList,chgiList:chgiList,mem:mem,isObs:isObs,subsOfMem:subsOfMem,stdsOfSubs:stdsOfSubs,simGo:function(c){simCur=c;simApply()},simOn:function(){return simOn},simSet:function(v){simOn=!!v;simApply()},PB:PB,myRole:myRole,lbData:function(){var rows=[],pend=[],ready=[],unas=[],fin=typeof finalOf==='function';team().forEach(function(m,i){if(isObs(m))return;var subs=subsOfMem(m),p=pctOf(subs),ns=stdsOfSubs(subs),ob=team().filter(function(x){return isObs(x)&&x.with===m.id}).map(function(x){return x.name.trim()||'معايش'});rows.push({name:m.name.trim()||lbl(i),p:p,ns:ns,ob:ob})});STDS.forEach(function(s){var n=s.n;if(!effStd(n))unas.push(n);var o=obsOf(n);if(o&&trState(n)[1]==='p-mid')pend.push(n);if(fin&&!finalOf(n)&&stdStats(s).pct>=100)ready.push(n)});return {rows:rows,pend:pend,ready:ready,unas:unas}}};
 })();
 </script>
 
@@ -22912,7 +22912,7 @@ function html(){var S=A.S(),sc=A.myScope();if(!sc)return '';
    '<div class="ov-lg"><span><i class="c1" style="background:var(--r1)"></i>1</span><span><i style="background:var(--r2)"></i>2</span><span><i style="background:var(--r3)"></i>3</span><span><i style="background:var(--r4)"></i>4</span><span><i style="background:rgb(var(--p-h2rgb,10 90 75))"></i>5</span>'+
    '<span><i style="background:repeating-linear-gradient(135deg,var(--surface-2,#f1f3f6) 0 4px,var(--line,#dde) 4px 6px);border:1px solid var(--line,#dde)"></i>مكتمل جزئياً</span><span><i style="background:var(--surface-2,#f1f3f6);border:1px solid var(--line,#dde)"></i>لم يبدأ</span><span><i style="border:1px dashed var(--line,#dde)"></i>لا ينطبق</span>'+
    (mine?'<span>الخلايا الباهتة ليست من معاييرك</span>':'')+'</div></div>';
-  h+=att(subs,mine);
+  var LB=window.V5LB;h+=(LB?'<div class="lb-two"><div>'+LB.dec()+LB.team()+'</div><div>':'')+att(subs,mine)+(LB?'</div></div>':'');
   return h}
 function att(subs,mine){var S=A.S(),o=[];
   subs.forEach(function(sb){var c=sb.code,x=A.subStats(sb);
@@ -23354,4 +23354,87 @@ window.addEventListener('resize',function(){setTimeout(run,150)});
 setInterval(run,1500);
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(run,500)});else setTimeout(run,500);
 })();</script>
+<style id="v5lb-css">
+/* لوحة الرئيس: «ما ينتظر قرارك» و«تقدم الفريق» بشكل العينة. الحساب من دوال النموذج الأصلية نفسها (tkLead) */
+#myTask.v5lbon .tk-p,#myTask.v5lbon .tk-r,#myTask.v5lbon .tk-d{display:none!important}
+#v5ov .lb-card{background:var(--surface,#fff);border:1px solid var(--line,#dde);border-radius:14px;padding:12px 14px;margin-top:10px}
+#v5ov .lb-card h3{margin:0 0 8px;font-size:1rem;display:flex;gap:8px;align-items:center}
+#v5ov .lb-card h3 small{font-size:.75rem;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:0 8px}
+#v5ov .lb-card h3 .lb-lk{margin-inline-start:auto;font:inherit;font-size:.8rem;font-weight:700;background:none;border:0;color:var(--brand);cursor:pointer;padding:0}
+#v5ov .lb-ti{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-weight:800;color:#fff;background:var(--brand,#1F3A5F)}
+#v5ov .lb-ti.u{background:var(--ink-2,#667)}
+#v5ov .lb-ti.t{background:var(--warn,#C98A12)}
+#v5ov .lb-ti.f{background:var(--ok,#3E8E5A)}
+#v5ov .lb-m{display:grid;grid-template-columns:auto 1fr auto;gap:4px 10px;align-items:center;padding:9px 0;border-top:1px solid var(--line,#dde)}
+#v5ov .lb-m:first-of-type{border-top:0}
+#v5ov .lb-av{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:.82rem;grid-row:span 3;align-self:start}
+#v5ov .lb-m b{font-weight:700;font-size:.9rem}
+#v5ov .lb-m .lb-pc{font-size:.85rem;font-weight:700;font-variant-numeric:tabular-nums}
+#v5ov .lb-m .lb-tg{grid-column:2/4;font-size:.76rem;color:var(--ink-2,#556)}
+#v5ov .lb-m .lb-br{grid-column:2/4;height:6px;border-radius:99px;background:var(--surface-2,#eef1f4);overflow:hidden}
+#v5ov .lb-m .lb-br i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--ok,#3E8E5A),var(--brand,#1F3A5F))}
+@media (min-width:1100px){#v5ov .lb-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:start}#v5ov .lb-two>div{margin-top:10px}#v5ov .lb-two .lb-team{margin-top:10px!important}#v5ov .lb-two .ov-att,#v5ov .lb-two .lb-card{margin-top:0}}
+@media print{#v5ov .lb-card{display:none!important}}
+</style>
+<script id="v5lb-js">(function(){
+var A=window.V5D;if(!A||!A.lbData)return;
+function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+var MC=['#1F3A5F','#0F7C6E','#2F6FB5','#B4532A','#8E3B76','#5E6B12','#6A4FA5'];
+function ini(n){n=String(n||'').replace(/^(د\.|م\.|أ\.|المهندس\/?|الدكتور)\s*/,'').trim();var p=n.split(/\s+/).filter(Boolean);function c(w){return (w.length>3&&w.indexOf('ال')===0?w.charAt(2):w.charAt(0))}return p.length?(c(p[0])+(p[1]?c(p[1]):'')):'؟'}
+function lead(){return A.myRole&&A.myRole()==='lead'}
+/* ما ينتظر قرارك: نفس قوائم tkLead (بلا مسؤول، عمل معايش بانتظار مراجعة العضو، جاهز للاعتماد النهائي) */
+function dec(){if(!lead())return '';var d=A.lbData(),o=[];
+  d.unas.forEach(function(n){o.push('<button type="button" data-tab="dist"><span class="lb-ti u">!</span><span>المعيار '+n+' بلا مسؤول</span><span class="ov-cd">'+n+'</span></button>')});
+  d.pend.forEach(function(n){o.push('<button type="button" data-goto="'+n+'"><span class="lb-ti t">✎</span><span>المعايش أنهى عمله في المعيار '+n+' بانتظار مراجعة العضو</span><span class="ov-cd">'+n+'</span></button>')});
+  d.ready.forEach(function(n){o.push('<button type="button" data-goto="'+n+'"><span class="lb-ti f">✓</span><span>المعيار '+n+' جاهز للاعتماد النهائي</span><span class="ov-cd">'+n+'</span></button>')});
+  return '<div class="lb-card lb-dec"><h3>ما ينتظر قرارك<small>'+o.length+'</small></h3>'+(o.length?'<div class="ov-al">'+o.join('')+'</div>':'<p class="ov-none">لا شيء ينتظر قرارك الآن.</p>')+'</div>'}
+function team(){if(!lead())return '';var d=A.lbData();
+  var r=d.rows.map(function(m,i){return '<div class="lb-m"><span class="lb-av" style="background:'+MC[i%MC.length]+'">'+esc(ini(m.name))+'</span><b>'+esc(m.name)+'</b><span class="lb-pc">'+(m.ns.length?m.p+'%':'—')+'</span><span class="lb-tg">'+(m.ns.length?'المعايير: '+m.ns.join('، '):'بلا معايير')+(m.ob.length?' · معه: '+esc(m.ob.join('، ')):'')+'</span>'+(m.ns.length?'<span class="lb-br"><i style="width:'+m.p+'%"></i></span>':'')+'</div>'}).join('');
+  return '<div class="lb-card lb-team"><h3>تقدّم الفريق<button type="button" class="lb-lk" data-tab="dist">توزيع المعايير</button></h3>'+(r||'<p class="ov-none">لم يُضف أعضاء بعد.</p>')+'</div>'}
+window.V5LB={dec:dec,team:team};
+/* إخفاء القائمتين الأصليتين في لوحة الرئيس فقط؛ تبقيان كما هما للعضو والمعايش والمراقب */
+function mark(){var t=document.getElementById('myTask');if(t)t.classList.toggle('v5lbon',lead()&&!!document.getElementById('v5ov'))}
+setInterval(mark,1000);document.addEventListener('input',function(){setTimeout(mark,400)},true);
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mark);else mark();
+})();</script>
+
+<!-- رسالة ترحيب من معدّ النموذج: نفس نص share/22m، تظهر مرة واحدة لكل جهاز -->
+<div class="wl-ov" id="wlOv" hidden>
+  <div class="wl" role="dialog" aria-modal="true" aria-labelledby="wlT" aria-describedby="wlB">
+    <h2 id="wlT">أهلًا بك في نموذج تقويم المعايير للمراجعة</h2>
+    <div id="wlB">
+      <p>أعددتُ هذا النموذج ليكون عونًا لفرق المراجعة، وهو متاح لك للاستخدام.</p>
+      <p>يسعدني وصول اقتراحاتك وملاحظاتك على البريد التالي:</p>
+      <p class="wl-mail"><a href="mailto:alrabia02@gmail.com?subject=%D8%A7%D9%82%D8%AA%D8%B1%D8%A7%D8%AD%20%D8%B9%D9%84%D9%89%20%D9%86%D9%85%D9%88%D8%B0%D8%AC%20%D8%AA%D9%82%D9%88%D9%8A%D9%85%20%D8%A7%D9%84%D9%85%D8%B9%D8%A7%D9%8A%D9%8A%D8%B1" dir="ltr">alrabia02@gmail.com</a></p>
+      <p>وأرجو ألا تنساني ووالديّ وأهلي من صالح دعائك.</p>
+      <p class="wl-sig">أخوك المهندس/ علي الأحمري</p>
+    </div>
+    <div class="wl-a"><button class="btn pri" id="wlOk" type="button">ابدأ استخدام النموذج</button></div>
+  </div>
+</div>
+<style id="v5wl-css">
+.wl-ov{position:fixed;inset:0;z-index:2147482000;background:rgba(10,20,35,.6);display:grid;place-items:center;padding:16px}
+.wl-ov[hidden]{display:none}
+.wl{font-family:'Tajawal',var(--font);max-height:calc(100dvh - 32px);overflow:auto;background:var(--surface,#fff);color:var(--ink,#16202c);max-width:520px;width:100%;border-radius:18px;border-top:5px solid var(--brand-2,#B4532F);padding:26px 24px 20px;box-shadow:0 20px 60px rgba(0,0,0,.28);text-align:start;line-height:1.9;font-size:1rem;animation:wlIn .22s ease-out}
+.wl h2{margin:0 0 10px;font-size:1.35rem;color:var(--brand,#1F3A5F);line-height:1.5}
+.wl p{margin:0 0 6px}
+.wl-mail a{font-weight:700;color:var(--brand,#1F3A5F);text-decoration:underline;text-underline-offset:3px;word-break:break-all}
+.wl-sig{margin-top:12px!important;font-weight:700;color:var(--brand-2,#B4532F)}
+.wl-a{margin-top:16px;display:flex;justify-content:flex-start}
+.wl-a .btn{font-family:inherit;background:var(--brand,#1F3A5F)!important;color:var(--brand-ink,#fff)!important;border:1px solid var(--brand,#1F3A5F)!important;font-weight:700;padding:10px 20px;border-radius:12px;font-size:1rem}
+.wl-a .btn:active{transform:scale(.97)}
+.wl a:focus-visible,.wl .btn:focus-visible{outline:3px solid var(--brand-2,#B4532F);outline-offset:2px}
+@keyframes wlIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.wl{animation:none}}
+@media print{.wl-ov{display:none!important}}
+</style>
+<script id="v5wl-js">
+(function(){var K='v5.welcome.v1',ov=document.getElementById('wlOv'),ok=document.getElementById('wlOk');if(!ov||!ok)return;
+var seen=false;try{seen=localStorage.getItem(K)==='1'}catch(e){}if(seen)return;
+var last=document.activeElement;ov.hidden=false;setTimeout(function(){try{ok.focus()}catch(e){}},30);
+function close(){try{localStorage.setItem(K,'1')}catch(e){}ov.hidden=true;var g=document.getElementById('gdOv');var n=g&&!g.hidden&&(document.getElementById('gdNext')||g.querySelector('button'));try{(n||last||document.body).focus()}catch(e){}document.removeEventListener('keydown',kd,true)}
+function kd(e){if(ov.hidden)return;if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close()}else if(e.key==='Tab'){e.preventDefault();var f=[ov.querySelector('a'),ok];var i=f.indexOf(document.activeElement);f[(i+(e.shiftKey?f.length-1:1))%f.length].focus()}}
+document.addEventListener('keydown',kd,true);ok.addEventListener('click',close)})();
+</script>
+
 </html>
