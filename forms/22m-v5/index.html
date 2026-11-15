@@ -22599,7 +22599,7 @@ buildForm();buildGuide();bootAll();
 if(!storeOK)setSave(false);else setSave(true);
 setShare();if(SH.on){shLinks();shStart()}else initSync();
 /* واجهة قراءة فقط لطبقة «نظرة عامة» (لا تغيّر البيانات) */
-window.V5D={S:function(){return S},STDS:STDS,SUB:SUB,SUBS_ALL:SUBS_ALL,subStats:subStats,stdStats:stdStats,status:status,r2:r2,myScope:myScope,gapMiss:gapMiss,decision:decision,goStd:goStd,dayLabel:dayLabel,LV:LV,page:function(){return PUB.page}};
+window.V5D={S:function(){return S},STDS:STDS,SUB:SUB,SUBS_ALL:SUBS_ALL,subStats:subStats,stdStats:stdStats,status:status,r2:r2,myScope:myScope,gapMiss:gapMiss,decision:decision,goStd:goStd,dayLabel:dayLabel,LV:LV,page:function(){return PUB.page},subSpot:subSpot,subRecs:subRecs,aljOn:aljOn,oCmp:oCmp,num:num,chgList:chgList,chgiList:chgiList};
 })();
 </script>
 
@@ -22860,6 +22860,16 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 #v5ov .ov-lg{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-size:.74rem;color:var(--ink-2,#556)}
 #v5ov .ov-lg span{display:inline-flex;align-items:center;gap:5px}
 #v5ov .ov-lg i{display:inline-block;width:14px;height:14px;border-radius:4px}
+#v5ov .ov-att{background:var(--surface,#fff);border:1px solid var(--line,#dde);border-radius:14px;padding:12px 14px;margin-top:10px}
+#v5ov .ov-att h3{margin:0 0 8px;font-size:1rem;display:flex;gap:8px;align-items:center}
+#v5ov .ov-att h3 small{font-size:.75rem;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:0 8px}
+#v5ov .ov-al{display:grid;gap:6px}
+#v5ov .ov-al button{font:inherit;display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;text-align:start;background:var(--surface-2,#f4f6f8);border:1px solid var(--line,#dde);border-radius:10px;padding:7px 10px;color:inherit;cursor:pointer;font-size:.86rem}
+#v5ov .ov-ti{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-weight:800;color:#fff;background:var(--bad,#CC4B44)}
+#v5ov .ov-ti.r{background:var(--warn,#C98A12)}
+#v5ov .ov-cd{font-weight:700;font-size:.8rem;color:var(--ink-2)}
+#v5ov .ov-none{margin:0;color:var(--ink-2);font-size:.88rem}
+#v5ov .ov-more{font:inherit;margin-top:8px;background:none;border:0;color:var(--brand);font-weight:700;cursor:pointer;padding:0}
 @media (max-width:760px){#v5ov .ov-k{grid-template-columns:repeat(2,minmax(0,1fr))}#v5ov .ov-days{grid-template-columns:1fr!important}}
 .sub.v5ov-hit{box-shadow:0 0 0 3px var(--p-g1,#E6C673);border-radius:12px;transition:box-shadow .3s}
 @media print{#v5ov{display:none!important}}
@@ -22902,7 +22912,20 @@ function html(){var S=A.S(),sc=A.myScope();if(!sc)return '';
    '<div class="ov-lg"><span><i class="c1" style="background:var(--r1)"></i>1</span><span><i style="background:var(--r2)"></i>2</span><span><i style="background:var(--r3)"></i>3</span><span><i style="background:var(--r4)"></i>4</span><span><i style="background:rgb(var(--p-h2rgb,10 90 75))"></i>5</span>'+
    '<span><i style="background:repeating-linear-gradient(135deg,var(--surface-2,#f1f3f6) 0 4px,var(--line,#dde) 4px 6px);border:1px solid var(--line,#dde)"></i>مكتمل جزئياً</span><span><i style="background:var(--surface-2,#f1f3f6);border:1px solid var(--line,#dde)"></i>لم يبدأ</span><span><i style="border:1px dashed var(--line,#dde)"></i>لا ينطبق</span>'+
    (mine?'<span>الخلايا الباهتة ليست من معاييرك</span>':'')+'</div></div>';
+  h+=att(subs,mine);
   return h}
+function att(subs,mine){var S=A.S(),o=[];
+  subs.forEach(function(sb){var c=sb.code,x=A.subStats(sb);
+    if(x.na){if(!(S.f[c+'.s.nar']||'').trim())o.push(['w',c,'«لا ينطبق» بلا تعليل']);return}
+    A.LV.forEach(function(l){var nv=A.num(S.f[c+'.'+l.k+'.rev']),no=A.oCmp(l.k,S.f[c+'.'+l.k+'.org']);if(nv!=null&&no!=null&&Math.abs(nv-no)>=2&&!(S.f[c+'.'+l.k+'.why']||'').trim())o.push(['w',c,'فرق درجتين عن رأي المنشأة بلا تعليل ('+l.name+')'])});
+    var sp=A.subSpot(sb);if(sp.rec.length&&!A.aljOn(c)&&!A.subRecs(c).some(function(q){return q.t==='توصية'&&q.x}))o.push(['r',c,'موضع توصية بلا توصية مكتوبة ('+sp.rec.map(function(l){return l.name}).join('، ')+')'])});
+  var inS={};subs.forEach(function(sb){inS[sb.code]=1});
+  try{A.chgiList().concat(A.chgList()).forEach(function(q){if(!q.why&&inS[q.code])o.push(['w',q.code,'تغيّرت الدرجة بلا سبب ('+q.lv+': '+q.from+' إلى '+q.to+')'])})}catch(e){}
+  var h='<div class="ov-att"><h3>يحتاج انتباهك<small>'+o.length+'</small></h3>';
+  if(!o.length)return h+'<p class="ov-none">لا شيء ينتظرك الآن.</p></div>';
+  var M=8;h+='<div class="ov-al">'+o.slice(0,M).map(function(q){return '<button type="button" data-ovsub="'+q[1]+'"><span class="ov-ti '+q[0]+'">'+(q[0]==='r'?'✎':'!')+'</span><span>'+esc(q[2])+'</span><span class="ov-cd">'+q[1]+'</span></button>'}).join('')+'</div>';
+  if(o.length>M)h+='<button type="button" class="ov-more" data-tab="sum">'+(o.length-M)+' بنود أخرى في «ملخص الزيارة»</button>';
+  return h+'</div>'}
 var last='';
 function render(){var d=$('#myTaskD'),box=$('#v5ov');if(!d)return;
   if(!box){box=document.createElement('div');box.id='v5ov';var t=$('#myTask');if(t)d.insertBefore(box,t);else d.appendChild(box)}
