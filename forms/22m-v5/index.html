@@ -23262,7 +23262,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 #app.v5wsm .sub.cur .lv .seg button.wide{flex:1 1 100%;max-width:150px;order:-1}
 .v5og span{flex-basis:100%;text-align:center}
 .v5og button{width:26px;height:26px}
-/* المستويات تحت بعضها بعرض كامل؛ عند فتح «ملاحظات وشواهد» تعود الخانات عمودين واسعين كالأصل */
+/* المستويات تحت بعضها بعرض كامل؛ عند فتح «تقييم المعيار والشواهد المضافة» تعود الخانات عمودين واسعين كالأصل */
 #app.v5wsm .sub.cur .lvls{grid-template-columns:minmax(0,1fr)!important}
 #app.v5wsm .sub.cur .lv-h{flex-wrap:nowrap}
 #app.v5wsm .sub.cur .lv-h .v5dial{flex:none;margin:0;margin-inline-start:auto}
@@ -23323,7 +23323,7 @@ function meter(sb){var S=A.S();['e','p','f'].forEach(function(k){var lv=$('#sub-
 var FOLD={};try{FOLD=JSON.parse(localStorage.getItem('v5.fold')||'{}')||{}}catch(e){}
 function fold(lv,code,k){var b=$('.v5fd',lv),tas=$$('.fld:not(:has(select)) textarea',lv),n=tas.filter(function(t){return t.value.trim()}).length;
   if(!b){b=document.createElement('button');b.type='button';b.className='v5fd';b.setAttribute('data-v5fd',k);var g=$('.v5gm',lv);g.parentNode.insertBefore(b,g.nextSibling)}
-  var open=FOLD[k]===1;lv.classList.toggle('v5fold',!open);var t=(open?'إخفاء ':'')+'ملاحظات وشواهد'+(n?' ('+n+' مكتوبة)':'');
+  var open=FOLD[k]===1;lv.classList.toggle('v5fold',!open);var t=(open?'إخفاء ':'')+'تقييم المعيار والشواهد المضافة'+(n?' ('+n+' مكتوبة)':'');
   if(b.textContent!==t){b.textContent=t}b.setAttribute('aria-expanded',open?'true':'false')}
 function run(){mode();if(!on())return;var c=$('.sub.cur');if(!c)return;var code=c.getAttribute('data-code'),sb=A.SUB[code];if(!sb)return;var sec=c.closest('.std');
   aside(sec,sb);meter(sb);org(sb);
