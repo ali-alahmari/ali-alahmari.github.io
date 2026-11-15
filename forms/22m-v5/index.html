@@ -22599,6 +22599,8 @@ shInit();
 buildForm();buildGuide();bootAll();
 if(!storeOK)setSave(false);else setSave(true);
 setShare();if(SH.on){shLinks();shStart()}else initSync();
+/* واجهة قراءة فقط لطبقة «نظرة عامة» (لا تغيّر البيانات) */
+window.V5D={S:function(){return S},STDS:STDS,SUB:SUB,SUBS_ALL:SUBS_ALL,subStats:subStats,stdStats:stdStats,status:status,r2:r2,myScope:myScope,gapMiss:gapMiss,decision:decision,goStd:goStd,dayLabel:dayLabel};
 })();
 </script>
 
@@ -22824,4 +22826,96 @@ function init(){setPal(getPal());palUI();tools();build();watchTabs();recChips();
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();</script>
 
+<style id="v5ov-css">
+#v5ov{margin:4px 0 14px}
+#v5ov .ov-k{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:10px}
+#v5ov .ov-kp{background:var(--surface,#fff);border:1px solid var(--line,#dde);border-radius:14px;padding:10px 14px;min-width:0}
+#v5ov .ov-kp span{display:block;font-size:.8rem;color:var(--ink-2,#556)}
+#v5ov .ov-kp b{display:block;font-size:1.55rem;line-height:1.25;font-variant-numeric:tabular-nums}
+#v5ov .ov-kp small{display:block;font-size:.74rem;color:var(--ink-2,#556);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#v5ov .ov-kp.main{background:linear-gradient(135deg,rgb(var(--p-h2rgb,10 90 75)),rgb(var(--p-h1rgb,3 46 39)));border-color:transparent;color:#fff}
+#v5ov .ov-kp.main span,#v5ov .ov-kp.main small{color:rgb(255 255 255 / .82)}
+#v5ov .ov-kp.warn b{color:var(--bad,#CC4B44)}
+#v5ov .ov-days{display:grid;gap:10px;margin-bottom:10px}
+#v5ov .ov-day{background:var(--surface,#fff);border:1px solid var(--line,#dde);border-radius:12px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+#v5ov .ov-day b{font-size:.85rem}
+#v5ov .ov-day .ov-dn{display:flex;gap:4px;flex-wrap:wrap}
+#v5ov .ov-day .ov-dn button{font:inherit;font-size:.75rem;min-width:24px;height:24px;border-radius:999px;border:1px solid var(--line,#dde);background:var(--surface-2,#f4f6f8);color:inherit;cursor:pointer}
+#v5ov .ov-map{background:var(--surface,#fff);border:1px solid var(--line,#dde);border-radius:14px;padding:12px 14px}
+#v5ov .ov-map h3{margin:0 0 8px;font-size:1rem;display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+#v5ov .ov-map h3 small{font-weight:400;font-size:.76rem;color:var(--ink-2,#556)}
+#v5ov .ov-sc{overflow-x:auto}
+#v5ov .ov-g{display:grid;grid-template-columns:minmax(150px,1.4fr) repeat(7,minmax(54px,1fr)) 52px;gap:6px;align-items:center;min-width:640px}
+#v5ov .ov-sn{display:flex;align-items:center;gap:8px;font-size:.8rem;font-weight:600;background:none;border:0;padding:0;color:inherit;cursor:pointer;text-align:start;font-family:inherit}
+#v5ov .ov-sn i{font-style:normal;flex:none;width:22px;height:22px;border-radius:7px;display:grid;place-items:center;background:rgb(var(--p-h2rgb,10 90 75));color:#fff;font-size:.75rem}
+#v5ov .ov-c{position:relative;font:inherit;height:44px;border-radius:9px;border:1px solid transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;color:#fff;padding:0}
+#v5ov .ov-c small{font-size:.66rem;opacity:.9}
+#v5ov .ov-c b{font-size:.98rem;font-variant-numeric:tabular-nums}
+#v5ov .ov-c:focus-visible{outline:2px solid var(--p-g1,#E6C673);outline-offset:2px}
+#v5ov .c1{background:var(--r1)}#v5ov .c2{background:var(--r2)}#v5ov .c3{background:var(--r3)}#v5ov .c4{background:var(--r4)}#v5ov .c5{background:rgb(var(--p-h2rgb,10 90 75))}
+#v5ov .cnew{background:var(--surface-2,#f1f3f6);border-color:var(--line,#dde);color:var(--ink-2,#556)}
+#v5ov .cpart{background:repeating-linear-gradient(135deg,var(--surface-2,#f1f3f6) 0 6px,var(--line,#dde) 6px 8px);border-color:var(--line,#dde);color:var(--ink,#123)}
+#v5ov .cna{background:repeating-linear-gradient(45deg,transparent 0 5px,var(--line,#dde) 5px 6px);border:1px dashed var(--line,#dde);color:var(--ink-2,#556)}
+#v5ov .ov-c.crit::after{content:"";position:absolute;top:4px;inset-inline-start:4px;width:7px;height:7px;border-radius:50%;background:var(--crit,#D9702A);box-shadow:0 0 0 1.5px #fff}
+#v5ov .ov-c.dim{opacity:.35}
+#v5ov .ov-av{font-weight:700;font-size:.9rem;text-align:center;font-variant-numeric:tabular-nums}
+#v5ov .ov-lg{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-size:.74rem;color:var(--ink-2,#556)}
+#v5ov .ov-lg span{display:inline-flex;align-items:center;gap:5px}
+#v5ov .ov-lg i{display:inline-block;width:14px;height:14px;border-radius:4px}
+#v5ov .ov-lg i.dot{width:8px;height:8px;border-radius:50%;background:var(--crit,#D9702A)}
+@media (max-width:760px){#v5ov .ov-k{grid-template-columns:repeat(2,minmax(0,1fr))}#v5ov .ov-days{grid-template-columns:1fr!important}}
+.sub.v5ov-hit{box-shadow:0 0 0 3px var(--p-g1,#E6C673);border-radius:12px;transition:box-shadow .3s}
+@media print{#v5ov{display:none!important}}
+</style>
+<script id="v5ov-js">(function(){
+var A=window.V5D;if(!A)return;
+function $(q){return document.querySelector(q)}
+function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function fmt(v){return v==null?'—':(Math.round(v*100)/100).toFixed(2).replace(/\.?0+$/,'')}
+function cell(sb,mine){var x=A.subStats(sb),c,t;
+  if(x.na){c='cna';t='—'}else if(x.avg!=null){c='c'+Math.max(1,Math.min(5,Math.round(x.avg)));t=String(x.avg)}else if(x.ans>0){c='cpart';t=x.ans+'/3'}else{c='cnew';t='·'}
+  var tip='المعيار الفرعي '+sb.code+(sb.crit?' (حرج)':'')+': '+(x.na?'لا ينطبق':x.avg!=null?'الدرجة '+x.avg:x.ans>0?'مكتمل جزئياً ('+x.ans+' من 3)':'لم يبدأ');
+  return '<button type="button" class="ov-c '+c+(sb.crit?' crit':'')+(mine&&!mine[sb.code]?' dim':'')+'" data-ovsub="'+sb.code+'" title="'+esc(tip)+'" aria-label="'+esc(tip)+'"><small>'+sb.code+'</small><b>'+t+'</b></button>'}
+function html(){var S=A.S(),sc=A.myScope();if(!sc)return '';
+  var subs=sc.subs&&sc.subs.length?sc.subs:A.SUBS_ALL,mine=null;
+  if(sc.r!=='lead'&&sc.r!=='view'){if(!sc.subs||!sc.subs.length)return '';mine={};sc.subs.forEach(function(sb){mine[sb.code]=1})}
+  var ans=0,tot=subs.length*3,done=0,crit=0,critD=0;
+  subs.forEach(function(sb){var x=A.subStats(sb);ans+=x.ans;var ok=x.na||x.ans>=3;if(ok)done++;if(sb.crit){crit++;if(ok)critD++}});
+  var pct=tot?Math.round(ans*100/tot):0;
+  var stds=A.STDS.filter(function(s){return !mine||s.subs.some(function(sb){return mine[sb.code]})});
+  var av=[];stds.forEach(function(s){var a=A.stdStats(s).avg;if(a!=null)av.push(a)});
+  var avg=av.length?A.r2(av.reduce(function(p,q){return p+q},0)/av.length):null;
+  var dec='';try{dec=sc.r==='lead'||sc.r==='view'?A.decision().t:A.status(avg,null)[0]}catch(e){}
+  var gm=0;try{gm=A.gapMiss().miss}catch(e){}
+  var h='<div class="ov-k">'+
+   '<div class="ov-kp main"><span>'+(mine?'إنجاز معاييري':'إنجاز التقويم')+'</span><b>'+pct+'٪</b><small>'+ans+' من '+tot+' مستوى</small></div>'+
+   '<div class="ov-kp"><span>معايير فرعية مكتملة</span><b>'+done+' من '+subs.length+'</b><small>الحرجة: '+critD+' من '+crit+'</small></div>'+
+   '<div class="ov-kp"><span>'+(mine?'متوسط معاييري':'متوسط الزيارة')+'</span><b>'+fmt(avg)+'</b><small>'+esc(dec||'')+'</small></div>'+
+   '<div class="ov-kp'+(gm?' warn':'')+'"><span>فروق بلا تعليل</span><b>'+gm+'</b><small>فرق درجتين أو أكثر عن رأي المنشأة</small></div></div>';
+  var nd=+S.setup.days||1,sd=S.stdDay||{},any=A.STDS.some(function(s){return sd[s.n]!==undefined&&sd[s.n]!==''});
+  if(nd>1&&any){h+='<div class="ov-days" style="grid-template-columns:repeat('+nd+',minmax(0,1fr))">';
+    for(var i=0;i<nd;i++){var ns=A.STDS.filter(function(s){return String(sd[s.n])===String(i)}).map(function(s){return s.n});
+      h+='<div class="ov-day"><b>'+esc(A.dayLabel(i))+'</b><span class="ov-dn">'+(ns.length?ns.map(function(n){return '<button type="button" data-goto="'+n+'" aria-label="المعيار '+n+'">'+n+'</button>'}).join(''):'<small>بلا معايير</small>')+'</span></div>'}
+    h+='</div>'}
+  var rows='';A.STDS.forEach(function(s){var st=A.stdStats(s);
+    rows+='<button type="button" class="ov-sn" data-goto="'+s.n+'"><i>'+s.n+'</i><span>'+esc(s.title)+'</span></button>';
+    for(var j=0;j<7;j++)rows+=s.subs[j]?cell(s.subs[j],mine):'<span></span>';
+    rows+='<span class="ov-av" title="متوسط المعيار">'+fmt(st.avg)+'</span>'});
+  h+='<div class="ov-map"><h3>خريطة الزيارة<small>انقر أي خلية لفتح المعيار الفرعي في النموذج</small></h3><div class="ov-sc"><div class="ov-g">'+rows+'</div></div>'+
+   '<div class="ov-lg"><span><i class="c1" style="background:var(--r1)"></i>1</span><span><i style="background:var(--r2)"></i>2</span><span><i style="background:var(--r3)"></i>3</span><span><i style="background:var(--r4)"></i>4</span><span><i style="background:rgb(var(--p-h2rgb,10 90 75))"></i>5</span>'+
+   '<span><i style="background:repeating-linear-gradient(135deg,var(--surface-2,#f1f3f6) 0 4px,var(--line,#dde) 4px 6px);border:1px solid var(--line,#dde)"></i>مكتمل جزئياً</span><span><i style="background:var(--surface-2,#f1f3f6);border:1px solid var(--line,#dde)"></i>لم يبدأ</span><span><i style="border:1px dashed var(--line,#dde)"></i>لا ينطبق</span><span><i class="dot"></i>معيار حرج</span>'+
+   (mine?'<span>الخلايا الباهتة ليست من معاييرك</span>':'')+'</div></div>';
+  return h}
+var last='';
+function render(){var d=$('#myTaskD'),box=$('#v5ov');if(!d)return;
+  if(!box){box=document.createElement('div');box.id='v5ov';var t=$('#myTask');if(t)d.insertBefore(box,t);else d.appendChild(box)}
+  var h='';try{h=html()}catch(e){h=''}
+  if(h!==last){last=h;box.innerHTML=h;box.hidden=!h}}
+var T=0;function sched(){clearTimeout(T);T=setTimeout(render,300)}
+document.addEventListener('change',sched,true);document.addEventListener('input',sched,true);
+setInterval(render,4000);
+document.addEventListener('click',function(e){var c=e.target.closest&&e.target.closest('[data-ovsub]');if(!c)return;var code=c.getAttribute('data-ovsub'),sb=A.SUB[code];if(!sb)return;
+  A.goStd(sb.std);setTimeout(function(){var el=document.getElementById('sub-'+code);if(el&&el.scrollIntoView)el.scrollIntoView({behavior:'auto',block:'start'});if(el){el.classList.add('v5ov-hit');setTimeout(function(){el.classList.remove('v5ov-hit')},1600)}},900)});
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',render);else render();
+})();</script>
 </html>
