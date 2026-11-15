@@ -22599,7 +22599,7 @@ buildForm();buildGuide();bootAll();
 if(!storeOK)setSave(false);else setSave(true);
 setShare();if(SH.on){shLinks();shStart()}else initSync();
 /* واجهة قراءة فقط لطبقة «نظرة عامة» (لا تغيّر البيانات) */
-window.V5D={S:function(){return S},STDS:STDS,SUB:SUB,SUBS_ALL:SUBS_ALL,subStats:subStats,stdStats:stdStats,status:status,r2:r2,myScope:myScope,gapMiss:gapMiss,decision:decision,goStd:goStd,dayLabel:dayLabel,LV:LV,page:function(){return PUB.page},subSpot:subSpot,subRecs:subRecs,aljOn:aljOn,oCmp:oCmp,num:num,chgList:chgList,chgiList:chgiList};
+window.V5D={S:function(){return S},STDS:STDS,SUB:SUB,SUBS_ALL:SUBS_ALL,subStats:subStats,stdStats:stdStats,status:status,r2:r2,myScope:myScope,gapMiss:gapMiss,decision:decision,goStd:goStd,dayLabel:dayLabel,LV:LV,page:function(){return PUB.page},subSpot:subSpot,subRecs:subRecs,aljOn:aljOn,oCmp:oCmp,num:num,chgList:chgList,chgiList:chgiList,mem:mem,isObs:isObs,subsOfMem:subsOfMem,stdsOfSubs:stdsOfSubs};
 })();
 </script>
 
@@ -23042,5 +23042,46 @@ function fit(){var pb=$('#v5Portal'),f=pb&&$('iframe',pb);if(!f||f.hidden)return
 document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-v5pv]');if(b){show(b.getAttribute('data-v5pv'))}});
 setInterval(function(){build();bar();fit()},1200);
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(build,500)});else setTimeout(build,500);
+})();</script>
+<style id="v5tm-css">
+.v5ms{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:6px 0 12px;padding-inline-start:52px;font-size:.82rem;color:var(--ink-2)}
+.v5ms i{font-style:normal;min-width:26px;height:26px;padding:0 6px;border-radius:999px;display:inline-grid;place-items:center;font-weight:800;font-size:.78rem;background:var(--surface-2);border:1px solid var(--line);color:var(--ink)}
+.v5ms button{font:inherit;font-size:.8rem;font-weight:700;border:1px solid var(--line);background:var(--surface);color:var(--brand);border-radius:999px;padding:3px 12px;cursor:pointer}
+.v5ds{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.v5ds button{font:inherit;font-weight:800;font-size:.8rem;min-width:30px;height:30px;border-radius:9px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.v5ds button.on{background:var(--p-g2,#C9A24B);border-color:var(--p-g2,#C9A24B);color:#fff}
+.v5ds button.other{opacity:.45}
+.v5ds button:disabled{cursor:default}
+.v5ds small{flex-basis:100%;font-size:.72rem;color:var(--ink-2)}
+@media (max-width:640px){.v5ms{padding-inline-start:0}}
+@media print{.v5ms,.v5ds{display:none!important}}
+</style>
+<script id="v5tm-js">(function(){
+var A=window.V5D;if(!A)return;
+function $(q,r){return (r||document).querySelector(q)}
+function $$(q,r){return [].slice.call((r||document).querySelectorAll(q))}
+function ini(n){n=String(n||'').trim().replace(/^(د\.|المهندس\/?|م\.)\s*/,'');var p=n.split(/\s+/).filter(Boolean).map(function(w){return w.length>3?w.replace(/^ال/,''):w});return p.length?(p[0].charAt(0)+(p[1]?' '+p[1].charAt(0):'')).replace(' ',''):''}
+function members(){var box=$('#teamBox');if(!box)return;
+  $$('.tm',box).forEach(function(tm){var inp=$('[data-tn]',tm);if(!inp)return;var id=inp.getAttribute('data-tn'),m=A.mem(id);if(!m)return;
+    var av=$('.av',tm);if(av){var t=ini(m.name);if(!av.getAttribute('data-n'))av.setAttribute('data-n',av.textContent);var want=t||av.getAttribute('data-n');if(av.textContent!==want)av.textContent=want}
+    if(A.isObs(m))return;
+    var after=tm.nextElementSibling&&tm.nextElementSibling.classList.contains('tm-em')?tm.nextElementSibling:tm,row=after.nextElementSibling;
+    if(!row||!row.classList.contains('v5ms')){row=document.createElement('div');row.className='v5ms';after.parentNode.insertBefore(row,after.nextSibling)}
+    var ns=A.stdsOfSubs(A.subsOfMem(m)),h='<span>المعايير:</span>'+(ns.length?ns.map(function(n){return '<i>'+n+'</i>'}).join(''):'<span>لم تُسند بعد</span>')+(A.myScope().r==='lead'?'<button type="button" data-tab="dist">تعديل التوزيع</button>':'');
+    if(row.getAttribute('data-h')!==h){row.setAttribute('data-h',h);row.innerHTML=h}})}
+function days(){var box=$('#daysBox');if(!box)return;var S=A.S(),sd=S.stdDay||{};
+  $$('.day',box).forEach(function(d){var inp=$('[data-day]',d);if(!inp)return;var i=inp.getAttribute('data-day'),w=$('.v5ds',d);
+    if(!w){w=document.createElement('div');w.className='v5ds';w.setAttribute('role','group');w.setAttribute('aria-label','معايير اليوم');d.appendChild(w)}
+    var dis=A.myScope().r!=='lead';
+    var h=A.STDS.map(function(s){var v=sd[s.n],on=v!==undefined&&v!==''&&String(v)===String(i),oth=v!==undefined&&v!==''&&!on;
+      return '<button type="button" data-v5sd="'+s.n+'" data-v5day="'+i+'" class="'+(on?'on':(oth?'other':''))+'" aria-pressed="'+on+'" title="المعيار '+s.n+': '+s.title+(oth?' (مسند ليوم آخر)':'')+'"'+(dis?' disabled':'')+'>'+s.n+'</button>'}).join('')+'<small>اضغط رقم المعيار لجعله في هذا اليوم، واضغطه مرة أخرى لإلغائه.</small>';
+    if(w.getAttribute('data-h')!==h){w.setAttribute('data-h',h);w.innerHTML=h}})}
+document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-v5sd]');if(!b||b.disabled)return;
+  var n=b.getAttribute('data-v5sd'),i=b.getAttribute('data-v5day'),sel=document.querySelector('select[data-sd="'+n+'"]');if(!sel||sel.disabled)return;
+  /* يمر عبر خانة «يوم المراجعة» الأصلية للمعيار، فيُحفظ ويُزامَن كما لو اخترته منها */
+  sel.value=b.classList.contains('on')?'':i;sel.dispatchEvent(new Event('change',{bubbles:true}));setTimeout(all,50)});
+function all(){try{members();days()}catch(e){}}
+setInterval(all,1500);document.addEventListener('input',function(){setTimeout(all,200)},true);document.addEventListener('change',function(){setTimeout(all,200)},true);
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(all,400)});else setTimeout(all,400);
 })();</script>
 </html>
