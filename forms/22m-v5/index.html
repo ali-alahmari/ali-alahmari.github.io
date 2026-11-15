@@ -23117,7 +23117,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 .v5q-e{padding:14px;color:var(--ink-2);font-size:.9rem}
 .v5q-h{padding:8px 14px;border-top:1px solid var(--line);font-size:.74rem;color:var(--ink-2)}
 @media (max-width:700px){.formwrap.v5st .rail a{flex-basis:200px}.v5k{min-width:0}.v5k .k{display:none}}
-@media (min-width:1100px){#app.simple #p-form .tools>.v5k{display:inline-flex!important}}
+@media (min-width:760px){#app.simple #p-form .tools>.v5k{display:inline-flex!important}}
 @media print{.v5rg,.v5ra,.v5k,.v5q{display:none!important}}
 </style>
 <script id="v5st-js">(function(){
@@ -23179,7 +23179,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 /* مساحة عمل المعيار الفرعي: تعمل داخل «العرض المبسّط» الأصلي على الشاشات العريضة فقط، ولا تحذف أي خانة */
 .v5subs button em{display:none}
 .v5ws,.v5gm,.v5fd{display:none}
-@media (min-width:1100px){
+@media (min-width:760px){
 #app.simple .formwrap.v5st .rail{display:flex}
 #app.simple .std.cur-std{display:grid!important;grid-template-columns:250px minmax(0,1fr) 290px;column-gap:16px;row-gap:0;align-items:start}
 #app.simple .std.cur-std>*{grid-column:1/-1}
@@ -23221,6 +23221,17 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 .v5ws .ph button:disabled{opacity:.5;cursor:default}
 .v5ws .nt{font-size:.78rem;color:var(--ink-2);margin:8px 0 0}
 /* مطابقة العينة: بطاقات المستويات النظيفة في مساحة العمل */
+/* نوافذ أضيق: القائمة في الأعلى، والدرجة والصياغات جانبًا ثم أسفل */
+@media (min-width:760px) and (max-width:1359px){
+#app.simple .std.cur-std{grid-template-columns:minmax(0,1fr) 260px}
+#app.simple .std.cur-std>.v5subs{grid-column:1/-1;grid-row:29;flex-direction:row;flex-wrap:wrap;position:static}
+#app.simple .std.cur-std>.v5subs::before{flex-basis:100%}
+#app.simple .std.cur-std>.v5subs button{width:auto;max-width:260px}
+#app.simple .std.cur-std>.subs{grid-column:1}
+#app.simple .std.cur-std>.v5ws{grid-column:2}}
+@media (min-width:760px) and (max-width:999px){
+#app.simple .std.cur-std{grid-template-columns:minmax(0,1fr)}
+#app.simple .std.cur-std>.v5ws{grid-column:1;grid-row:31;position:static;max-height:none}}
 #app.v5wsm .mytask{display:block!important}
 #app.v5wsm .std.cur-std>.std-h,#app.v5wsm .sub.cur .sub-chips,#app.v5wsm .sub.cur .v5sb{display:none!important}
 #app.v5wsm #phaseBar{padding:6px 12px;font-size:.86rem}
@@ -23261,7 +23272,7 @@ function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return
 function num(v){var n=parseFloat(v);return isNaN(n)?null:n}
 function cls(v){return v==null?'cn':'c'+Math.max(1,Math.min(5,Math.round(v)))}
 var LN={e:'الوجود',p:'الممارسة',f:'الفاعلية'},LOW={e:1,p:1,f:2},HIGH={e:3,p:3,f:5};
-function wide(){return window.matchMedia('(min-width:1100px)').matches}
+function wide(){return window.matchMedia('(min-width:760px)').matches}
 function on(){return A.simOn()&&wide()}
 /* سبب درجة المعيار الفرعي بقاعدة النموذج نفسها */
 function why(code){var S=A.S(),f=S.f,na=f[code+'.s.na'];if(na==='NA'||na==='1'||na==='yes')return 'لا ينطبق على هذا المعيار الفرعي، ويُستبعد من المتوسط.';
