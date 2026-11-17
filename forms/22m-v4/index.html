@@ -23470,6 +23470,18 @@ document.addEventListener('keydown',kd,true);ok.addEventListener('click',close)}
 .obx textarea{font:inherit;font-size:.9rem;width:100%;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);padding:6px 8px;resize:vertical;min-height:34px}
 .obx-xl{font-size:.84rem;color:var(--ink-2);margin:10px 0 4px;display:block}
 @media print{.obx{break-inside:avoid}.obx:not([open]) .obx-p{display:block}}
+
+#v5b-obs .obx-bar-in{padding:14px 16px 18px;background:var(--surface);border:1px solid var(--line);border-top:0;border-radius:0 0 18px 18px}
+#v5b-obs .obx-st h3{margin:16px 0 8px;font-size:1.05rem;color:var(--brand)}
+#v5b-obs .obx-st:first-of-type h3{margin-top:4px}
+#v5b-obs .obx{margin:0 0 10px;padding:0 12px 10px}
+.obx-sh{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:10px 0 6px}
+.obx-code{font-weight:800;color:var(--crit);direction:ltr;unicode-bidi:isolate}
+.obx-stx{flex:1 1 320px;min-width:0;font-weight:700;font-size:.95rem}
+.obx-sum{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.obx-sum .obx-t{display:none}
+#app .obx .obx-go{font:inherit;font-size:.8rem;border:1px solid var(--line);background:var(--surface);color:var(--brand);border-radius:8px;padding:2px 10px;cursor:pointer}
+.obx-x2{margin-top:8px}
 </style>
 <script id="obs-js">
 (function(){
@@ -23495,7 +23507,7 @@ function blockHTML(code){var it=OB[code],f=SF(),h='<details class="obx" data-obx
 function inject(){var n=0;Object.keys(OB).forEach(function(code){var a=document.getElementById('sub-'+code);if(!a||a.querySelector('[data-obx]'))return;var lv=a.querySelector('.lvls');var w=document.createElement('div');w.innerHTML=blockHTML(code);var el=w.firstChild;if(lv&&lv.nextSibling)a.insertBefore(el,lv.nextSibling);else a.appendChild(el);
     var sel=el.querySelectorAll('select[data-f]');for(var i=0;i<sel.length;i++)sel[i].value=SF()[sel[i].getAttribute('data-f')]||'';n++});
   if(n)try{D().S()&&window.dispatchEvent(new Event('obs:ready'))}catch(e){}return n}
-function refresh(){Object.keys(OB).forEach(function(code){var el=document.querySelector('[data-obx="'+code+'"]');if(!el)return;var f=SF();
+function refresh(){try{refreshBar()}catch(e){}Object.keys(OB).forEach(function(code){var el=document.querySelector('[data-obx="'+code+'"]');if(!el)return;var f=SF();
   var ref=document.getElementById('f-'+code+'-e-rev'),ro=!!(ref&&ref.disabled),fs=el.querySelectorAll('[data-f]');for(var q=0;q<fs.length;q++)if(fs[q].disabled!==ro)fs[q].disabled=ro;
   var s=el.querySelector('[data-obxs]');if(s){var nh=sumHTML(code);if(s.innerHTML!==nh)s.innerHTML=nh}
   (OB[code]||[]).forEach(function(_,i){var k=code+'.ob'+(i+1),v=f[k+'.r']||'',row=el.querySelector('[data-obi="'+k+'"]');if(!row)return;var sel=row.querySelector('select');
@@ -23528,7 +23540,41 @@ function buildDoc(){var X=window.docx;if(!X)throw new Error('docx');var f=SF(),S
     footers:{default:new X.Footer({children:[P('نموذج المعاينة الميدانية · إعداد المهندس/ علي الأحمري',{size:16,color:'777777',al:AL.CENTER})]})},children:ch}]})}
 async function exportDoc(){try{var blob=await window.docx.Packer.toBlob(buildDoc());var fac=(D().S().setup.facility||'').replace(/[\\/:*?"<>|]/g,'').trim();var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='نموذج المعاينة الميدانية'+(fac?' - '+fac:'')+'.docx';document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},4000)}catch(e){alert('تعذّر إنشاء ملف Word: '+(e&&e.message||e))}}
 function addBtn(){if(document.getElementById('btnObsW'))return;var ref=document.getElementById('btnWordF');if(!ref)return;var b=document.createElement('button');b.className='btn';b.id='btnObsW';b.type='button';b.textContent='نموذج المعاينة الميدانية (Word)';b.title='بنود المعاينة الميدانية ونتائجها وملاحظاتها لكل المعايير';ref.parentNode.insertBefore(b,ref.nextSibling);b.addEventListener('click',exportDoc)}
-function boot(){if(!D()){setTimeout(boot,300);return}inject();addBtn();refresh();setInterval(function(){inject();refresh()},1500)}
+
+/* ---------- شريط مستقل «المعاينة الميدانية» يجمع البنود كلها (نسخة مرآة للخانات تحت كل معيار فرعي) ---------- */
+var SVG='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+var CHEV='<svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>';
+function allCnt(){var o={ok:0,pa:0,no:0,na:0,n:0};Object.keys(OB).forEach(function(c){var x=cnt(c);o.n+=x.n;['ok','pa','no','na'].forEach(function(k){o[k]+=x[k]})});return o}
+function barRows(){var f=SF(),h='<div class="obx-bar-in"><p class="obx-h">كل بنود المعاينة الميدانية في مكان واحد، مرتبة حسب المعايير. ما تسجله هنا يظهر تحت المعيار الفرعي نفسه في النموذج، والعكس.</p>',bySt={};
+  Object.keys(OB).forEach(function(c){(bySt[stdOf(c)]=bySt[stdOf(c)]||[]).push(c)});
+  D().STDS.forEach(function(st){var cs=bySt[st.n];if(!cs)return;h+='<section class="obx-st"><h3>المعيار '+esc(st.ord)+' ('+st.n+'): '+esc(st.title)+'</h3>';
+    cs.forEach(function(code){var sb=D().SUB[code];h+='<div class="obx" data-obb="'+code+'"><div class="obx-sh"><span class="obx-code">'+code+'</span><span class="obx-stx">'+esc(sb?sb.text:'')+'</span><span class="obx-sum" data-obxs2="'+code+'">'+sumHTML(code)+'</span><button type="button" class="obx-go" data-obgo="'+code+'">فتح في النموذج</button></div>';
+      OB[code].forEach(function(x,i){var k=code+'.ob'+(i+1),v=f[k+'.r']||'';
+        h+='<div class="obx-i" data-obi2="'+k+'" data-v="'+esc(v)+'"><span class="obx-no">'+(i+1)+'</span><div class="obx-c"><p class="obx-tx">'+esc(x[0])+'</p><div class="obx-m"><span class="obx-tag">'+esc(x[1])+'</span>'+x[2].split(' / ').map(function(l){return '<span class="obx-tag obx-lv">'+(LVN[l]||esc(l))+'</span>'}).join('')+'</div>'+
+          '<div class="obx-ch" role="group" aria-label="نتيجة البند '+(i+1)+' للمعيار الفرعي '+code+'">'+RES.map(function(r){return '<button type="button" class="obx-chip" data-obc="'+k+'" data-v="'+r[0]+'" aria-pressed="'+(v===r[0])+'">'+r[1]+'</button>'}).join('')+'</div>'+
+          '<textarea data-obn="'+k+'.n" rows="1" aria-label="ملاحظة البند '+(i+1)+' للمعيار الفرعي '+code+'" placeholder="ما شاهدته، ورقم الصورة إن وُجدت">'+esc(f[k+'.n']||'')+'</textarea></div></div>'});
+      h+='<textarea class="obx-x2" data-obn="'+code+'.ob.x" rows="1" aria-label="بنود أخرى للمعيار الفرعي '+code+'" placeholder="بنود أخرى عاينها الفريق في الموقع…">'+esc(f[code+'.ob.x']||'')+'</textarea></div>'});
+    h+='</section>'});
+  return h+'</div>'}
+var BOPEN=false;
+function addBar(){if(document.getElementById('v5-obs'))return true;var form=document.getElementById('v5-form');if(!form||!D())return false;
+  var sec=document.createElement('section');sec.className='v5-bar';sec.id='v5-obs';
+  sec.innerHTML='<button type="button" class="v5-h" data-v5bar="obs" aria-expanded="false" aria-controls="v5b-obs"><span class="v5-ic">'+SVG+'</span><span class="v5-tx"><b>المعاينة الميدانية</b><small>ما لا يُتحقق منه إلا بالمشاهدة في الموقع، لكل المعايير</small></span><span class="v5-bd" id="obxBd"></span><span class="v5-ch">'+CHEV+'</span></button><div class="v5-body v5-c" id="v5b-obs"></div>';
+  form.parentNode.insertBefore(sec,form.nextSibling);return true}
+function setBar(on){var sec=document.getElementById('v5-obs');if(!sec)return;BOPEN=on;var body=sec.querySelector('.v5-body');
+  if(on&&!body.firstChild)body.innerHTML=barRows();sec.classList.toggle('open',on);sec.querySelector('.v5-h').setAttribute('aria-expanded',on?'true':'false');body.classList.toggle('v5-c',!on);
+  if(on){refreshBar();setTimeout(function(){sec.scrollIntoView({block:'start',behavior:'smooth'})},30)}}
+function refreshBar(){var bd=document.getElementById('obxBd');if(bd){var a=allCnt(),t=(a.ok+a.pa+a.no+a.na)+' من '+a.n;if(bd.textContent!==t)bd.textContent=t}
+  if(!BOPEN)return;var f=SF(),act=document.activeElement;
+  Object.keys(OB).forEach(function(code){var s=document.querySelector('[data-obxs2="'+code+'"]');if(s){var nh=sumHTML(code);if(s.innerHTML!==nh)s.innerHTML=nh}
+    var ref=document.getElementById('f-'+code+'-e-rev'),ro=!!(ref&&ref.disabled);
+    (OB[code]||[]).forEach(function(_,i){var k=code+'.ob'+(i+1),v=f[k+'.r']||'',row=document.querySelector('[data-obi2="'+k+'"]');if(!row)return;row.setAttribute('data-v',v);
+      var bs=row.querySelectorAll('.obx-chip');for(var j=0;j<bs.length;j++){bs[j].setAttribute('aria-pressed',String(bs[j].getAttribute('data-v')===v));bs[j].disabled=ro}});
+    var ts=document.querySelectorAll('[data-obb="'+code+'"] textarea[data-obn]');for(var q=0;q<ts.length;q++){var t=ts[q];t.disabled=ro;if(t!==act){var nv=f[t.getAttribute('data-obn')]||'';if(t.value!==nv)t.value=nv}}})}
+document.addEventListener('input',function(e){var t=e.target;if(!t||!t.getAttribute||!t.hasAttribute('data-obn'))return;var src=document.querySelector('[data-f="'+t.getAttribute('data-obn')+'"]');if(!src||src.disabled)return;src.value=t.value;src.dispatchEvent(new Event('input',{bubbles:true}));setTimeout(refresh,50)});
+document.addEventListener('click',function(e){var h=e.target.closest&&e.target.closest('[data-v5bar]');if(h){var k=h.getAttribute('data-v5bar');if(k==='obs')setBar(!BOPEN);else if(BOPEN)setBar(false);return}
+  var g=e.target.closest&&e.target.closest('[data-obgo]');if(g){var c=g.getAttribute('data-obgo');var fh=document.querySelector('[data-v5bar="form"]');if(fh&&fh.getAttribute('aria-expanded')!=='true')fh.click();setTimeout(function(){try{D().simGo(c)}catch(x){}var d=document.querySelector('[data-obx="'+c+'"]');if(d){d.open=true;setTimeout(function(){d.scrollIntoView({block:'center',behavior:'smooth'})},120)}},250)}});
+function boot(){if(!D()){setTimeout(boot,300);return}inject();addBtn();addBar();refresh();setInterval(function(){inject();addBar();refresh()},1500)}
 document.addEventListener('input',function(e){if(e.target&&e.target.closest&&e.target.closest('.obx'))setTimeout(refresh,50)},true);
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 window.OBX={buildDoc:buildDoc,refresh:refresh,data:OB};

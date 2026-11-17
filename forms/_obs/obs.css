@@ -29,3 +29,15 @@
 .obx textarea{font:inherit;font-size:.9rem;width:100%;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);padding:6px 8px;resize:vertical;min-height:34px}
 .obx-xl{font-size:.84rem;color:var(--ink-2);margin:10px 0 4px;display:block}
 @media print{.obx{break-inside:avoid}.obx:not([open]) .obx-p{display:block}}
+
+#v5b-obs .obx-bar-in{padding:14px 16px 18px;background:var(--surface);border:1px solid var(--line);border-top:0;border-radius:0 0 18px 18px}
+#v5b-obs .obx-st h3{margin:16px 0 8px;font-size:1.05rem;color:var(--brand)}
+#v5b-obs .obx-st:first-of-type h3{margin-top:4px}
+#v5b-obs .obx{margin:0 0 10px;padding:0 12px 10px}
+.obx-sh{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:10px 0 6px}
+.obx-code{font-weight:800;color:var(--crit);direction:ltr;unicode-bidi:isolate}
+.obx-stx{flex:1 1 320px;min-width:0;font-weight:700;font-size:.95rem}
+.obx-sum{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.obx-sum .obx-t{display:none}
+#app .obx .obx-go{font:inherit;font-size:.8rem;border:1px solid var(--line);background:var(--surface);color:var(--brand);border-radius:8px;padding:2px 10px;cursor:pointer}
+.obx-x2{margin-top:8px}
