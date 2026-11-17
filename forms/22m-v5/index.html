@@ -23437,4 +23437,100 @@ function kd(e){if(ov.hidden)return;if(e.key==='Escape'){e.preventDefault();e.sto
 document.addEventListener('keydown',kd,true);ok.addEventListener('click',close)})();
 </script>
 
+<style id="obs-css">
+.obx{margin:4px 14px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2)}
+.obx>summary{list-style:none;cursor:pointer;display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;padding:9px 12px;font-size:.92rem}
+.obx>summary::-webkit-details-marker{display:none}
+.obx>summary::before{content:"";width:7px;height:7px;border-inline-start:2px solid var(--ink-2);border-bottom:2px solid var(--ink-2);transform:rotate(-45deg);transition:transform .15s;margin-inline-end:2px}
+.obx[open]>summary::before{transform:rotate(45deg)}
+.obx-t{font-weight:700;color:var(--brand)}
+.obx-n{color:var(--ink-2);font-size:.85rem;font-variant-numeric:tabular-nums}
+.obx-b{font-size:.78rem;border-radius:999px;padding:1px 8px;border:1px solid currentColor}
+.obx-b.obx-ok,#app .obx-i[data-v="ok"] .obx-chip[aria-pressed="true"]{color:var(--ok)!important}
+.obx-b.obx-pa,#app .obx-i[data-v="pa"] .obx-chip[aria-pressed="true"]{color:var(--warn)!important}
+.obx-b.obx-no,#app .obx-i[data-v="no"] .obx-chip[aria-pressed="true"]{color:var(--bad)!important}
+.obx-b.obx-na,#app .obx-i[data-v="na"] .obx-chip[aria-pressed="true"]{color:var(--r-na)!important}
+.obx-p{padding:0 12px 12px;display:flex;flex-direction:column;gap:0}
+.obx-h{margin:0 0 6px;font-size:.84rem;color:var(--ink-2)}
+.obx-i{display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px;padding:10px 0;border-top:1px solid var(--line)}
+.obx-i[data-v="ok"]{box-shadow:inset -3px 0 0 var(--ok)}.obx-i[data-v="pa"]{box-shadow:inset -3px 0 0 var(--warn)}.obx-i[data-v="no"]{box-shadow:inset -3px 0 0 var(--bad)}.obx-i[data-v="na"]{box-shadow:inset -3px 0 0 var(--r-na)}
+.obx-i{padding-inline-start:6px}
+.obx-no{font-weight:700;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.obx-c{min-width:0;display:flex;flex-direction:column;gap:6px}
+.obx-tx{margin:0;font-size:.95rem;line-height:1.6}
+.obx-m{display:flex;flex-wrap:wrap;gap:5px}
+#app .obx .obx-tag{font-size:.75rem;border-radius:6px;padding:1px 7px;background:var(--brand-soft);color:var(--brand)}
+.obx-tag.obx-lv{background:var(--crit-soft);color:var(--crit);font-weight:700}
+.obx-ch{display:flex;flex-wrap:wrap;gap:6px}
+#app .obx .obx-chip{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:8px;padding:3px 11px;cursor:pointer}
+#app .obx .obx-chip[aria-pressed="true"]{border-color:currentColor!important;font-weight:700;background:color-mix(in srgb,currentColor 12%,var(--surface))!important;box-shadow:none}
+.obx-chip:disabled{cursor:not-allowed;opacity:.6}
+.obx-chip:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.obx textarea{font:inherit;font-size:.9rem;width:100%;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);padding:6px 8px;resize:vertical;min-height:34px}
+.obx-xl{font-size:.84rem;color:var(--ink-2);margin:10px 0 4px;display:block}
+@media print{.obx{break-inside:avoid}.obx:not([open]) .obx-p{display:block}}
+</style>
+<script id="obs-js">
+(function(){
+/* المعاينة الميدانية: بنود لا يُتحقق منها إلا بالمشاهدة في الموقع، لكل معيار فرعي. المفاتيح: <code>.ob<i>.r (النتيجة) و<code>.ob<i>.n (الملاحظة) و<code>.ob.x (بنود إضافية) */
+var OB={"1-1":[["مخرجات الشراكة الظاهرة في الموقع: معدات أو أجهزة مقدمة من جهات العمل، معامل أو ورش مشتركة أو برعاية جهة، ومدى استخدامها فعلاً في التدريب.","الورش والمعامل","ف"]],"1-2":[["إن أُتيحت زيارة جهة تدريب تعاوني: بيئة التدريب، وتوافق ما يؤديه المتدرب مع تخصصه، ووجود مشرف من الجهة.","جهة التدريب التعاوني","م"]],"2-4":[["لوحات وشاشات التواصل داخل المنشأة: وجودها في أماكن مرئية وحداثة محتواها (إعلانات، قرارات، مواعيد).","الممرات والمداخل","م"],["وجود صناديق أو رموز للشكاوى والمقترحات في متناول المتدربين.","الممرات ومرافق الخدمات","و"]],"2-5":[["عرض حي لنظام إدارة المعلومات واستخراج تقرير مباشر أمام الفريق، ومطابقة أرقامه مع الدراسة الذاتية.","مكتب النظام","م"]],"2-6":[["القاعات والورش والمعامل: النظافة، الإضاءة، التهوية، التكييف، حالة الأثاث.","جولة المرافق","م"],["المرافق العامة: دورات المياه، المصلى، أماكن الاستراحة، المواقف، وحالتها.","جولة المرافق","م"],["تهيئة المرافق لذوي الإعاقة: المداخل والمنحدرات، المصاعد، دورات المياه المهيأة، المواقف المخصصة.","جولة المرافق","م"],["آثار الصيانة الظاهرة: أعطال قائمة، تسربات، أجهزة معطلة متروكة في القاعات.","جولة المرافق","ف"]],"2-7":[["مخارج الطوارئ: وضوح اللوحات، الإضاءة، خلو الممرات والأبواب من العوائق.","جولة المرافق","م"],["طفايات الحريق وأنظمة الإنذار: وجودها، سهولة الوصول إليها، وتاريخ الفحص على البطاقة.","جولة المرافق","م"],["مخططات الإخلاء ونقاط التجمع معلّقة وواضحة.","الممرات والساحات","و"],["حقائب الإسعافات الأولية: وجودها في الورش والمعامل وصلاحية محتواها.","الورش والمعامل","م"],["التزام المتدربين والمدربين بأدوات الوقاية الشخصية داخل الورش، ووجود اللوحات الإرشادية على الأجهزة.","الورش والمعامل","م"],["تخزين المواد الخطرة أو القابلة للاشتعال بطريقة آمنة ومعزولة.","المستودعات والورش","م"]],"3-3":[["مرافق خدمات المتدربين قائمة ومفعّلة: مكتب الإرشاد، المكتبة، غرفة الإسعاف أو العيادة، أماكن الأنشطة، الكافتيريا.","جولة المرافق","و / م"],["إقبال المتدربين الفعلي على هذه المرافق وقت الجولة (مكتبة مستخدمة، مرشد متواجد).","جولة المرافق","ف"]],"4-3":[["توفر الموارد المساعدة فعلياً داخل القاعات والورش والمكتبة: الحقائب التدريبية، المراجع، النماذج والمجسمات التعليمية، الملصقات الفنية.","القاعات والورش والمكتبة","م"]],"4-4":[["إن تزامن مع الزيارة تقييم عملي: ارتباط المهمة المطلوبة بنواتج التعلم، وتطبيق بطاقة الملاحظة أثناء التقييم.","الورش والمعامل","م"]],"4-5":[["مكان حفظ الاختبارات وأوراق الإجابة: خزائن مغلقة، صلاحيات الوصول، وسرية الحفظ.","وحدة الاختبارات","م"]],"5-1":[["حضور جزء من جلسة تدريبية نظرية وأخرى عملية، ورصد الاستراتيجيات المستخدمة فعلاً (شرح، تطبيق عملي، تعلم تعاوني، حل مشكلات، محاكاة).","القاعات والورش","م"],["مطابقة ما يُنفذ في الجلسة مع خطة التدريب وتوصيف المقرر لنفس الأسبوع.","القاعات والورش","م"],["مراعاة الفروق الفردية داخل الجلسة: دعم المتعثرين، ومهام إثرائية للمتميزين.","القاعات والورش","م"],["تهيئة القاعات والمواد لذوي الإعاقة، وتوفر التدريب في الفترات أو الأقسام الأخرى إن وجدت.","القاعات والورش","م"]],"5-2":[["نماذج حية من مشاريع المتدربين أو منتجاتهم (معرض، ورشة، نادٍ) وارتباطها بنواتج التعلم.","الورش والمعارض","م"],["أنشطة التحفيز الظاهرة: لوحات إنجاز، أندية، مسابقات، وحداثة تواريخها.","الممرات والأندية","م"]],"5-3":[["عرض حي لنظام إدارة التعلم: مقررات مفعّلة، محتوى مرفوع، واجبات وتقييمات، وتفاعل المتدربين (اختيار مقررين عشوائياً).","عرض النظام","م"],["توظيف التقنية داخل القاعات والورش: أجهزة عرض تعمل، برمجيات تخصصية، محاكيات، أجهزة تشخيص حديثة.","القاعات والورش","م"],["جاهزية البنية التقنية: الشبكة، معامل الحاسب، أجهزة المتدربين.","معامل الحاسب والقاعات","و / م"]],"5-4":[["كفاية المعدات لعدد المتدربين في الشعبة (نسبة المتدرب إلى الجهاز أو محطة العمل).","الورش والمعامل","م"],["صلاحية المعدات وتشغيلها، ووجود بطاقة تشغيل وسجل صيانة على الأجهزة الرئيسة.","الورش والمعامل","م"],["ملاءمة المعدات لنواتج التعلم وحداثتها مقارنة بما يستخدمه سوق العمل.","الورش والمعامل","ف"],["مطابقة جدول إشغال الورش والقاعات مع الاستخدام الفعلي وقت الجولة.","الورش والقاعات","م"],["توفر المواد الاستهلاكية اللازمة للتدريب العملي في الورش.","الورش والمستودع","م"]],"6-1":[["أعمال ومنتجات متدربين من مستويات مختلفة تُظهر تطور مهاراتهم الفعلي.","الورش والمعارض","ف"]],"6-2":[["عرض حي لنظام الحضور والغياب والإنذارات، ومطابقة الحضور الفعلي في جلسة مع المسجل في النظام.","عرض النظام + القاعات","م"]],"6-3":[["سلوك المتدربين أثناء التدريب: الانضباط، الالتزام بالزي وأدوات السلامة، العمل الجماعي، احترام الوقت وأخلاقيات العمل.","القاعات والورش","م"]],"7-1":[["مطابقة المدرب المسجل في الجدول مع من يدرّس فعلاً وقت الجولة.","القاعات والورش","م"],["تمكن المدرب أثناء الجلسة: إتقان الجانب العملي، إدارة الجلسة، الإجابة عن أسئلة المتدربين.","القاعات والورش","م"]]};
+var RES=[['ok','متحقق'],['pa','جزئي'],['no','غير متحقق'],['na','لم يُتح']];
+var LVN={'و':'الوجود','م':'الممارسة','ف':'الفاعلية'};
+function D(){return window.V5D}
+function SF(){try{return D().S().f}catch(e){return {}}}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function cnt(code){var f=SF(),it=OB[code]||[],o={ok:0,pa:0,no:0,na:0,n:it.length};it.forEach(function(_,i){var v=f[code+'.ob'+(i+1)+'.r'];if(o[v]!=null)o[v]++});return o}
+function sumHTML(code){var c=cnt(code),d=c.ok+c.pa+c.no+c.na;
+  return '<span class="obx-t">المعاينة الميدانية</span><span class="obx-n">'+d+' من '+c.n+'</span>'+
+    (c.ok?'<span class="obx-b obx-ok">متحقق '+c.ok+'</span>':'')+(c.pa?'<span class="obx-b obx-pa">جزئي '+c.pa+'</span>':'')+(c.no?'<span class="obx-b obx-no">غير متحقق '+c.no+'</span>':'')+(c.na?'<span class="obx-b obx-na">لم يُتح '+c.na+'</span>':'')}
+function blockHTML(code){var it=OB[code],f=SF(),h='<details class="obx" data-obx="'+code+'"><summary data-obxs="'+code+'">'+sumHTML(code)+'</summary><div class="obx-p"><p class="obx-h">بنود لا يُتحقق منها إلا بالمشاهدة في الموقع أو بالعرض الحي. سجّل النتيجة وما شاهدته، فهي سند لدرجة المرحلة الميدانية.</p>';
+  it.forEach(function(x,i){var k=code+'.ob'+(i+1),v=f[k+'.r']||'';
+    h+='<div class="obx-i" data-obi="'+k+'" data-v="'+esc(v)+'"><span class="obx-no">'+(i+1)+'</span><div class="obx-c"><p class="obx-tx">'+esc(x[0])+'</p><div class="obx-m"><span class="obx-tag">'+esc(x[1])+'</span>'+x[2].split(' / ').map(function(l){return '<span class="obx-tag obx-lv">'+(LVN[l]||esc(l))+'</span>'}).join('')+'</div>'+
+      '<div class="obx-ch" role="group" aria-label="نتيجة البند '+(i+1)+' للمعيار الفرعي '+code+'">'+RES.map(function(r){return '<button type="button" class="obx-chip" data-obc="'+k+'" data-v="'+r[0]+'" aria-pressed="'+(v===r[0])+'">'+r[1]+'</button>'}).join('')+'</div>'+
+      '<select id="f-'+code+'-ob'+(i+1)+'-r" data-f="'+k+'.r" hidden aria-hidden="true" tabindex="-1"><option value=""></option>'+RES.map(function(r){return '<option value="'+r[0]+'">'+r[1]+'</option>'}).join('')+'</select>'+
+      '<textarea id="f-'+code+'-ob'+(i+1)+'-n" data-f="'+k+'.n" rows="1" placeholder="ما شاهدته، ورقم الصورة إن وُجدت">'+esc(f[k+'.n']||'')+'</textarea></div></div>'});
+  h+='<label class="obx-xl" for="f-'+code+'-ob-x">بنود أخرى عاينها الفريق في الموقع</label><textarea id="f-'+code+'-ob-x" data-f="'+code+'.ob.x" rows="2" placeholder="اكتب البند ونتيجته…">'+esc(f[code+'.ob.x']||'')+'</textarea></div></details>';
+  return h}
+function inject(){var n=0;Object.keys(OB).forEach(function(code){var a=document.getElementById('sub-'+code);if(!a||a.querySelector('[data-obx]'))return;var lv=a.querySelector('.lvls');var w=document.createElement('div');w.innerHTML=blockHTML(code);var el=w.firstChild;if(lv&&lv.nextSibling)a.insertBefore(el,lv.nextSibling);else a.appendChild(el);
+    var sel=el.querySelectorAll('select[data-f]');for(var i=0;i<sel.length;i++)sel[i].value=SF()[sel[i].getAttribute('data-f')]||'';n++});
+  if(n)try{D().S()&&window.dispatchEvent(new Event('obs:ready'))}catch(e){}return n}
+function refresh(){Object.keys(OB).forEach(function(code){var el=document.querySelector('[data-obx="'+code+'"]');if(!el)return;var f=SF();
+  var ref=document.getElementById('f-'+code+'-e-rev'),ro=!!(ref&&ref.disabled),fs=el.querySelectorAll('[data-f]');for(var q=0;q<fs.length;q++)if(fs[q].disabled!==ro)fs[q].disabled=ro;
+  var s=el.querySelector('[data-obxs]');if(s){var nh=sumHTML(code);if(s.innerHTML!==nh)s.innerHTML=nh}
+  (OB[code]||[]).forEach(function(_,i){var k=code+'.ob'+(i+1),v=f[k+'.r']||'',row=el.querySelector('[data-obi="'+k+'"]');if(!row)return;var sel=row.querySelector('select');
+    if(sel&&sel.value!==v&&document.activeElement!==sel)sel.value=v;var dis=!!(sel&&sel.disabled);row.setAttribute('data-v',v);
+    var bs=row.querySelectorAll('.obx-chip');for(var j=0;j<bs.length;j++){bs[j].setAttribute('aria-pressed',String(bs[j].getAttribute('data-v')===v));bs[j].disabled=dis}})})}
+document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.obx-chip');if(!b||b.disabled)return;var k=b.getAttribute('data-obc'),sel=document.querySelector('select[data-f="'+k+'.r"]');if(!sel||sel.disabled)return;
+  var v=b.getAttribute('data-v');sel.value=sel.value===v?'':v;sel.dispatchEvent(new Event('input',{bubbles:true}));sel.dispatchEvent(new Event('change',{bubbles:true}));refresh()});
+
+/* تصدير Word: نموذج المعاينة الميدانية معبّأً */
+function stdOf(code){try{return D().SUB[code].std}catch(e){return +code.split('-')[0]}}
+function buildDoc(){var X=window.docx;if(!X)throw new Error('docx');var f=SF(),S=D().S(),FONT={ascii:'Sakkal Majalla',hAnsi:'Sakkal Majalla',cs:'Sakkal Majalla',eastAsia:'Sakkal Majalla'},AL=X.AlignmentType,DX=X.WidthType.DXA;
+  var LAB={};RES.forEach(function(r){LAB[r[0]]=r[1]});
+  function run(t,o){o=o||{};return new X.TextRun({text:String(t),font:FONT,size:o.size||24,bold:!!o.bold,color:o.color,rightToLeft:true})}
+  function P(t,o){o=o||{};return new X.Paragraph({bidirectional:true,alignment:o.al||AL.START,spacing:{before:o.sb||0,after:o.sa==null?60:o.sa},keepNext:!!o.keep,children:[run(t,o)]})}
+  var bd={style:X.BorderStyle.SINGLE,size:4,color:'B9C7C5'},B={top:bd,bottom:bd,left:bd,right:bd};
+  function C(t,w,o){o=o||{};var ps=String(t==null?'':t).split(/\r?\n/).map(function(x){return P(x||' ',{size:o.size||21,bold:o.bold,color:o.color,al:o.al,sa:0})});return new X.TableCell({children:ps,width:{size:w,type:DX},shading:o.fill?{type:X.ShadingType.CLEAR,fill:o.fill,color:'auto'}:undefined,borders:B,margins:{top:60,bottom:60,left:100,right:100}})}
+  function T(cw,rows){return new X.Table({visuallyRightToLeft:true,width:{size:cw.reduce(function(a,b){return a+b},0),type:DX},columnWidths:cw,rows:rows.map(function(r,i){return new X.TableRow({children:r,cantSplit:true,tableHeader:i===0})})})}
+  var W=[500,5600,1700,1100,1400,4400],H=['م','ما يُعاين في الموقع','مكان المعاينة','المستوى','النتيجة','ما شوهد'];
+  var ch=[P('نموذج المعاينة الميدانية',{size:34,bold:true,color:'1F3A5F',al:AL.CENTER,sa:40}),
+    P('المنشأة: '+(S.setup.facility||'—')+'    تاريخ الزيارة: '+(S.setup.date||'—'),{size:22,al:AL.CENTER,sa:160})];
+  var bySt={};Object.keys(OB).forEach(function(c){(bySt[stdOf(c)]=bySt[stdOf(c)]||[]).push(c)});
+  D().STDS.forEach(function(st){var cs=bySt[st.n];if(!cs)return;
+    ch.push(P('المعيار '+st.ord+' ('+st.n+'): '+st.title,{size:28,bold:true,color:'B0702F',sb:200,sa:80,keep:true}));
+    cs.forEach(function(code){var sb=D().SUB[code];ch.push(P('('+code+') '+(sb?sb.text:''),{size:23,bold:true,color:'1F3A5F',sb:100,sa:60,keep:true}));
+      var rows=[H.map(function(h,i){return C(h,W[i],{bold:true,color:'FFFFFF',fill:'1F3A5F',al:AL.CENTER})})];
+      OB[code].forEach(function(x,i){var k=code+'.ob'+(i+1);rows.push([C(i+1,W[0],{al:AL.CENTER}),C(x[0],W[1]),C(x[1],W[2]),C(x[2].split(' / ').map(function(l){return LVN[l]||l}).join('، '),W[3],{al:AL.CENTER}),C(LAB[f[k+'.r']]||'—',W[4],{al:AL.CENTER,bold:true}),C(f[k+'.n']||'',W[5])])});
+      ch.push(T(W,rows));if((f[code+'.ob.x']||'').trim())ch.push(P('بنود أخرى: '+f[code+'.ob.x'],{size:21,sb:60}))})});
+  ch.push(P('عضو الفريق: ............................    رئيس الفريق: ............................',{size:22,sb:300}));
+  return new X.Document({sections:[{properties:{page:{size:{orientation:X.PageOrientation.LANDSCAPE,width:11906,height:16838},margin:{top:900,bottom:900,left:900,right:900}}},
+    footers:{default:new X.Footer({children:[P('نموذج المعاينة الميدانية · إعداد المهندس/ علي الأحمري',{size:16,color:'777777',al:AL.CENTER})]})},children:ch}]})}
+async function exportDoc(){try{var blob=await window.docx.Packer.toBlob(buildDoc());var fac=(D().S().setup.facility||'').replace(/[\\/:*?"<>|]/g,'').trim();var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='نموذج المعاينة الميدانية'+(fac?' - '+fac:'')+'.docx';document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},4000)}catch(e){alert('تعذّر إنشاء ملف Word: '+(e&&e.message||e))}}
+function addBtn(){if(document.getElementById('btnObsW'))return;var ref=document.getElementById('btnWordF');if(!ref)return;var b=document.createElement('button');b.className='btn';b.id='btnObsW';b.type='button';b.textContent='نموذج المعاينة الميدانية (Word)';b.title='بنود المعاينة الميدانية ونتائجها وملاحظاتها لكل المعايير';ref.parentNode.insertBefore(b,ref.nextSibling);b.addEventListener('click',exportDoc)}
+function boot(){if(!D()){setTimeout(boot,300);return}inject();addBtn();refresh();setInterval(function(){inject();refresh()},1500)}
+document.addEventListener('input',function(e){if(e.target&&e.target.closest&&e.target.closest('.obx'))setTimeout(refresh,50)},true);
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+window.OBX={buildDoc:buildDoc,refresh:refresh,data:OB};
+})();
+</script>
 </html>
