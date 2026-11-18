@@ -97,27 +97,19 @@ document.addEventListener('click',function(e){var t=e.target;if(!t.closest)retur
    نتيجة كل بند: <sub>.c<id>x<item>.<r|n|at|by>   (sub = المعيار الفرعي الذي يتبعه البند) */
 var CAT={
  ses:{home:'5-1',name:'حضور جلسة',ph:'القاعة أو الورشة',items:[
-  ['s1','5-1','الاستراتيجيات المستخدمة فعلاً في الجلسة (شرح، تطبيق عملي، تعلم تعاوني، حل مشكلات، محاكاة).','م'],
-  ['s2','5-1','مطابقة ما يُنفذ في الجلسة مع خطة التدريب وتوصيف المقرر لنفس الأسبوع.','م'],
-  ['s3','5-1','مراعاة الفروق الفردية: دعم المتعثرين، ومهام إثرائية للمتميزين.','م'],
-  ['s4','5-1','تهيئة القاعة والمواد لذوي الإعاقة.','م'],
-  ['s5','4-3','توفر الموارد المساعدة في القاعة: الحقائب التدريبية، المراجع، النماذج والمجسمات، الملصقات الفنية.','م'],
+  ['s1','5-1','الاستراتيجيات المستخدمة فعلاً (شرح، تطبيق، تعلم تعاوني، حل مشكلات، محاكاة)، ومراعاة الفروق الفردية.','م'],
+  ['s2','5-1','مطابقة ما يُنفذ مع خطة التدريب وتوصيف المقرر لنفس الأسبوع.','م'],
+  ['s5','4-3','توفر الموارد المساعدة في القاعة: الحقائب، المراجع، النماذج والمجسمات، الملصقات.','م'],
   ['s6','5-3','توظيف التقنية في الجلسة: أجهزة عرض تعمل، برمجيات تخصصية، محاكيات.','م'],
   ['s7','6-2','مطابقة الحضور الفعلي مع المسجل في نظام الحضور.','م'],
-  ['s8','6-3','سلوك المتدربين: الانضباط، الالتزام بالزي، العمل الجماعي، احترام الوقت وأخلاقيات العمل.','م'],
-  ['s9','7-1','مطابقة المدرب الذي يدرّس فعلاً مع المسجل في الجدول.','م'],
-  ['s10','7-1','تمكن المدرب: إتقان المحتوى أو الجانب العملي، إدارة الجلسة، الإجابة عن أسئلة المتدربين.','م'],
-  ['s11','2-6','حالة القاعة أو الورشة: النظافة، الإضاءة، التهوية، التكييف، الأثاث.','م'],
-  ['p1','5-4','كفاية المعدات لعدد المتدربين (نسبة المتدرب إلى الجهاز أو محطة العمل).','م',1],
-  ['p2','5-4','صلاحية المعدات وتشغيلها، ووجود بطاقة تشغيل وسجل صيانة على الأجهزة الرئيسة.','م',1],
-  ['p3','5-4','ملاءمة المعدات لنواتج التعلم وحداثتها مقارنة بما يستخدمه سوق العمل.','ف',1],
-  ['p4','5-4','توفر المواد الاستهلاكية اللازمة للتدريب العملي.','م',1],
-  ['p5','5-4','مطابقة جدول إشغال الورشة مع الاستخدام الفعلي.','م',1],
-  ['p6','2-7','التزام المتدربين والمدرب بأدوات الوقاية الشخصية، ووجود اللوحات الإرشادية على الأجهزة.','م',1],
-  ['p7','2-7','حقيبة الإسعافات الأولية في الورشة وصلاحية محتواها.','م',1],
-  ['p8','2-7','طفاية الحريق ومخرج الطوارئ في الورشة: الوجود، سهولة الوصول، تاريخ الفحص.','م',1],
+  ['s8','6-3','سلوك المتدربين: الانضباط، الزي، العمل الجماعي، احترام الوقت.','م'],
+  ['s9','7-1','مطابقة المدرب مع الجدول، وتمكنه: إتقان المحتوى، إدارة الجلسة، الإجابة عن الأسئلة.','م'],
+  ['s11','2-6','حالة القاعة: النظافة، الإضاءة، التهوية، التكييف، الأثاث، والتهيئة لذوي الإعاقة.','م'],
+  ['p1','5-4','كفاية المعدات لعدد المتدربين وصلاحيتها وتشغيلها، وتوفر المواد الاستهلاكية.','م',1],
+  ['p3','5-4','ملاءمة المعدات لنواتج التعلم وحداثتها، ومطابقة جدول إشغال الورشة مع الاستخدام الفعلي.','ف',1],
+  ['p6','2-7','السلامة في الورشة: أدوات الوقاية الشخصية، اللوحات الإرشادية، حقيبة الإسعافات، الطفاية ومخرج الطوارئ.','م',1],
   ['p9','4-4','إن تزامن تقييم عملي: ارتباط المهمة بنواتج التعلم، وتطبيق بطاقة الملاحظة.','م',1],
-  ['p10','6-1','أعمال المتدربين ومنتجاتهم في الورشة ومستوى المهارة الظاهر.','ف',1]]},
+  ['p10','6-1','أعمال المتدربين ومنتجاتهم ومستوى المهارة الظاهر.','ف',1]]},
  fc:{home:'2-6',name:'المرافق العامة والممرات',ph:'مثال: المبنى الرئيس، الدور الأول',items:[
   ['f1','2-6','المرافق العامة: دورات المياه، المصلى، أماكن الاستراحة، المواقف، وحالتها.','م'],
   ['f2','2-6','تهيئة المرافق لذوي الإعاقة: المداخل والمنحدرات، المصاعد، دورات المياه المهيأة، المواقف المخصصة.','م'],
@@ -126,7 +118,17 @@ var CAT={
   ['f5','2-7','طفايات الحريق وأنظمة الإنذار: وجودها، سهولة الوصول إليها، تاريخ الفحص على البطاقة.','م'],
   ['f6','2-7','مخططات الإخلاء ونقاط التجمع معلّقة وواضحة.','و'],
   ['f7','2-4','لوحات وشاشات التواصل في أماكن مرئية وحداثة محتواها.','م'],
-  ['f8','2-4','صناديق أو رموز للشكاوى والمقترحات في متناول المتدربين.','و']]},
+  ['f8','2-4','صناديق أو رموز للشكاوى والمقترحات في متناول المتدربين.','و'],
+  ['f9','3-3','مكتب الإرشاد قائم ومرشد متواجد وقت الجولة.','م']]},
+ ws:{home:'2-6',name:'الورش والمستودعات والشراكة',ph:'مثال: مستودع الورش',items:[
+  ['w1','2-7','تخزين المواد الخطرة أو القابلة للاشتعال بطريقة آمنة ومعزولة.','م'],
+  ['w2','5-4','توفر المواد الاستهلاكية والمخزون اللازم للتدريب.','م'],
+  ['r1','1-1','معدات أو معامل مقدمة من جهات العمل، ومدى استخدامها فعلاً في التدريب.','ف']]},
+ of:{home:'2-6',name:'المكاتب والأنظمة',ph:'مثال: الشؤون الأكاديمية',items:[
+  ['y1','2-5','عرض حي لنظام إدارة المعلومات واستخراج تقرير مباشر، ومطابقة أرقامه مع الدراسة الذاتية.','م'],
+  ['y2','5-3','عرض حي لنظام إدارة التعلم: مقررات مفعّلة، محتوى، تقييمات، تفاعل المتدربين (مقرران عشوائياً).','م'],
+  ['y3','6-2','عرض حي لنظام الحضور والغياب والإنذارات.','م'],
+  ['e1','4-5','مكان حفظ الاختبارات وأوراق الإجابة: خزائن مغلقة، صلاحيات الوصول، سرية الحفظ.','م']]},
  hs:{home:'2-6',name:'سكن المتدربين',ph:'مثال: سكن المتدربين، المبنى 2',items:[
   ['h1','3-3','توفر السكن وتجهيزه: الغرف، الأسرّة، الخزائن، الإنترنت، أماكن المذاكرة.','و / م'],
   ['h2','2-6','النظافة والصيانة والتكييف ودورات المياه في السكن.','م'],
@@ -172,10 +174,10 @@ var CAT={
   ['o1','2-6','حالة المكان: النظافة، الصيانة، التهيئة.','م'],
   ['o2','2-7','وسائل السلامة في المكان.','م']]}
 };
-var TOURS=['fc','hs','cf','cl','lb','ac','sv','it','sy','ex','st','pt','ot'];
+var TOURS=['fc','hs','cf','cl','lb','ac','it','ws','of'];/* الأنواع الأخرى في CAT تبقى لعرض بطاقات قديمة فقط */
 var KD=[['th','نظرية'],['pr','عملية']],KDL={th:'نظرية',pr:'عملية'};
-var HF={ses:[['tl','عنوان الجلسة أو المقرر','text'],['rm','القاعة أو الورشة','text'],['kd','نوع الجلسة','kd'],['tr','المدرب','text'],['ns','عدد المتدربين','number'],['dt','التاريخ','date'],['tf','من الساعة','time'],['tt','إلى الساعة','time'],['es','المرافق من المنشأة','text']],
-  tour:[['rm','اسم المكان','text'],['es','المرافق من المنشأة','text'],['dt','التاريخ','date'],['tf','من الساعة','time'],['tt','إلى الساعة','time']]};
+var HF={ses:[['tl','عنوان الجلسة أو المقرر','text'],['rm','القاعة أو الورشة','text'],['kd','نوع الجلسة','kd'],['tr','المدرب','text'],['ns','عدد المتدربين','number'],['es','المرافق من المنشأة','text'],['dt','التاريخ','date'],['tm','الوقت (من - إلى)','tm']],
+  tour:[['rm','اسم المكان','text'],['es','المرافق من المنشأة','text'],['dt','التاريخ','date'],['tm','الوقت (من - إلى)','tm']]};
 var CFLD=['tl','rm','kd','tr','ns','dt','tf','tt','es','x'],NEWC={};
 function hf(ty){return ty==='ses'?HF.ses:HF.tour}
 function ck(c,p){return c.home+'.cv'+c.id+'.'+p}
@@ -189,16 +191,19 @@ function cTitle(c){var f=SF(),g=function(p){return (f[ck(c,p)]||'').trim()};
 function canEdit(){return !!document.querySelector('[id$="-e-rev"]:not([disabled])')}
 function cCnt(c){var f=SF(),o={t:0,no:0,n:0};cItems(c).forEach(function(it){o.n++;var v=f[ik(c,it)+'.r'];if(v){o.t++;if(v==='no')o.no++}});return o}
 function cSum(c){var o=cCnt(c);return o.t+' من '+o.n+(o.no?' · غير متحقق '+o.no:'')}
+var OPENN={};
+function needN(k){var f=SF(),v=f[k+'.r']||'';return !!(OPENN[k]||v==='pa'||v==='no'||v==='ni'||(f[k+'.n']||'').trim())}
 function rowHTML(c,it,dis){var f=SF(),k=ik(c,it),v=f[k+'.r']||'',lv=it[1].replace('-','_');var id='f-'+it[1]+'-c'+c.id+'x'+it[0]+'-';
   return '<div class="obx-e obc-i'+(v==='ni'&&!(f[k+'.n']||'').trim()?' obx-miss':'')+'" data-obci="'+k+'" data-v="'+esc(v)+'"'+(it[4]?' data-prac="1"':'')+'><div class="obc-it"><span class="obx-code">'+it[1]+'</span><span class="obc-tx">'+esc(it[2])+'</span>'+it[3].split(' / ').map(function(l){return '<span class="obx-tag obx-lv">'+(LVN[l]||esc(l))+'</span>'}).join('')+(it[4]?'<span class="obx-tag">عملي</span>':'')+'</div>'+
     '<div class="obx-ch" role="group" aria-label="النتيجة: '+esc(it[2])+'">'+RES.map(function(r){return '<button type="button" class="obx-chip" data-obc="'+k+'" data-v="'+r[0]+'" aria-pressed="'+(v===r[0])+'"'+dis+'>'+r[1]+'</button>'}).join('')+'</div>'+
     '<select id="'+id+'r" data-f="'+k+'.r" hidden aria-hidden="true" tabindex="-1"'+dis+'><option value=""></option>'+RES.map(function(r){return '<option value="'+r[0]+'"'+(v===r[0]?' selected':'')+'>'+r[1]+'</option>'}).join('')+'</select>'+
-    '<textarea id="'+id+'n" data-f="'+k+'.n" rows="1" aria-label="ما شوهد: '+esc(it[2])+'" placeholder="'+(v==='ni'?PHNI:PH)+'"'+dis+'>'+esc(f[k+'.n']||'')+'</textarea>'+
+    '<button type="button" class="obc-nt" data-obnote="'+k+'"'+(needN(k)?' hidden':'')+dis+'>+ ملاحظة</button><textarea id="'+id+'n" data-f="'+k+'.n" rows="1" aria-label="ما شوهد: '+esc(it[2])+'" placeholder="'+(v==='ni'?PHNI:PH)+'"'+(needN(k)?'':' hidden')+dis+'>'+esc(f[k+'.n']||'')+'</textarea>'+
     '<small class="obx-stp" data-obst="'+k+'">'+esc(stamp(f,k))+'</small><input type="hidden" id="'+id+'at" data-f="'+k+'.at" value="'+esc(f[k+'.at']||'')+'"><input type="hidden" id="'+id+'by" data-f="'+k+'.by" value="'+esc(f[k+'.by']||'')+'"></div>'}
 function cardHTML(c,open){var f=SF(),dis=canEdit()?'':' disabled',cat=CAT[c.ty],fid=function(p){return 'f-'+c.home+'-cv'+c.id+'-'+p};
   var h='<details class="obc" data-obcard="'+c.id+'" data-ty="'+c.ty+'" data-kd="'+esc(f[ck(c,'kd')]||'')+'"'+(open?' open':'')+'><summary><span class="obc-k">'+(c.ty==='ses'?'جلسة':'جولة')+'</span><b class="obc-t" data-obct="'+c.id+'">'+esc(cTitle(c))+'</b><span class="obc-s" data-obcs="'+c.id+'">'+esc(cSum(c))+'</span></summary><div class="obx obc-w">'+
     '<input type="hidden" id="'+fid('ty')+'" data-f="'+ck(c,'ty')+'" value="'+esc(f[ck(c,'ty')]||'')+'"><div class="obc-h">';
   hf(c.ty).forEach(function(x){var k=ck(c,x[0]),v=f[k]||'';
+    if(x[2]==='tm'){h+='<label class="obc-tm">'+x[1]+'<span><input type="time" id="'+fid('tf')+'" data-f="'+ck(c,'tf')+'" value="'+esc(f[ck(c,'tf')]||'')+'" aria-label="من الساعة"'+dis+'><i>-</i><input type="time" id="'+fid('tt')+'" data-f="'+ck(c,'tt')+'" value="'+esc(f[ck(c,'tt')]||'')+'" aria-label="إلى الساعة"'+dis+'></span></label>';return}
     if(x[2]==='kd')h+='<label>'+x[1]+'<select id="'+fid(x[0])+'" data-f="'+k+'"'+dis+'><option value=""></option>'+KD.map(function(o){return '<option value="'+o[0]+'"'+(v===o[0]?' selected':'')+'>'+o[1]+'</option>'}).join('')+'</select></label>';
     else h+='<label>'+x[1]+'<input type="'+x[2]+'"'+(x[2]==='number'?' min="0" inputmode="numeric"':'')+' id="'+fid(x[0])+'" data-f="'+k+'" value="'+esc(v)+'"'+(x[0]==='rm'?' placeholder="'+esc(cat.ph)+'"':'')+dis+'></label>'});
   h+='</div><p class="obx-h">'+(c.ty==='ses'?'سجّل ما شاهدته في هذه الجلسة. بنود الجلسة العملية (المعدات والسلامة والتقييم العملي) تختفي إذا اخترت «نظرية».':'سجّل ما شاهدته في هذا المكان.')+' كل نتيجة تُحسب تلقائياً للمعيار الفرعي المكتوب بجانب البند.</p><div class="obc-items">';
@@ -208,7 +213,7 @@ function cardHTML(c,open){var f=SF(),dis=canEdit()?'':' disabled',cat=CAT[c.ty],
   return h}
 function newCard(ty){if(!canEdit()||!CAT[ty])return;var id=Date.now().toString(36)+Math.floor(Math.random()*1296).toString(36);var c={id:id,home:CAT[ty].home,ty:ty};NEWC[id]=c;
   var list=document.getElementById('obcList');if(!list)return;var w=document.createElement('div');w.innerHTML=cardHTML(c,true);var el=w.firstChild;list.appendChild(el);
-  var e=document.getElementById('obcEmpty');if(e)e.hidden=true;setVal(ck(c,'ty'),ty);delete NEWC[id];
+  var e=document.getElementById('obcEmpty');if(e)e.hidden=true;setVal(ck(c,'ty'),ty);var d=new Date(),td=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');setVal(ck(c,'dt'),td);delete NEWC[id];
   setTimeout(function(){el.scrollIntoView({block:'start',behavior:'smooth'});var i=el.querySelector('.obc-h input,.obc-h select');if(i)i.focus({preventScroll:true})},60)}
 function delCard(id){var c=cards().filter(function(x){return x.id===id})[0];if(!c||!canEdit())return;if(!confirm('حذف بطاقة «'+cTitle(c)+'» وكل ما سُجل فيها؟'))return;
   CFLD.forEach(function(p){setVal(ck(c,p),'')});CAT[c.ty].items.forEach(function(it){['r','n','at','by'].forEach(function(p){setVal(ik(c,it)+'.'+p,'')})});setVal(ck(c,'ty'),'');
@@ -222,7 +227,7 @@ function syncCards(){var list=document.getElementById('obcList');if(!list)return
     var fs=el.querySelectorAll('[data-f]');for(var q=0;q<fs.length;q++){var x=fs[q],key=x.getAttribute('data-f');if(x.disabled!==dis&&x.type!=='hidden')x.disabled=dis;if(x!==act){var nv=f[key]||'';if(x.value!==String(nv))x.value=nv}}
     var bs=el.querySelectorAll('button');for(var b=0;b<bs.length;b++)if(bs[b].disabled!==dis)bs[b].disabled=dis;
     var rows=el.querySelectorAll('[data-obci]');for(var r=0;r<rows.length;r++){var row=rows[r],k=row.getAttribute('data-obci'),v=f[k+'.r']||'';row.setAttribute('data-v',v);row.classList.toggle('obx-miss',v==='ni'&&!(f[k+'.n']||'').trim());
-      var ta=row.querySelector('textarea'),ph=v==='ni'?PHNI:PH;if(ta&&ta.placeholder!==ph)ta.placeholder=ph;var sp=row.querySelector('[data-obst]'),st=stamp(f,k);if(sp&&sp.textContent!==st)sp.textContent=st;
+      var ta=row.querySelector('textarea'),ph=v==='ni'?PHNI:PH;if(ta&&ta.placeholder!==ph)ta.placeholder=ph;var nn=needN(k)||(ta&&ta===act);if(ta&&ta.hidden===nn)ta.hidden=!nn;var nb=row.querySelector('[data-obnote]');if(nb&&nb.hidden!==nn)nb.hidden=nn;var sp=row.querySelector('[data-obst]'),st=stamp(f,k);if(sp&&sp.textContent!==st)sp.textContent=st;
       var ch=row.querySelectorAll('.obx-chip');for(var z=0;z<ch.length;z++)ch[z].setAttribute('aria-pressed',String(ch[z].getAttribute('data-v')===v))}})}
 /* نتائج البطاقات لكل معيار فرعي */
 function rollOf(code){var f=SF(),o=[];cards().forEach(function(c){cItems(c).forEach(function(it){if(it[1]!==code)return;var k=ik(c,it),r=f[k+'.r']||'',n=(f[k+'.n']||'').trim();if(r||n)o.push({c:c,it:it,r:r,n:n,k:k})})});return o}
@@ -261,11 +266,11 @@ function buildDoc(){var X=window.docx;if(!X)throw new Error('docx');var f=SF(),S
   var WI=[450,900,6400,1150,1400,4700],HI=['م','المعيار الفرعي','ما يُعاين','المستوى','النتيجة','ما شوهد'],WH=[2300,5200,2300,5200];
   cs.forEach(function(c,ci){var g=function(p){return f[ck(c,p)]||''};
     ch.push(P('بطاقة معاينة '+(ci+1)+': '+cTitle(c),{size:28,bold:true,color:'B0702F',sa:80,keep:true,pb:true}));
-    var hfs=hf(c.ty).map(function(x){var v=g(x[0]);if(x[0]==='kd')v=KDL[v]||'';return [x[1],v||'—']});if(c.ty!=='ses')hfs.unshift(['نوع المكان',CAT[c.ty].name]);
+    var hfs=hf(c.ty).map(function(x){var v=x[0]==='tm'?((g('tf')||g('tt'))?(g('tf')||'—')+' - '+(g('tt')||'—'):''):g(x[0]);if(x[0]==='kd')v=KDL[v]||'';return [x[1],v||'—']});if(c.ty!=='ses')hfs.unshift(['نوع المكان',CAT[c.ty].name]);
     var hr=[];for(var q=0;q<hfs.length;q+=2){var a=hfs[q],b=hfs[q+1]||['',''];hr.push([C(a[0],WH[0],{bold:true,fill:'EEF2F6'}),C(a[1],WH[1]),C(b[0],WH[2],{bold:true,fill:b[0]?'EEF2F6':undefined}),C(b[1],WH[3])])}
     ch.push(T(WH,hr,false),P(' ',{sa:60}));
-    var rows=[HD(HI,WI)];cItems(c).forEach(function(it,n){var k=ik(c,it),sp=stamp(f,k);rows.push([C(n+1,WI[0],{al:AL.CENTER}),C(it[1],WI[1],{al:AL.CENTER}),C(it[2],WI[2]),C(lvs(it[3]),WI[3],{al:AL.CENTER}),C(LAB[f[k+'.r']]||'—',WI[4],{al:AL.CENTER,bold:true}),C((f[k+'.r']==='ni'?'السبب: ':'')+(f[k+'.n']||'')+(sp?'\n'+sp:''),WI[5])])});
-    ch.push(T(WI,rows));if(g('x').trim())ch.push(P('ملاحظات أخرى: '+g('x'),{size:21,sb:60}));
+    var rows=[HD(HI,WI)],nn=0;cItems(c).forEach(function(it){var k=ik(c,it),sp=stamp(f,k);if(!f[k+'.r']&&!(f[k+'.n']||'').trim())return;var n=nn++;rows.push([C(n+1,WI[0],{al:AL.CENTER}),C(it[1],WI[1],{al:AL.CENTER}),C(it[2],WI[2]),C(lvs(it[3]),WI[3],{al:AL.CENTER}),C(LAB[f[k+'.r']]||'—',WI[4],{al:AL.CENTER,bold:true}),C((f[k+'.r']==='ni'?'السبب: ':'')+(f[k+'.n']||'')+(sp?'\n'+sp:''),WI[5])])});
+    if(nn)ch.push(T(WI,rows));else ch.push(P('لم تُسجل نتائج في هذه البطاقة بعد.',{size:21,color:'777777'}));var cc0=cCnt(c);if(nn&&cc0.n>nn)ch.push(P('البنود التي لم تُسجل لها نتيجة ('+(cc0.n-nn)+') لا تظهر هنا.',{size:18,color:'777777',sb:40}));if(g('x').trim())ch.push(P('ملاحظات أخرى: '+g('x'),{size:21,sb:60}));
     ch.push(P('عضو الفريق: ............................    المرافق من المنشأة: '+(g('es')||'............................')+'    التوقيع: ................',{size:22,sb:240}))});
   /* 3) النتائج حسب المعايير الفرعية (البطاقات والبنود المنفردة) */
   var WR=[4300,5300,1400,4000],HR=['المصدر','ما يُعاين','النتيجة','ما شوهد'],first=true;
@@ -325,6 +330,7 @@ document.addEventListener('input',prox);document.addEventListener('change',prox)
 document.addEventListener('click',function(e){var h=e.target.closest&&e.target.closest('[data-v5bar]');if(h){var k=h.getAttribute('data-v5bar');if(k==='obs')setBar(!BOPEN);else if(BOPEN)setBar(false);return}
   var nb=e.target.closest&&e.target.closest('[data-obnew]');if(nb){if(!nb.disabled)newCard(nb.getAttribute('data-obnew'));return}
   var cd=e.target.closest&&e.target.closest('[data-obcdel]');if(cd){if(!cd.disabled)delCard(cd.getAttribute('data-obcdel'));return}
+  var ntb=e.target.closest&&e.target.closest('[data-obnote]');if(ntb){var nk=ntb.getAttribute('data-obnote');OPENN[nk]=1;ntb.hidden=true;var ta=document.querySelector('textarea[data-f="'+nk+'.n"]');if(ta){ta.hidden=false;ta.focus()}return}
   var oc=e.target.closest&&e.target.closest('[data-obopen]');if(oc){openCard(oc.getAttribute('data-obopen'));return}
   var vw=e.target.closest&&e.target.closest('[data-obvw]');if(vw){var nv=vw.getAttribute('data-obvw');if(nv!==BVIEW){BVIEW=nv;try{localStorage.setItem('obx.view2',nv)}catch(x){}var bd=document.getElementById('v5b-obs');if(bd){bd.innerHTML=barRows();refreshBar()}}return}
   var g=e.target.closest&&e.target.closest('[data-obgo]');if(g){var c=g.getAttribute('data-obgo');var fh=document.querySelector('[data-v5bar="form"]');if(fh&&fh.getAttribute('aria-expanded')!=='true')fh.click();setTimeout(function(){try{D().simGo(c)}catch(x){}var d=document.querySelector('[data-obx="'+c+'"]');if(d){d.open=true;setTimeout(function(){d.scrollIntoView({block:'center',behavior:'smooth'})},120)}},250)}});

@@ -100,3 +100,13 @@
 .obx-roll0{font-size:.85rem;color:var(--ink-2);margin:0 0 8px}
 .obx-old{margin-top:6px;border-top:1px dashed var(--line);padding-top:6px}
 .obx-old>summary{cursor:pointer;font-size:.85rem;color:var(--ink-2);padding:4px 0}
+.obc-tm span{display:flex;align-items:center;gap:6px}
+.obc-tm i{font-style:normal;color:var(--ink-2)}
+#app .obc-nt{font:inherit;font-size:.78rem;border:0;background:transparent;color:var(--brand);cursor:pointer;justify-self:start;padding:0}
+#app .obc-nt[hidden]{display:none}
+.obx-e.obc-i{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px 10px}
+.obc-i>*{grid-column:1/-1}
+.obc-i>.obc-it{grid-column:1}
+.obc-i>.obx-ch{grid-column:2}
+.obc-i>.obx-stp:empty{display:none}
+@media (max-width:720px){.obx-e.obc-i{grid-template-columns:minmax(0,1fr)}.obc-i>.obx-ch{grid-column:1}}
