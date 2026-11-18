@@ -55,3 +55,16 @@
 .obx-e[data-v="ni"]{box-shadow:inset -3px 0 0 var(--ink-2)}
 .obx-e.obx-miss textarea{border-color:var(--warn)!important;background:color-mix(in srgb,var(--warn) 8%,var(--surface))}
 #btnObsW::before{content:"";display:inline-block;flex:0 0 auto;width:1.15em;height:1.15em;background:currentColor;--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E");-webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat}
+.obx-ss{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px 8px}
+@media (max-width:720px){.obx-ss{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.obx-ss label{display:flex;flex-direction:column;gap:3px;font-size:.78rem;color:var(--ink-2);font-weight:700;min-width:0}
+.obx-ss input,.obx-ss select{font:inherit;font-size:.88rem;font-weight:400;width:100%;min-width:0;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);color:var(--ink);padding:4px 8px}
+.obx-stp{font-size:.75rem;color:var(--ink-2)}.obx-stp:empty{display:none}
+.obx-warn{margin:4px 0 8px;padding:8px 10px;border-radius:10px;font-size:.86rem;line-height:1.6;color:var(--bad);background:color-mix(in srgb,var(--bad) 9%,var(--surface));border:1px solid color-mix(in srgb,var(--bad) 35%,transparent)}
+.obx-b.obx-w{color:var(--bad)!important;font-weight:700}
+.obx-vw{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:8px;font-size:.85rem;color:var(--ink-2)}
+#app .obx-vw button{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:999px;padding:3px 12px;cursor:pointer}
+#app .obx-vw button[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:700}
+.obx-ref{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:.82rem}
+.obx-ref .obx-stx{font-weight:400;color:var(--ink-2);flex:1 1 240px}
+#v5b-obs .obx-pl h3 small{font-size:.78rem;color:var(--ink-2);font-weight:400}
