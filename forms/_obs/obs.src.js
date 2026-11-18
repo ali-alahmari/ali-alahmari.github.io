@@ -4,7 +4,8 @@
    والمعاينات التالية: <code>.ob<i>e<j>.t/.r/.n ، والبنود الإضافية: <code>.ob.x
    (t = اسم القاعة أو الورشة أو الدرس، r = النتيجة، n = ما شوهد) */
 var OB=__OBDATA__;
-var RES=[['ok','متحقق'],['pa','جزئي'],['no','غير متحقق'],['na','لم يُتح']];
+var RES=[['ok','متحقق'],['pa','جزئي'],['no','غير متحقق'],['na','لم يُتح'],['ni','لا ينطبق']];
+var PH='ما شاهدته، ورقم الصورة إن وُجدت',PHNI='سبب عدم الانطباق (مطلوب)';
 var LVN={'و':'الوجود','م':'الممارسة','ف':'الفاعلية'};
 var MAXE=12,LOCAL={};
 function D(){return window.V5D}
@@ -14,22 +15,22 @@ function lvOf(i,j){return 'ob'+i+(j>1?'e'+j:'')}
 function EK(code,i,j){return code+'.'+lvOf(i,j)}
 function hasE(f,code,i,j){var k=EK(code,i,j);return !!((f[k+'.t']||'').trim()||f[k+'.r']||(f[k+'.n']||'').trim())}
 function nEnt(code,i){var f=SF(),n=1;for(var j=2;j<=MAXE;j++)if(hasE(f,code,i,j))n=j;return Math.max(n,LOCAL[code+'.'+i]||1)}
-function cnt(code){var f=SF(),it=OB[code]||[],o={ok:0,pa:0,no:0,na:0,n:it.length,d:0,e:0};
+function cnt(code){var f=SF(),it=OB[code]||[],o={ok:0,pa:0,no:0,na:0,ni:0,n:it.length,d:0,e:0};
   it.forEach(function(_,x){var i=x+1,any=false,n=nEnt(code,i);for(var j=1;j<=n;j++){var v=f[EK(code,i,j)+'.r'];if(o[v]!=null){o[v]++;any=true}}if(any)o.d++;if(n>1)o.e+=n});return o}
 function sumHTML(code){var c=cnt(code);
   return '<span class="obx-t">المعاينة الميدانية</span><span class="obx-n">'+c.d+' من '+c.n+'</span>'+
-    (c.ok?'<span class="obx-b obx-ok">متحقق '+c.ok+'</span>':'')+(c.pa?'<span class="obx-b obx-pa">جزئي '+c.pa+'</span>':'')+(c.no?'<span class="obx-b obx-no">غير متحقق '+c.no+'</span>':'')+(c.na?'<span class="obx-b obx-na">لم يُتح '+c.na+'</span>':'')}
+    (c.ok?'<span class="obx-b obx-ok">متحقق '+c.ok+'</span>':'')+(c.pa?'<span class="obx-b obx-pa">جزئي '+c.pa+'</span>':'')+(c.no?'<span class="obx-b obx-no">غير متحقق '+c.no+'</span>':'')+(c.na?'<span class="obx-b obx-na">لم يُتح '+c.na+'</span>':'')+(c.ni?'<span class="obx-b obx-ni">لا ينطبق '+c.ni+'</span>':'')}
 function ro(code){var ref=document.getElementById('f-'+code+'-e-rev');return !!(ref&&ref.disabled)}
 
 /* معاينة واحدة داخل البند. mode 'in' = الخانات الأصلية تحت المعيار الفرعي، 'bar' = نسخة مرآة في الشريط المستقل */
 function entryHTML(code,i,j,n,mode){var f=SF(),k=EK(code,i,j),v=f[k+'.r']||'',id='f-'+code+'-'+lvOf(i,j)+'-',dis=ro(code)?' disabled':'',inn=mode==='in';
   var lab='اسم القاعة أو الورشة أو الدرس للمعاينة '+j+'، البند '+i+'، المعيار الفرعي '+code;
-  var h='<div class="obx-e" '+(inn?'data-obe':'data-obe2')+'="'+k+'" data-v="'+esc(v)+'"><div class="obx-eh"><span class="obx-en">معاينة '+j+'</span>'+
+  var h='<div class="obx-e'+(v==='ni'&&!(f[k+'.n']||'').trim()?' obx-miss':'')+'" '+(inn?'data-obe':'data-obe2')+'="'+k+'" data-v="'+esc(v)+'"><div class="obx-eh"><span class="obx-en">معاينة '+j+'</span>'+
     '<input type="text" '+(inn?'id="'+id+'t" data-f="'+k+'.t"':'data-obn="'+k+'.t"')+' value="'+esc(f[k+'.t']||'')+'" aria-label="'+lab+'" placeholder="القاعة أو الورشة أو الدرس (مثال: ورشة المحركات، مقرر كهرباء السيارات)"'+dis+'>'+
     (n>1?'<button type="button" class="obx-del" data-obdel="'+code+'|'+i+'|'+j+'" aria-label="حذف المعاينة '+j+' من البند '+i+'" title="حذف هذه المعاينة"'+dis+'>حذف</button>':'')+'</div>'+
     '<div class="obx-ch" role="group" aria-label="نتيجة المعاينة '+j+' للبند '+i+' للمعيار الفرعي '+code+'">'+RES.map(function(r){return '<button type="button" class="obx-chip" data-obc="'+k+'" data-v="'+r[0]+'" aria-pressed="'+(v===r[0])+'"'+dis+'>'+r[1]+'</button>'}).join('')+'</div>'+
     (inn?'<select id="'+id+'r" data-f="'+k+'.r" hidden aria-hidden="true" tabindex="-1"'+dis+'><option value=""></option>'+RES.map(function(r){return '<option value="'+r[0]+'"'+(v===r[0]?' selected':'')+'>'+r[1]+'</option>'}).join('')+'</select>':'')+
-    '<textarea '+(inn?'id="'+id+'n" data-f="'+k+'.n"':'data-obn="'+k+'.n"')+' rows="1" aria-label="ما شوهد في المعاينة '+j+' للبند '+i+'" placeholder="ما شاهدته، ورقم الصورة إن وُجدت"'+dis+'>'+esc(f[k+'.n']||'')+'</textarea></div>';
+    '<textarea '+(inn?'id="'+id+'n" data-f="'+k+'.n"':'data-obn="'+k+'.n"')+' rows="1" aria-label="ما شوهد في المعاينة '+j+' للبند '+i+'" placeholder="'+(v==='ni'?PHNI:PH)+'"'+dis+'>'+esc(f[k+'.n']||'')+'</textarea></div>';
   return h}
 function entriesHTML(code,i,mode){var n=nEnt(code,i),h='';for(var j=1;j<=n;j++)h+=entryHTML(code,i,j,n,mode);return h}
 function itemHTML(code,x,i,mode){var k=code+'.ob'+i;
@@ -47,7 +48,7 @@ function inject(){var n=0;Object.keys(OB).forEach(function(code){var a=document.
 function syncEntries(box,code,i,mode){if(!box)return;var n=nEnt(code,i),act=document.activeElement;
   if(box.children.length!==n&&!(act&&box.contains(act)&&act.tagName!=='BUTTON')){box.innerHTML=entriesHTML(code,i,mode);return}
   var f=SF(),dis=ro(code);
-  for(var j=1;j<=box.children.length;j++){var row=box.children[j-1],k=EK(code,i,j),v=f[k+'.r']||'';row.setAttribute('data-v',v);
+  for(var j=1;j<=box.children.length;j++){var row=box.children[j-1],k=EK(code,i,j),v=f[k+'.r']||'';row.setAttribute('data-v',v);row.classList.toggle('obx-miss',v==='ni'&&!(f[k+'.n']||'').trim());var ta=row.querySelector('textarea');if(ta){var ph=v==='ni'?PHNI:PH;if(ta.placeholder!==ph)ta.placeholder=ph}
     var sel=row.querySelector('select');if(sel&&sel.value!==v&&act!==sel)sel.value=v;
     var bs=row.querySelectorAll('button');for(var q=0;q<bs.length;q++){if(bs[q].classList.contains('obx-chip'))bs[q].setAttribute('aria-pressed',String(bs[q].getAttribute('data-v')===v));if(bs[q].disabled!==dis)bs[q].disabled=dis}
     var ts=row.querySelectorAll('input,textarea,select');for(var t=0;t<ts.length;t++){var e=ts[t];if(e.disabled!==dis)e.disabled=dis;var key=e.getAttribute('data-f')||e.getAttribute('data-obn');if(key&&e!==act&&e.tagName!=='SELECT'){var nv=f[key]||'';if(e.value!==nv)e.value=nv}}}}
@@ -92,7 +93,7 @@ function buildDoc(){var X=window.docx;if(!X)throw new Error('docx');var f=SF(),S
       OB[code].forEach(function(x,n){var i=n+1,ne=nEnt(code,i);
         for(var j=1;j<=ne;j++){var k=EK(code,i,j),cells=[];
           if(j===1)cells.push(C(i,W[0],{al:AL.CENTER,rs:ne}),C(x[0],W[1],{rs:ne}),C(x[1],W[2],{rs:ne}),C(x[2].split(' / ').map(function(l){return LVN[l]||l}).join('، '),W[3],{al:AL.CENTER,rs:ne}));
-          cells.push(C((ne>1?j+') ':'')+(f[k+'.t']||''),W[4]),C(LAB[f[k+'.r']]||'—',W[5],{al:AL.CENTER,bold:true}),C(f[k+'.n']||'',W[6]));rows.push(cells)}});
+          cells.push(C((ne>1?j+') ':'')+(f[k+'.t']||''),W[4]),C(LAB[f[k+'.r']]||'—',W[5],{al:AL.CENTER,bold:true}),C((f[k+'.r']==='ni'?'السبب: ':'')+(f[k+'.n']||''),W[6]));rows.push(cells)}});
       ch.push(T(W,rows));if((f[code+'.ob.x']||'').trim())ch.push(P('بنود أخرى: '+f[code+'.ob.x'],{size:21,sb:60}))})});
   ch.push(P('عضو الفريق: ............................    رئيس الفريق: ............................',{size:22,sb:300}));
   return new X.Document({sections:[{properties:{page:{size:{orientation:X.PageOrientation.LANDSCAPE,width:11906,height:16838},margin:{top:900,bottom:900,left:900,right:900}}},

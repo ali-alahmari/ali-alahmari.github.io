@@ -10,6 +10,7 @@
 .obx-b.obx-pa,#app .obx-e[data-v="pa"] .obx-chip[aria-pressed="true"]{color:var(--warn)!important}
 .obx-b.obx-no,#app .obx-e[data-v="no"] .obx-chip[aria-pressed="true"]{color:var(--bad)!important}
 .obx-b.obx-na,#app .obx-e[data-v="na"] .obx-chip[aria-pressed="true"]{color:var(--r-na)!important}
+.obx-b.obx-ni,#app .obx-e[data-v="ni"] .obx-chip[aria-pressed="true"]{color:var(--ink-2)!important}
 .obx-p{padding:0 12px 12px;display:flex;flex-direction:column;gap:0}
 .obx-h{margin:0 0 6px;font-size:.84rem;color:var(--ink-2)}
 .obx-i{display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px;padding:10px 0;border-top:1px solid var(--line)}
@@ -51,3 +52,6 @@
 #app .obx .obx-del{flex:none;font:inherit;font-size:.78rem;border:1px solid var(--line);background:transparent;color:var(--bad);border-radius:8px;padding:2px 8px;cursor:pointer}
 #app .obx .obx-add:disabled,#app .obx .obx-del:disabled{display:none}
 .obx-add:focus-visible,.obx-del:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.obx-e[data-v="ni"]{box-shadow:inset -3px 0 0 var(--ink-2)}
+.obx-e.obx-miss textarea{border-color:var(--warn)!important;background:color-mix(in srgb,var(--warn) 8%,var(--surface))}
+#btnObsW::before{content:"";display:inline-block;flex:0 0 auto;width:1.15em;height:1.15em;background:currentColor;--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E");-webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat}
