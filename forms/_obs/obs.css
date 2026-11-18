@@ -115,3 +115,7 @@
 .obc-gtn{display:none;margin:0;font-size:.85rem;color:var(--ink-2);border:1px dashed var(--line);border-radius:10px;padding:8px 12px}
 .obc[data-gt="1"] .obc-gtn{display:block}
 .obc[data-gt="1"] .obc-i:not([data-gate]){display:none}
+
+.obc-ses{display:flex;flex-wrap:wrap;gap:8px}
+#app .obc-nb.obc-pri.obc-pr{background:var(--crit);border-color:var(--crit)}
+.obc[data-ty="ses"][data-kd="th"] .obc-k{background:var(--brand-soft);color:var(--brand)}
