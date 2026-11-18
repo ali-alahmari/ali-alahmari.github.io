@@ -185,7 +185,10 @@ var CAT={
   ['o1','2-6','حالة المكان: النظافة، الصيانة، التهيئة.','م'],
   ['o2','2-7','وسائل السلامة في المكان.','م']]}
 };
-var TOURS=['fc','hs','cf','cl','lb','ac','it','of'];/* الأنواع الأخرى في CAT تبقى لعرض بطاقات قديمة فقط */
+var SECS=['hs','cf','cl','lb','ac'];
+CAT.sa={home:'2-6',name:'خدمات المتدربين',btn:'خدمات المتدربين (السكن، الكافتيريا، العيادة، المكتبة، الأنشطة والملاعب)',ph:'مثال: مبنى الخدمات الطلابية',secs:SECS,items:[]};
+SECS.forEach(function(t){CAT[t].items.forEach(function(it){var x=it.slice();x.sec=t;CAT.sa.items.push(x)})});
+var TOURS=['sa','fc','it','of'];/* الأنواع الأخرى في CAT تبقى لعرض بطاقات قديمة فقط */
 var KD=[['th','نظرية'],['pr','عملية']],KDL={th:'نظرية',pr:'عملية'};
 var HF={ses:[['tl','عنوان الجلسة أو المقرر','text'],['rm','القاعة أو الورشة','text'],['kd','نوع الجلسة','kd'],['tr','المدرب','text'],['ns','عدد المتدربين','number'],['es','المرافق من المنشأة','text'],['dt','التاريخ','date'],['tm','الوقت (من - إلى)','tm']],
   tour:[['rm','اسم المكان','text'],['es','المرافق من المنشأة','text'],['dt','التاريخ','date'],['tm','الوقت (من - إلى)','tm']]};
@@ -195,8 +198,12 @@ function ck(c,p){return c.home+'.cv'+c.id+'.'+p}
 function ik(c,it){return it[1]+'.c'+c.id+'x'+it[0]}
 function cards(){var f=SF(),o=[],seen={};Object.keys(f).forEach(function(k){var m=/^(\d+-\d+)\.cv([a-z0-9]+)\.ty$/.exec(k);if(m&&CAT[f[k]]&&!seen[m[2]]){seen[m[2]]=1;o.push({id:m[2],home:m[1],ty:f[k]})}});
   Object.keys(NEWC).forEach(function(id){if(!seen[id])o.push(NEWC[id])});o.sort(function(a,b){return a.id<b.id?-1:a.id>b.id?1:0});return o}
-function gated(c){var f=SF(),cat=CAT[c.ty];return !!(cat.gate&&f[ik(c,cat.items[0])+'.r']==='ni')}
-function cItems(c){var f=SF(),kd=f[ck(c,'kd')]||'';if(gated(c))return [CAT[c.ty].items[0]];return CAT[c.ty].items.filter(function(it){return !(it[4]&&kd==='th')})}
+function itx(it){return (it.sec?CAT[it.sec].name+': ':'')+it[2]}
+function secOf(c,it){return CAT[c.ty].secs?it.sec:(CAT[c.ty].gate?'_':'')}
+function isGate(c,it){var cat=CAT[c.ty];if(cat.secs)return CAT[it.sec].gate&&cat.items.filter(function(x){return x.sec===it.sec})[0]===it;return !!cat.gate&&it===cat.items[0]}
+function gatedSecs(c){var f=SF(),o=[];CAT[c.ty].items.forEach(function(it){if(isGate(c,it)&&f[ik(c,it)+'.r']==='ni')o.push(secOf(c,it))});return o}
+function gated(c){return gatedSecs(c).join(' ')}
+function cItems(c){var f=SF(),kd=f[ck(c,'kd')]||'',gs=gatedSecs(c);return CAT[c.ty].items.filter(function(it){if(it[4]&&kd==='th')return false;if(gs.indexOf(secOf(c,it))>=0&&!isGate(c,it))return false;return true})}
 function cTitle(c){var f=SF(),g=function(p){return (f[ck(c,p)]||'').trim()};
   if(c.ty==='ses'){var kd=KDL[g('kd')];return 'جلسة'+(kd?' '+kd:'')+': '+(g('tl')||'بدون عنوان')+(g('rm')?' · '+g('rm'):'')+(g('tf')?' · '+g('tf'):'')}
   return CAT[c.ty].name+(g('rm')?': '+g('rm'):'')+(g('tf')?' · '+g('tf'):'')}
@@ -206,21 +213,21 @@ function cSum(c){var o=cCnt(c);return o.t+' من '+o.n+(o.no?' · غير متح�
 var OPENN={};
 function needN(k){var f=SF(),v=f[k+'.r']||'';return !!(OPENN[k]||v==='pa'||v==='no'||v==='ni'||(f[k+'.n']||'').trim())}
 function rowHTML(c,it,dis){var f=SF(),k=ik(c,it),v=f[k+'.r']||'',lv=it[1].replace('-','_');var id='f-'+it[1]+'-c'+c.id+'x'+it[0]+'-';
-  return '<div class="obx-e obc-i'+(v==='ni'&&!(f[k+'.n']||'').trim()?' obx-miss':'')+'" data-obci="'+k+'" data-v="'+esc(v)+'"'+(it[4]?' data-prac="1"':'')+(CAT[c.ty].gate&&it===CAT[c.ty].items[0]?' data-gate="1"':'')+'><div class="obc-it"><span class="obx-code">'+it[1]+'</span><span class="obc-tx">'+esc(it[2])+'</span>'+it[3].split(' / ').map(function(l){return '<span class="obx-tag obx-lv">'+(LVN[l]||esc(l))+'</span>'}).join('')+(it[4]?'<span class="obx-tag">عملي</span>':'')+'</div>'+
+  return '<div class="obx-e obc-i'+(v==='ni'&&!(f[k+'.n']||'').trim()?' obx-miss':'')+'" data-obci="'+k+'" data-v="'+esc(v)+'"'+(it[4]?' data-prac="1"':'')+(isGate(c,it)?' data-gate="1"':'')+(secOf(c,it)?' data-sec="'+secOf(c,it)+'"':'')+'><div class="obc-it"><span class="obx-code">'+it[1]+'</span><span class="obc-tx">'+esc(it[2])+'</span>'+it[3].split(' / ').map(function(l){return '<span class="obx-tag obx-lv">'+(LVN[l]||esc(l))+'</span>'}).join('')+(it[4]?'<span class="obx-tag">عملي</span>':'')+'</div>'+
     '<div class="obx-ch" role="group" aria-label="النتيجة: '+esc(it[2])+'">'+RES.map(function(r){return '<button type="button" class="obx-chip" data-obc="'+k+'" data-v="'+r[0]+'" aria-pressed="'+(v===r[0])+'"'+dis+'>'+r[1]+'</button>'}).join('')+'</div>'+
     '<select id="'+id+'r" data-f="'+k+'.r" hidden aria-hidden="true" tabindex="-1"'+dis+'><option value=""></option>'+RES.map(function(r){return '<option value="'+r[0]+'"'+(v===r[0]?' selected':'')+'>'+r[1]+'</option>'}).join('')+'</select>'+
     '<button type="button" class="obc-nt" data-obnote="'+k+'"'+(needN(k)?' hidden':'')+dis+'>+ ملاحظة</button><textarea id="'+id+'n" data-f="'+k+'.n" rows="1" aria-label="ما شوهد: '+esc(it[2])+'" placeholder="'+(v==='ni'?PHNI:PH)+'"'+(needN(k)?'':' hidden')+dis+'>'+esc(f[k+'.n']||'')+'</textarea>'+
     '<small class="obx-stp" data-obst="'+k+'">'+esc(stamp(f,k))+'</small><input type="hidden" id="'+id+'at" data-f="'+k+'.at" value="'+esc(f[k+'.at']||'')+'"><input type="hidden" id="'+id+'by" data-f="'+k+'.by" value="'+esc(f[k+'.by']||'')+'"></div>'}
 function cardHTML(c,open){var f=SF(),dis=canEdit()?'':' disabled',cat=CAT[c.ty],fid=function(p){return 'f-'+c.home+'-cv'+c.id+'-'+p};
-  var h='<details class="obc" data-obcard="'+c.id+'" data-ty="'+c.ty+'" data-kd="'+esc(f[ck(c,'kd')]||'')+'" data-gt="'+(gated(c)?1:0)+'"'+(open?' open':'')+'><summary><span class="obc-k">'+(c.ty==='ses'?'جلسة':'جولة')+'</span><b class="obc-t" data-obct="'+c.id+'">'+esc(cTitle(c))+'</b><span class="obc-s" data-obcs="'+c.id+'">'+esc(cSum(c))+'</span></summary><div class="obx obc-w">'+
+  var h='<details class="obc" data-obcard="'+c.id+'" data-ty="'+c.ty+'" data-kd="'+esc(f[ck(c,'kd')]||'')+'" data-gt="'+gated(c)+'"'+(open?' open':'')+'><summary><span class="obc-k">'+(c.ty==='ses'?'جلسة':'جولة')+'</span><b class="obc-t" data-obct="'+c.id+'">'+esc(cTitle(c))+'</b><span class="obc-s" data-obcs="'+c.id+'">'+esc(cSum(c))+'</span></summary><div class="obx obc-w">'+
     '<input type="hidden" id="'+fid('ty')+'" data-f="'+ck(c,'ty')+'" value="'+esc(f[ck(c,'ty')]||'')+'"><div class="obc-h">';
   hf(c.ty).forEach(function(x){var k=ck(c,x[0]),v=f[k]||'';
     if(x[2]==='tm'){h+='<label class="obc-tm">'+x[1]+'<span><input type="time" id="'+fid('tf')+'" data-f="'+ck(c,'tf')+'" value="'+esc(f[ck(c,'tf')]||'')+'" aria-label="من الساعة"'+dis+'><i>-</i><input type="time" id="'+fid('tt')+'" data-f="'+ck(c,'tt')+'" value="'+esc(f[ck(c,'tt')]||'')+'" aria-label="إلى الساعة"'+dis+'></span></label>';return}
     if(x[2]==='kd')h+='<label>'+x[1]+'<select id="'+fid(x[0])+'" data-f="'+k+'"'+dis+'><option value=""></option>'+KD.map(function(o){return '<option value="'+o[0]+'"'+(v===o[0]?' selected':'')+'>'+o[1]+'</option>'}).join('')+'</select></label>';
     else h+='<label>'+x[1]+'<input type="'+x[2]+'"'+(x[2]==='number'?' min="0" inputmode="numeric"':'')+' id="'+fid(x[0])+'" data-f="'+k+'" value="'+esc(v)+'"'+(x[0]==='rm'?' placeholder="'+esc(cat.ph)+'"':'')+dis+'></label>'});
-  h+='</div><p class="obx-h">'+(c.ty==='ses'?'سجّل ما شاهدته في هذه الجلسة. بنود الجلسة العملية (المعدات والسلامة ومستودع الورشة والشراكة والتقييم العملي) تختفي إذا اخترت «نظرية».':'سجّل ما شاهدته في هذا المكان.'+(cat.gate?' إذا لم يوجد هذا المكان في المنشأة اختر «لا ينطبق» في البند الأول واكتب السبب، فتختفي بقية البنود.':''))+' كل نتيجة تُحسب تلقائياً للمعيار الفرعي المكتوب بجانب البند.</p><div class="obc-items">';
-  CAT[c.ty].items.forEach(function(it){h+=rowHTML(c,it,dis)});
-  h+='<p class="obc-gtn">بقية بنود هذه الجولة مخفية لأن المكان لا ينطبق على المنشأة.</p></div><label class="obx-xl" for="'+fid('x')+'">ملاحظات أخرى في هذه '+(c.ty==='ses'?'الجلسة':'الجولة')+'</label><textarea id="'+fid('x')+'" data-f="'+ck(c,'x')+'" rows="2"'+dis+'>'+esc(f[ck(c,'x')]||'')+'</textarea>'+
+  h+='</div><p class="obx-h">'+(c.ty==='ses'?'سجّل ما شاهدته في هذه الجلسة. بنود الجلسة العملية (المعدات والسلامة ومستودع الورشة والشراكة والتقييم العملي) تختفي إذا اخترت «نظرية».':'سجّل ما شاهدته في هذا المكان.'+(cat.secs?' إذا لم يوجد أحد هذه الأماكن في المنشأة اختر «لا ينطبق» في أول بند من قسمه واكتب السبب، فتختفي بقية بنود ذلك القسم فقط.':'')+(cat.gate?' إذا لم يوجد هذا المكان في المنشأة اختر «لا ينطبق» في البند الأول واكتب السبب، فتختفي بقية البنود.':''))+' كل نتيجة تُحسب تلقائياً للمعيار الفرعي المكتوب بجانب البند.</p><div class="obc-items">';
+  var ps=null;CAT[c.ty].items.forEach(function(it){if(cat.secs&&it.sec!==ps){if(ps)h+='<p class="obc-gtn" data-sec="'+ps+'">بقية بنود «'+esc(CAT[ps].name)+'» مخفية لأنه لا ينطبق على المنشأة.</p>';ps=it.sec;h+='<h4 class="obc-sec">'+esc(CAT[ps].name)+'</h4>'}h+=rowHTML(c,it,dis)});
+  h+=(cat.secs?'<p class="obc-gtn" data-sec="'+ps+'">بقية بنود «'+esc(CAT[ps].name)+'» مخفية لأنه لا ينطبق على المنشأة.</p>':'<p class="obc-gtn" data-sec="_">بقية بنود هذه الجولة مخفية لأن المكان لا ينطبق على المنشأة.</p>')+'</div><label class="obx-xl" for="'+fid('x')+'">ملاحظات أخرى في هذه '+(c.ty==='ses'?'الجلسة':'الجولة')+'</label><textarea id="'+fid('x')+'" data-f="'+ck(c,'x')+'" rows="2"'+dis+'>'+esc(f[ck(c,'x')]||'')+'</textarea>'+
     '<div class="obc-ft"><button type="button" class="obc-nb" data-obdup="'+c.id+'"'+dis+'>'+(c.ty==='ses'?'+ بطاقة جلسة أخرى':'+ بطاقة '+esc(cat.name)+' أخرى')+'</button><button type="button" class="obx-del" data-obcdel="'+c.id+'"'+dis+'>حذف البطاقة</button></div></div></details>';
   return h}
 function newCard(ty,from,kd){if(!canEdit()||!CAT[ty])return;var id=Date.now().toString(36)+Math.floor(Math.random()*1296).toString(36);var c={id:id,home:CAT[ty].home,ty:ty};NEWC[id]=c;
@@ -234,7 +241,7 @@ function syncCards(){var list=document.getElementById('obcList');if(!list)return
   cs.forEach(function(c){ids[c.id]=1;if(!list.querySelector('[data-obcard="'+c.id+'"]')){var w=document.createElement('div');w.innerHTML=cardHTML(c,false);list.appendChild(w.firstChild)}});
   Array.prototype.slice.call(list.querySelectorAll('[data-obcard]')).forEach(function(el){if(!ids[el.getAttribute('data-obcard')]&&!(act&&el.contains(act)))el.remove()});
   var e=document.getElementById('obcEmpty');if(e)e.hidden=!!cs.length;
-  cs.forEach(function(c){var el=list.querySelector('[data-obcard="'+c.id+'"]');if(!el)return;var kd=f[ck(c,'kd')]||'';if(el.getAttribute('data-kd')!==kd)el.setAttribute('data-kd',kd);var gt=gated(c)?'1':'0';if(el.getAttribute('data-gt')!==gt)el.setAttribute('data-gt',gt);
+  cs.forEach(function(c){var el=list.querySelector('[data-obcard="'+c.id+'"]');if(!el)return;var kd=f[ck(c,'kd')]||'';if(el.getAttribute('data-kd')!==kd)el.setAttribute('data-kd',kd);var gt=gated(c);if(el.getAttribute('data-gt')!==gt)el.setAttribute('data-gt',gt);
     var t=el.querySelector('[data-obct]'),tt=cTitle(c);if(t&&t.textContent!==tt)t.textContent=tt;var s=el.querySelector('[data-obcs]'),ss=cSum(c);if(s&&s.textContent!==ss)s.textContent=ss;
     var fs=el.querySelectorAll('[data-f]');for(var q=0;q<fs.length;q++){var x=fs[q],key=x.getAttribute('data-f');if(x.disabled!==dis&&x.type!=='hidden')x.disabled=dis;if(x!==act){var nv=f[key]||'';if(x.value!==String(nv))x.value=nv}}
     var bs=el.querySelectorAll('button');for(var b=0;b<bs.length;b++)if(bs[b].disabled!==dis)bs[b].disabled=dis;
@@ -245,7 +252,7 @@ function syncCards(){var list=document.getElementById('obcList');if(!list)return
 function rollOf(code){var f=SF(),o=[];cards().forEach(function(c){cItems(c).forEach(function(it){if(it[1]!==code)return;var k=ik(c,it),r=f[k+'.r']||'',n=(f[k+'.n']||'').trim();if(r||n)o.push({c:c,it:it,r:r,n:n,k:k})})});return o}
 function rollHTML(code){var rs=rollOf(code),L={};RES.forEach(function(r){L[r[0]]=r[1]});
   if(!rs.length)return '<p class="obx-roll0">لا نتائج من بطاقات المعاينة لهذا المعيار الفرعي بعد. أضف بطاقة جلسة أو جولة من شريط «المعاينة الميدانية».</p>';
-  return '<ul class="obx-roll">'+rs.map(function(x){return '<li data-v="'+x.r+'"><span class="obx-b obx-'+x.r+'">'+(L[x.r]||'بلا نتيجة')+'</span><span><b>'+esc(cTitle(x.c))+'</b> · '+esc(x.it[2])+(x.n?'<em> — '+esc(x.n)+'</em>':'')+'</span><button type="button" class="obx-go" data-obopen="'+x.c.id+'">فتح البطاقة</button></li>'}).join('')+'</ul>'}
+  return '<ul class="obx-roll">'+rs.map(function(x){return '<li data-v="'+x.r+'"><span class="obx-b obx-'+x.r+'">'+(L[x.r]||'بلا نتيجة')+'</span><span><b>'+esc(cTitle(x.c))+'</b> · '+esc(itx(x.it))+(x.n?'<em> — '+esc(x.n)+'</em>':'')+'</span><button type="button" class="obx-go" data-obopen="'+x.c.id+'">فتح البطاقة</button></li>'}).join('')+'</ul>'}
 function openCard(id){BVIEW='cards';if(!BOPEN)setBar(true);else{var bd=document.getElementById('v5b-obs');if(bd&&!document.getElementById('obcList')){bd.innerHTML=barRows();refreshBar()}}
   setTimeout(function(){var el=document.querySelector('[data-obcard="'+id+'"]');if(el){el.open=true;el.scrollIntoView({block:'start',behavior:'smooth'})}},120)}
 
@@ -281,14 +288,14 @@ function buildDoc(){var X=window.docx;if(!X)throw new Error('docx');var f=SF(),S
     var hfs=hf(c.ty).map(function(x){var v=x[0]==='tm'?((g('tf')||g('tt'))?(g('tf')||'—')+' - '+(g('tt')||'—'):''):g(x[0]);if(x[0]==='kd')v=KDL[v]||'';return [x[1],v||'—']});if(c.ty!=='ses')hfs.unshift(['نوع المكان',CAT[c.ty].name]);
     var hr=[];for(var q=0;q<hfs.length;q+=2){var a=hfs[q],b=hfs[q+1]||['',''];hr.push([C(a[0],WH[0],{bold:true,fill:'EEF2F6'}),C(a[1],WH[1]),C(b[0],WH[2],{bold:true,fill:b[0]?'EEF2F6':undefined}),C(b[1],WH[3])])}
     ch.push(T(WH,hr,false),P(' ',{sa:60}));
-    var rows=[HD(HI,WI)],nn=0;cItems(c).forEach(function(it){var k=ik(c,it),sp=stamp(f,k);if(!f[k+'.r']&&!(f[k+'.n']||'').trim())return;var n=nn++;rows.push([C(n+1,WI[0],{al:AL.CENTER}),C(it[1],WI[1],{al:AL.CENTER}),C(it[2],WI[2]),C(lvs(it[3]),WI[3],{al:AL.CENTER}),C(LAB[f[k+'.r']]||'—',WI[4],{al:AL.CENTER,bold:true}),C((f[k+'.r']==='ni'?'السبب: ':'')+(f[k+'.n']||'')+(sp?'\n'+sp:''),WI[5])])});
+    var rows=[HD(HI,WI)],nn=0;cItems(c).forEach(function(it){var k=ik(c,it),sp=stamp(f,k);if(!f[k+'.r']&&!(f[k+'.n']||'').trim())return;var n=nn++;rows.push([C(n+1,WI[0],{al:AL.CENTER}),C(it[1],WI[1],{al:AL.CENTER}),C((it.sec?CAT[it.sec].name+': ':'')+it[2],WI[2]),C(lvs(it[3]),WI[3],{al:AL.CENTER}),C(LAB[f[k+'.r']]||'—',WI[4],{al:AL.CENTER,bold:true}),C((f[k+'.r']==='ni'?'السبب: ':'')+(f[k+'.n']||'')+(sp?'\n'+sp:''),WI[5])])});
     if(nn)ch.push(T(WI,rows));else ch.push(P('لم تُسجل نتائج في هذه البطاقة بعد.',{size:21,color:'777777'}));var cc0=cCnt(c);if(nn&&cc0.n>nn)ch.push(P('البنود التي لم تُسجل لها نتيجة ('+(cc0.n-nn)+') لا تظهر هنا.',{size:18,color:'777777',sb:40}));if(g('x').trim())ch.push(P('ملاحظات أخرى: '+g('x'),{size:21,sb:60}));
     ch.push(P('عضو الفريق: ............................    المرافق من المنشأة: '+(g('es')||'............................')+'    التوقيع: ................',{size:22,sb:240}))});
   /* 3) النتائج حسب المعايير الفرعية (البطاقات والبنود المنفردة) */
   var WR=[4300,5300,1400,4000],HR=['المصدر','ما يُعاين','النتيجة','ما شوهد'],first=true;
   D().STDS.forEach(function(st){var cc=bySt[st.n];if(!cc)return;var stPushed=false;
     cc.forEach(function(code){var rows=[];
-      rollOf(code).forEach(function(x){var sp=stamp(f,x.k);rows.push([C(cTitle(x.c),WR[0]),C(x.it[2],WR[1]),C(LAB[x.r]||'—',WR[2],{al:AL.CENTER,bold:true}),C((x.r==='ni'?'السبب: ':'')+x.n+(sp?'\n'+sp:''),WR[3])])});
+      rollOf(code).forEach(function(x){var sp=stamp(f,x.k);rows.push([C(cTitle(x.c),WR[0]),C(itx(x.it),WR[1]),C(LAB[x.r]||'—',WR[2],{al:AL.CENTER,bold:true}),C((x.r==='ni'?'السبب: ':'')+x.n+(sp?'\n'+sp:''),WR[3])])});
       OB[code].forEach(function(x,n){var i=n+1,ne=nEnt(code,i);for(var j=1;j<=ne;j++){var k=EK(code,i,j);if(!hasE(f,code,i,j))continue;var sp=stamp(f,k);
         rows.push([C('بند منفرد'+((f[k+'.t']||'').trim()?': '+f[k+'.t']:''),WR[0]),C(x[0],WR[1]),C(LAB[f[k+'.r']]||'—',WR[2],{al:AL.CENTER,bold:true}),C((f[k+'.r']==='ni'?'السبب: ':'')+(f[k+'.n']||'')+(sp?'\n'+sp:''),WR[3])])}});
       var xx=(f[code+'.ob.x']||'').trim();if(!rows.length&&!xx)return;
@@ -310,7 +317,7 @@ function allCnt(){var o={d:0,n:0};Object.keys(OB).forEach(function(c){var x=cnt(
 function barRows(){var f=SF(),bySt={},h='<div class="obx-bar-in"><div class="obx-vw" role="group" aria-label="طريقة العرض"><span>العرض:</span><button type="button" data-obvw="cards" aria-pressed="'+(BVIEW==='cards')+'">بطاقات المعاينة</button><button type="button" data-obvw="std" aria-pressed="'+(BVIEW==='std')+'">النتائج حسب المعيار</button></div>';
   if(BVIEW==='cards'){var dis=canEdit()?'':' disabled',cs=cards();
     h+='<p class="obx-h">أنشئ بطاقة لكل جلسة تحضرها أو مكان تزوره. البطاقة تجمع بنود كل المعايير التي تُقيَّم فيه، وكل نتيجة تُحسب تلقائياً للمعيار الفرعي الذي يتبعه البند.</p>'+
-      '<div class="obc-add"><div class="obc-ses"><button type="button" class="obc-nb obc-pri" data-obnew="ses" data-obkd="th"'+dis+'>+ حضور جلسة نظرية</button><button type="button" class="obc-nb obc-pri obc-pr" data-obnew="ses" data-obkd="pr"'+dis+'>+ حضور جلسة عملية</button></div><div class="obc-tours"><span>+ بطاقة جولة في:</span>'+TOURS.map(function(t){return '<button type="button" class="obc-nb" data-obnew="'+t+'"'+dis+'>'+CAT[t].name+'</button>'}).join('')+'</div></div>'+
+      '<div class="obc-add"><div class="obc-ses"><button type="button" class="obc-nb obc-pri" data-obnew="ses" data-obkd="th"'+dis+'>+ حضور جلسة نظرية</button><button type="button" class="obc-nb obc-pri obc-pr" data-obnew="ses" data-obkd="pr"'+dis+'>+ حضور جلسة عملية</button></div><div class="obc-tours"><span>+ بطاقة جولة في:</span>'+TOURS.map(function(t){return '<button type="button" class="obc-nb" data-obnew="'+t+'"'+dis+'>'+(CAT[t].btn||CAT[t].name)+'</button>'}).join('')+'</div></div>'+
       '<p id="obcEmpty" class="obx-roll0"'+(cs.length?' hidden':'')+'>لا توجد بطاقات بعد. ابدأ بإضافة بطاقة جلسة أو جولة.</p><div id="obcList">'+cs.map(function(c){return cardHTML(c,false)}).join('')+'</div></div>';
     return h}
   h+='<p class="obx-h">نتائج بطاقات المعاينة مجمّعة تحت كل معيار فرعي، ومعها البنود المنفردة المسجلة بدون بطاقة.</p>';
